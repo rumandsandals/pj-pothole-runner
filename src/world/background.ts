@@ -5,7 +5,9 @@ import { THEME } from '../config/theme';
 import { SKIES, type TimeId } from '../config/timeOfDay';
 import { groundPx } from './lanes';
 import { ART_HEIGHT, ART_WIDTH, drawSprite, fill, makeCanvas, seededRandom, toPx } from './pixels';
+import { landmarkImage } from './landmarks';
 import { buildingsStrip, roadsideStrip, type Strip } from './scenery';
+import type { LandmarkId } from '../config/landmarks';
 
 /**
  * Sky, clouds, the distant city skyline, then the level's buildings and
@@ -95,8 +97,22 @@ function drawLooping(ctx: CanvasRenderingContext2D, strip: HTMLCanvasElement, sc
 
 // Where each layer was drawn this frame, so the dusk lights line up with it.
 let layers: Array<{ strip: Strip; scroll: number; y: number }> = [];
+let placed: Array<{ art: Strip; x: number; y: number }> = [];
 
-export function drawBackground(ctx: CanvasRenderingContext2D, roadOffset: number, time: number, scenery: Scenery, timeOfDay: TimeId): void {
+/** A landmark coming up on this level: `ahead` = how far down the road it is (world units). */
+export interface LandmarkAhead {
+  id: LandmarkId;
+  ahead: number;
+}
+
+export function drawBackground(
+  ctx: CanvasRenderingContext2D,
+  roadOffset: number,
+  time: number,
+  scenery: Scenery,
+  timeOfDay: TimeId,
+  landmarks: LandmarkAhead[] = [],
+): void {
   let sky = skies.get(timeOfDay);
   if (!sky) skies.set(timeOfDay, (sky = buildSky(timeOfDay)));
   far ??= buildFarSkyline();
@@ -125,10 +141,26 @@ export function drawBackground(ctx: CanvasRenderingContext2D, roadOffset: number
     { strip: buildings, scroll: toPx(roadOffset) * PARALLAX.buildings, y: ground - buildings.image.height - 8 },
     { strip: roadside, scroll: toPx(roadOffset) * PARALLAX.roadside, y: ground - roadside.image.height },
   ];
-  for (const l of layers) drawLooping(ctx, l.strip.image, l.scroll, l.y);
+  const [farLayer, buildingLayer, roadsideLayer] = layers as [typeof layers[0], typeof layers[0], typeof layers[0]];
+  drawLooping(ctx, farLayer.strip.image, farLayer.scroll, farLayer.y);
+  drawLooping(ctx, buildingLayer.strip.image, buildingLayer.scroll, buildingLayer.y);
+
+  // PJ landmarks slide past with the buildings (same parallax), standing in front of them
+  placed = [];
+  for (const l of landmarks) {
+    const art = landmarkImage(l.id);
+    const x = Math.round(ART_WIDTH + toPx(l.ahead) * PARALLAX.buildings);
+    if (x > ART_WIDTH || x + art.image.width < 0) continue;
+    const y = ground - art.image.height - 4;
+    ctx.drawImage(art.image, x, y);
+    placed.push({ art, x, y });
+  }
+
+  drawLooping(ctx, roadsideLayer.strip.image, roadsideLayer.scroll, roadsideLayer.y);
 }
 
 /** At dusk: windows, signs and lamps, drawn on top of the tinted scene. */
 export function drawBackgroundLights(ctx: CanvasRenderingContext2D): void {
   for (const l of layers) drawLooping(ctx, l.strip.lights, l.scroll, l.y);
+  for (const p of placed) ctx.drawImage(p.art.lights, p.x, p.y);
 }

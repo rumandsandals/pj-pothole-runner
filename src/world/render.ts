@@ -1,6 +1,7 @@
 import { LEVELS } from '../config/levels';
 import { THEME } from '../config/theme';
 import { SCENERY } from '../config/scenery';
+import { LANDMARKS } from '../config/landmarks';
 import { LIGHTS_ON } from '../config/timeOfDay';
 import { currentLevel, currentTime, levelLength, secondsLeft, type GameState } from '../core/state';
 import { drawBackground, drawBackgroundLights } from './background';
@@ -27,7 +28,10 @@ export function render(ctx: CanvasRenderingContext2D, state: GameState): void {
   setLaneCount(level.lanes);
   const carLane = drawLane(state.car.lanePos);
   const timeOfDay = currentTime(state);
-  drawBackground(ctx, state.roadOffset, state.time, SCENERY[level.scenery], timeOfDay);
+  // Landmarks on this level, and how far down the road each one is
+  const length = levelLength(level);
+  const landmarks = LANDMARKS.filter((l) => l.level === state.level).map((l) => ({ id: l.id, ahead: l.at * length - state.levelDistance }));
+  drawBackground(ctx, state.roadOffset, state.time, SCENERY[level.scenery], timeOfDay, landmarks);
   drawRoad(ctx, state.road, state.roadOffset, roughness, level.highway);
 
   // Furthest lane first, so nearer things overlap further ones
