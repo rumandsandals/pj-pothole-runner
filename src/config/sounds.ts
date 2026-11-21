@@ -34,6 +34,22 @@ export const VOLUME = {
   music: 0.3,
 };
 
+/**
+ * ENGINE SOUND — a subtle hum that follows your speed, with gear changes.
+ * Within each gear the pitch rises as you speed up; at the top of a gear it
+ * shifts up (a short dip, and the pitch drops back down). Slowing down
+ * shifts back down. Switched off with the SFX button.
+ */
+export const ENGINE = {
+  volume: 0.07, // keep it under the music and effects
+  idleHz: 34, // pitch when stopped
+  gearLowHz: 42, // pitch at the bottom of each gear…
+  gearHighHz: 92, // …and at the top, just before shifting
+  gears: [2.2, 4.4, 6.6, 8.8, 11, 14], // top speed of gears 1–6 (game speed units)
+  shiftDipMs: 120, // how long the throttle "lifts" during a gear change
+  brightness: 650, // tone filter: lower = muffled, higher = raspier
+};
+
 /** What a new player hears before they change anything. */
 export const SOUND_DEFAULTS = {
   effectsOn: true,

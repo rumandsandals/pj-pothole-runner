@@ -88,6 +88,9 @@ export class Game {
     render(this.artCtx, this.state);
     const [dx, dy] = shakeOffset(this.state);
     const s = this.state;
+    // Engine hum follows your speed while driving (idles at lights); silent on menus and pop-ups
+    const driving = s.mode === 'playing' || s.mode === 'pullover' || s.mode === 'towArriving';
+    sound.engine(driving && s.car.crashTimer === 0 && s.car.sinkY === 0 ? (s.mode === 'playing' ? s.speed : 0) : null);
     const dip = s.dip > 0 ? Math.round(Math.sin((s.dip / JUICE.landingDipTicks) * Math.PI) * JUICE.landingDip) : 0;
     this.viewport.present(this.ctx, this.art, [dx, dy + dip]);
     requestAnimationFrame((t) => this.frame(t));

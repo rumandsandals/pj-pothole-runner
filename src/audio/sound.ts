@@ -1,5 +1,6 @@
 import { TRACKS, type TrackId } from '../config/music';
 import { SOUND_DEFAULTS, SOUNDS, VOLUME, type SoundName } from '../config/sounds';
+import { Engine } from './engine';
 import { MusicPlayer } from './music';
 import { playTone } from './synth';
 
@@ -67,6 +68,7 @@ class SoundSystem {
       musicOut.gain.value = VOLUME.music;
       musicOut.connect(master);
       this.music = new MusicPlayer(ctx, musicOut, TRACKS[this.track]);
+      this.engineSound = new Engine(ctx, master);
       if (this.bpm !== null) this.music.setTempo(this.bpm);
       this.ctx = ctx;
       document.addEventListener('visibilitychange', () => this.onVisibility());
@@ -80,6 +82,14 @@ class SoundSystem {
     if (!this.effectsOn || !ctx || !this.effectsOut || ctx.state !== 'running') return;
     const start = ctx.currentTime + 0.01;
     for (const tone of SOUNDS[name]) playTone(ctx, this.effectsOut, tone, start);
+  }
+
+  private engineSound: Engine | null = null;
+
+  /** The engine hum: pass the car's speed while driving, or null for silence. */
+  engine(speed: number | null): void {
+    if (!this.engineSound || !this.ctx || this.ctx.state !== 'running') return;
+    this.engineSound.setSpeed(this.effectsOn ? speed : null);
   }
 
   setEffects(on: boolean): void {
