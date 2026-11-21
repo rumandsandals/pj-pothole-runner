@@ -10,7 +10,7 @@ import type { ColourKey } from './theme';
  * drafted for the game. See "Facts to verify" in README.md.
  */
 
-export type Offence = 'speeding' | 'jump' | 'accident' | 'laneChange' | 'record' | 'redLight';
+export type Offence = 'speeding' | 'jump' | 'accident' | 'laneChange' | 'record' | 'redLight' | 'giveWay';
 
 export const HEAT = {
   max: 100,
@@ -60,6 +60,11 @@ export const POLICE_STOPS: Record<Offence, { title: string; description: string;
   redLight: {
     title: '🚓 RAN A RED LIGHT!',
     description: 'You drove through a red light. The officer saw it — and so did the traffic camera.',
+    fine: 300,
+  },
+  giveWay: {
+    title: '🚓 FAILED TO GIVE WAY!',
+    description: 'You drove through a zebra crossing while people were crossing. Pedestrians on a crossing always have the right of way.',
     fine: 300,
   },
   record: {

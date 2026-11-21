@@ -13,7 +13,7 @@ import { ART_WIDTH, drawText, fill, textWidth } from './pixels';
 import { drawHeatMeter, drawPoliceCar } from './police';
 import { drawPotholes } from './potholes';
 import { drawRoad } from './road';
-import { drawRoadMarkings, drawSignalPoles } from './streetFurniture';
+import { drawCrossingPeople, drawRoadMarkings, drawSignalPoles, drawStrollers } from './streetFurniture';
 import { drawTowTruck } from './towTruck';
 import { drawRempitWarnings, drawVehicles } from './traffic';
 import { drawLane, laneCount, setLaneCount } from './lanes';
@@ -36,6 +36,7 @@ export function render(ctx: CanvasRenderingContext2D, state: GameState): void {
   drawRoad(ctx, state.road, state.roadOffset, roughness, level.highway);
   drawRoadMarkings(ctx, state.signals, state.crossings);
   drawSignalPoles(ctx, state.signals, state.time);
+  drawStrollers(ctx, state.strollers, state.time);
 
   // Furthest lane first, so nearer things overlap further ones
   for (let lane = laneCount() - 1; lane >= 0; lane--) {
@@ -47,6 +48,8 @@ export function render(ctx: CanvasRenderingContext2D, state: GameState): void {
       drawCar(ctx, state.car, state.time, state.roadOffset, roughness, state.mode === 'playing' ? state.pace : 1);
     }
   }
+
+  drawCrossingPeople(ctx, state.crossings, state.time);
 
   // Time of day on top of the scene; at dusk the lights come on
   drawTimeTint(ctx, timeOfDay);

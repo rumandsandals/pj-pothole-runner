@@ -2,7 +2,8 @@ import { ROAD } from '../config/game';
 import type { LevelTraffic } from '../config/levels';
 import { VEHICLE_ART } from '../config/sprites';
 import { CAR_PAINT, CYCLIST_PAINT, REMPIT, REMPIT_PAINT, RIDER_PAINT, TRAFFIC_RULES, VEHICLES, type VehicleKind } from '../config/traffic';
-import type { Car, Signal, Vehicle } from '../core/state';
+import type { Car, Vehicle } from '../core/state';
+import type { StopPoint } from './streetFurniture';
 import { LIGHTS } from '../config/trafficLights';
 import { drawVehicleArt, vehicleBox, wheelFrame } from './car';
 import { drawLane, laneCount, laneHeight, laneY, neighbourLane, randomLane, sameLane, slideLane, type Lane } from './lanes';
@@ -112,9 +113,9 @@ const laneIsClear = (vehicles: Vehicle[], me: Vehicle, lane: Lane): boolean =>
  * Cars queue behind the stop line; motorcycles and bicycles filter forward
  * and bunch up in front of the first car. Mat Rempit don't stop at all.
  */
-function stopTarget(v: Vehicle, vehicles: Vehicle[], signals: Signal[]): number | null {
-  if (v.kind === 'rempit') return null;
-  const light = signals.filter((s) => s.phase !== 'green' && s.x > v.x - 2).sort((a, b) => a.x - b.x)[0];
+function stopTarget(v: Vehicle, vehicles: Vehicle[], stops: StopPoint[]): number | null {
+  // Mat Rempit run red lights — but even they stop for people on a crossing
+  const light = stops.filter((s) => (s.everyone || v.kind !== 'rempit') && s.x > v.x - 2).sort((a, b) => a.x - b.x)[0];
   if (!light) return null;
   const isBike = VEHICLES[v.kind].group === 'twoWheeler';
   const between = (o: Vehicle): boolean => o !== v && o.x > v.x && o.x < light.x && o.kind !== 'rempit';
@@ -127,10 +128,10 @@ function stopTarget(v: Vehicle, vehicles: Vehicle[], signals: Signal[]): number 
   return light.x - LIGHTS.carStopGap - 34 - VEHICLES[v.kind].halfWidth - carsAhead * LIGHTS.carQueueSpacing;
 }
 
-export function updateVehicles(vehicles: Vehicle[], playerSpeed: number, roadSpeed: number, player: Car, signals: Signal[] = []): Vehicle[] {
+export function updateVehicles(vehicles: Vehicle[], playerSpeed: number, roadSpeed: number, player: Car, stops: StopPoint[] = []): Vehicle[] {
   for (const v of vehicles) {
-    // Red light ahead: slow down to the stop position (bikes filter to the front)
-    const stopAt = stopTarget(v, vehicles, signals);
+    // Red light or busy crossing ahead: slow down to the stop position (bikes filter to the front)
+    const stopAt = stopTarget(v, vehicles, stops);
     if (stopAt !== null && v.x < stopAt + 40) {
       const isBike = VEHICLES[v.kind].group === 'twoWheeler';
       const speed = Math.min(roadSpeed * v.speedShare * (isBike ? 1.25 : 1), Math.max(0, (stopAt - v.x) * 0.07));

@@ -4,6 +4,7 @@ import { ANIMATION, CAR, DRIVING, ECONOMY, JUICE, EFFECTS, TICKS_PER_SECOND, TOW
 import { LEVELS } from '../config/levels';
 import { tempoForLevel } from '../config/music';
 import { LIGHTS } from '../config/trafficLights';
+import { PEDESTRIANS } from '../config/pedestrians';
 import { HEAT, POLICE, POLICE_CHOICES, POLICE_STOPS, type Offence } from '../config/police';
 import { POTHOLES } from '../config/potholes';
 import { ROAD_EVENTS, type EventChoice, type RoadEvent, type RoadEventId } from '../config/roadEvents';
@@ -36,7 +37,7 @@ import { addFloatingText, updateParticles } from '../world/particles';
 import { ART_HEIGHT, ART_WIDTH, makeCanvas } from '../world/pixels';
 import { findCollision, maybeSpawnPothole, movePotholes } from '../world/potholes';
 import { render } from '../world/render';
-import { blocksPotholes, placeFurniture, stopLightAhead, updateFurniture } from '../world/streetFurniture';
+import { blocksPotholes, placeFurniture, stopAhead, stopPoints, updateFurniture, updateStrollers } from '../world/streetFurniture';
 import { generateRoad } from '../world/road';
 import { updateTowTruck } from '../world/towTruck';
 import { clearAround, findVehicleHit, maybeSpawnVehicle, updateVehicles } from '../world/traffic';
@@ -151,7 +152,7 @@ export class Game {
     let target = s.throttle < 0 ? DRIVING.brakeSpeed : s.throttle > 0 ? DRIVING.gasSpeed : 1;
     let rate = DRIVING.change;
     // Traffic lights: braking near a red / amber light brings you to a full stop, and you wait there
-    const redAhead = stopLightAhead(s.signals, car, LIGHTS.brakeZone);
+    const redAhead = stopAhead(s.signals, s.crossings, car, LIGHTS.brakeZone) !== null; // red light or people crossing
     if (redAhead && s.throttle < 0) {
       target = 0;
       rate *= LIGHTS.stopPower;
@@ -178,17 +179,23 @@ export class Game {
     const furniture = updateFurniture(s.signals, s.crossings, s.speed, car, s.pace < 0.03);
     s.signals = furniture.signals;
     s.crossings = furniture.crossings;
-    for (const _ of furniture.ranRed) {
+    if (furniture.ranRed > 0) {
       this.addHeat(LIGHTS.runRedHeat, 'redLight');
       addFloatingText(s.particles, car.x, car.y - 46, 'RAN RED LIGHT!', THEME.particles.damage, 50);
       sound.play('bad');
     }
+    if (furniture.noGiveWay > 0) {
+      this.addHeat(PEDESTRIANS.giveWayHeat, 'giveWay');
+      addFloatingText(s.particles, car.x, car.y - 46, 'GIVE WAY!', THEME.particles.damage, 50);
+      sound.play('horn');
+    }
+    s.strollers = updateStrollers(s.strollers, s.speed, !level.highway);
 
     if (!blocksPotholes(s.signals, s.crossings)) maybeSpawnPothole(s.potholes, level, s.speed);
     s.potholes = movePotholes(s.potholes, s.speed);
     const newVehicle = maybeSpawnVehicle(s.vehicles, level.traffic, level.highway);
     if (newVehicle?.kind === 'rempit') sound.play('rev');
-    s.vehicles = updateVehicles(s.vehicles, s.speed, level.speed, car, s.signals);
+    s.vehicles = updateVehicles(s.vehicles, s.speed, level.speed, car, stopPoints(s.signals, s.crossings));
     s.distance += s.speed;
     s.levelDistance += s.speed;
     s.tick++;
@@ -429,6 +436,7 @@ export class Game {
     s.eventFired = false;
     s.signals = [];
     s.crossings = [];
+    s.strollers = [];
     s.placed = [];
     s.potholes = [];
     s.vehicles = [];

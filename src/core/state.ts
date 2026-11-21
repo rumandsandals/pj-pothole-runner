@@ -7,6 +7,8 @@ import type { VehicleKind } from '../config/traffic';
 import type { Offence } from '../config/police';
 import { FIRST_LEVEL_TIME, TIMES, type TimeId } from '../config/timeOfDay';
 import { laneY, type Lane } from '../world/lanes';
+import type { Stroller } from '../world/pedestrians';
+import type { Crossing } from '../world/streetFurniture';
 import type { Swaps } from '../world/pixels';
 import { generateRoad, type RoadPoint } from '../world/road';
 
@@ -127,7 +129,8 @@ export interface GameState {
   dip: number; // ticks of landing camera-dip left
   levelStats: LevelStats; // how this level is going (for the stars on the level card)
   signals: Signal[]; // traffic lights on the road
-  crossings: number[]; // zebra crossings on the road (world x)
+  crossings: Crossing[]; // zebra crossings on the road (with people crossing)
+  strollers: Stroller[]; // people walking along the pavement
   placed: string[]; // which of this level's lights / crossings have appeared
   times: TimeId[]; // time of day for each level (shuffled every game)
   workshop: { bill: number; step: number; log: WorkshopLogEntry[] };
@@ -198,6 +201,7 @@ export function createState(mode: Mode = 'menu'): GameState {
     levelStats: freshLevelStats(),
     signals: [],
     crossings: [],
+    strollers: [],
     placed: [],
     times: shuffleTimes(),
     workshop: { bill: WORKSHOP.startingBill, step: 0, log: [] },
