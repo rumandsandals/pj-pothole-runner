@@ -237,6 +237,18 @@ function rainTree(ctx: G, x: number, h: number, size: number, random: () => numb
   fill(ctx, '3', x - wide + 4, base, wide * 2 - 8, 2);
 }
 
+/** A small roadside tree (the kind planted along housing-area streets): slim trunk, round crown. */
+function smallTree(ctx: G, x: number, h: number, random: () => number): void {
+  const size = 7 + Math.floor(random() * 4);
+  fill(ctx, '4', x - 1, h - 18 - size, 2, size + 6);
+  const cy = h - 22 - size;
+  for (let row = -size; row <= size; row++) {
+    const half = Math.round(Math.sqrt(size * size - row * row) * (0.9 + random() * 0.15));
+    fill(ctx, row < -size / 3 ? 'b' : '3', x - half, cy + row, half * 2, 1);
+  }
+  for (let i = 0; i < 4; i++) fill(ctx, 'b', x - size + 2 + Math.floor(random() * (size * 2 - 4)), cy - size + 2 + Math.floor(random() * size), 2, 1);
+}
+
 /** Trimmed roadside hedge with pink bougainvillea, over a concrete monsoon drain. */
 function hedgeAndDrain(ctx: G, w: number, h: number, random: () => number): void {
   const { dark, light } = THEME.bushes;
@@ -261,14 +273,28 @@ function busStop(ctx: G, glow: G, x: number, h: number): void {
 }
 
 const ROADSIDE: Record<RoadsideId, { height: number; width: number; draw: Draw }> = {
-  /** The classic PJ road edge: rain trees, hedge, drain, lamps and a bus stop. */
-  pjStreet: {
+  /** Housing-area street: lots of small roadside trees, one big rain tree, hedge, drain, lamps, a bus stop. */
+  suburbStreet: {
     height: 96,
-    width: 840,
+    width: 860,
     draw: (ctx, glow, w, h, random) => {
-      for (let x = 50; x < w - 50; x += 120 + Math.floor(random() * 60)) rainTree(ctx, x, h, Math.floor(random() * 10), random);
-      for (let x = 70; x < w; x += 200) lampPost(ctx, glow, x, h);
-      busStop(ctx, glow, 440, h - 4);
+      rainTree(ctx, 600, h, 8, random); // the one big tree on this stretch
+      for (let x = 30; x < w - 20; x += 70 + Math.floor(random() * 40)) if (Math.abs(x - 600) > 70) smallTree(ctx, x, h, random);
+      for (let x = 110; x < w; x += 260) lampPost(ctx, glow, x, h);
+      busStop(ctx, glow, 300, h - 4);
+      hedgeAndDrain(ctx, w, h, random);
+    },
+  },
+
+  /** City street: a rare big tree, a few small trees, hedge, drain, lamps, a bus stop. */
+  cityStreet: {
+    height: 96,
+    width: 900,
+    draw: (ctx, glow, w, h, random) => {
+      rainTree(ctx, 160, h, 6, random);
+      for (const x of [420, 560, 780]) smallTree(ctx, x, h, random);
+      for (let x = 60; x < w; x += 180) lampPost(ctx, glow, x, h);
+      busStop(ctx, glow, 640, h - 4);
       hedgeAndDrain(ctx, w, h, random);
     },
   },
@@ -279,7 +305,7 @@ const ROADSIDE: Record<RoadsideId, { height: number; width: number; draw: Draw }
     width: 900,
     draw: (ctx, glow, w, h, random) => {
       const sign = THEME.highway.sign;
-      for (const x of [60, 380, 720]) rainTree(ctx, x, h, 4, random);
+      rainTree(ctx, 380, h, 4, random); // a rare big tree on the verge
       for (let x = 40; x < w; x += 150) lampPost(ctx, glow, x, h);
       ['PJ 3 KM', 'KL 12 KM', 'SUBANG 8', 'SHAH ALAM'].forEach((text, i) => {
         const x = 100 + i * 220;

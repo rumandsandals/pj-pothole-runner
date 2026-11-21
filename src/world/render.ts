@@ -13,6 +13,7 @@ import { ART_WIDTH, drawText, fill, textWidth } from './pixels';
 import { drawHeatMeter, drawPoliceCar } from './police';
 import { drawPotholes } from './potholes';
 import { drawRoad } from './road';
+import { drawRoadMarkings, drawSignalPoles } from './streetFurniture';
 import { drawTowTruck } from './towTruck';
 import { drawRempitWarnings, drawVehicles } from './traffic';
 import { drawLane, laneCount, setLaneCount } from './lanes';
@@ -33,6 +34,8 @@ export function render(ctx: CanvasRenderingContext2D, state: GameState): void {
   const landmarks = LANDMARKS.filter((l) => l.level === state.level).map((l) => ({ id: l.id, ahead: l.at * length - state.levelDistance }));
   drawBackground(ctx, state.roadOffset, state.time, SCENERY[level.scenery], timeOfDay, landmarks);
   drawRoad(ctx, state.road, state.roadOffset, roughness, level.highway);
+  drawRoadMarkings(ctx, state.signals, state.crossings);
+  drawSignalPoles(ctx, state.signals, state.time);
 
   // Furthest lane first, so nearer things overlap further ones
   for (let lane = laneCount() - 1; lane >= 0; lane--) {

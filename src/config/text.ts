@@ -27,6 +27,8 @@ export const TEXT = {
     Sedans, slow SUVs and fast sports cars share the road<br>
     💥 Serious crash = tow truck choice · ❗ = Mat Rempit coming from behind<br>
     Mat Rempit split lanes — riding the line, they can hit you in either lane. Jump!<br><br>
+    <b>🚦 TRAFFIC LIGHTS:</b> hold BRAKE to stop before the white line on red.<br>
+    Bikes will squeeze to the front. Running a red = police heat!<br><br>
     <b>🚨 POLICE HEAT (lights top-left):</b><br>
     Speeding, jumping OVER vehicles, cutting in, causing crashes and<br>
     illegal choices raise your heat. High heat = pulled over!<br>

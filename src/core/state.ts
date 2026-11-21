@@ -126,6 +126,9 @@ export interface GameState {
   jumpedOver: boolean; // already counted a vehicle jumped over during this jump
   dip: number; // ticks of landing camera-dip left
   levelStats: LevelStats; // how this level is going (for the stars on the level card)
+  signals: Signal[]; // traffic lights on the road
+  crossings: number[]; // zebra crossings on the road (world x)
+  placed: string[]; // which of this level's lights / crossings have appeared
   times: TimeId[]; // time of day for each level (shuffled every game)
   workshop: { bill: number; step: number; log: WorkshopLogEntry[] };
 }
@@ -193,9 +196,22 @@ export function createState(mode: Mode = 'menu'): GameState {
     jumpedOver: false,
     dip: 0,
     levelStats: freshLevelStats(),
+    signals: [],
+    crossings: [],
+    placed: [],
     times: shuffleTimes(),
     workshop: { bill: WORKSHOP.startingBill, step: 0, log: [] },
   };
+}
+
+/** A traffic light standing at a stop line (x = world position of the line). */
+export interface Signal {
+  x: number;
+  phase: 'green' | 'amber' | 'red';
+  timer: number;
+  decided: boolean; // has it decided whether to change yet?
+  stoppedTicks: number; // how long you've waited at it
+  ran: boolean; // you ran this red light
 }
 
 export interface LevelStats {

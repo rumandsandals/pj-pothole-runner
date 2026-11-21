@@ -22,6 +22,8 @@ export function validateConfig(): string[] {
     if (level.speed <= 0) problems.push(`${where}: speed must be above 0.`);
     if (level.seconds <= 0) problems.push(`${where}: seconds must be above 0.`);
     if (level.lanes < 1 || level.lanes > 3) problems.push(`${where}: lanes must be 1, 2 or 3.`);
+    for (const at of [...level.trafficLights, ...level.crossings])
+      if (at <= 0 || at >= 1) problems.push(`${where}: traffic light / crossing at ${at} must be between 0 and 1.`);
     const t = level.traffic;
     if (t) {
       for (const key of ['motorcycleShare', 'rempitChance', 'laneChangeChance'] as const) {

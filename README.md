@@ -47,6 +47,7 @@ Everything you're likely to change lives in **`src/config/`**. Edit a file, save
 | Menu and panel colours and fonts           | top of `src/style.css`      |
 | When phones switch to sideways / upright layout | `LAYOUT` in `src/config/game.ts` |
 | Juice: lean, jump stretch, landing squash and dip, money roll | `JUICE` in `src/config/game.ts` |
+| Traffic lights and zebra crossings: where (per level) and how they behave | `trafficLights` / `crossings` in `levels.ts`; `LIGHTS` in `src/config/trafficLights.ts` |
 | Where the car sits on screen               | `CAR.x` in `src/config/game.ts` |
 | Number of lanes (1, 2 or 3) and highway look per level | `lanes` and `highway` in `src/config/levels.ts` |
 | Lane width (the road grows with more lanes) and where vehicles sit | `ROAD` in `src/config/game.ts` |
@@ -96,6 +97,7 @@ The accident scenes (`src/config/accidents.ts`) were drafted for the game. Check
 9. **"Ulat" tow touts** at crash scenes: the advice "never let a tow truck you didn't call take your car".
 10. The RM amounts and outcomes are game numbers, not real figures.
 11. **Police stops** (`src/config/police.ts`): speeding saman of about **RM 300**, and that offering a police officer a bribe ("duit kopi") is a crime under the **MACC Act 2009**.
+13. The red-light fine (`redLight` in `src/config/police.ts`) is a game number.
 12. Which choices count as illegal (`heat` in `accidents.ts` and `roadEvents.ts`): not reporting an accident, leaving the scene, bribing, chasing another road user.
 
 The hotlines in `src/config/text.ts` (MBPJ, MACC, Tribunal, JPJ, BNM) came from the original game and should be re-checked too.

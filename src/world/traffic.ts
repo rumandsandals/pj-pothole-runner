@@ -2,7 +2,8 @@ import { ROAD } from '../config/game';
 import type { LevelTraffic } from '../config/levels';
 import { VEHICLE_ART } from '../config/sprites';
 import { CAR_PAINT, CYCLIST_PAINT, REMPIT, REMPIT_PAINT, RIDER_PAINT, TRAFFIC_RULES, VEHICLES, type VehicleKind } from '../config/traffic';
-import type { Car, Vehicle } from '../core/state';
+import type { Car, Signal, Vehicle } from '../core/state';
+import { LIGHTS } from '../config/trafficLights';
 import { drawVehicleArt, vehicleBox, wheelFrame } from './car';
 import { drawLane, laneCount, laneHeight, laneY, neighbourLane, randomLane, sameLane, slideLane, type Lane } from './lanes';
 import { drawText, fill, toPx } from './pixels';
@@ -106,8 +107,44 @@ const laneIsClear = (vehicles: Vehicle[], me: Vehicle, lane: Lane): boolean =>
   !vehicles.some((v) => v !== me && sameLane(v.lanePos, lane) && Math.abs(v.x - me.x) < TRAFFIC_RULES.minGapOtherLane);
 
 /** Moves traffic relative to the player and handles lane changes. */
-export function updateVehicles(vehicles: Vehicle[], playerSpeed: number, roadSpeed: number, player: Car): Vehicle[] {
+/**
+ * Where a vehicle should stop for a red / amber light ahead of it, or null.
+ * Cars queue behind the stop line; motorcycles and bicycles filter forward
+ * and bunch up in front of the first car. Mat Rempit don't stop at all.
+ */
+function stopTarget(v: Vehicle, vehicles: Vehicle[], signals: Signal[]): number | null {
+  if (v.kind === 'rempit') return null;
+  const light = signals.filter((s) => s.phase !== 'green' && s.x > v.x - 2).sort((a, b) => a.x - b.x)[0];
+  if (!light) return null;
+  const isBike = VEHICLES[v.kind].group === 'twoWheeler';
+  const between = (o: Vehicle): boolean => o !== v && o.x > v.x && o.x < light.x && o.kind !== 'rempit';
+  if (isBike) {
+    const bikesAhead = vehicles.filter((o) => between(o) && VEHICLES[o.kind].group === 'twoWheeler').length;
+    return light.x - LIGHTS.bikeStopGap - VEHICLES[v.kind].halfWidth - bikesAhead * LIGHTS.bikeBunchSpacing;
+  }
+  const carsAhead = vehicles.filter((o) => between(o) && VEHICLES[o.kind].group === 'car' && sameLane(o.lanePos, v.lanePos)).length;
+  // Leave room at the front for the motorcycles to squeeze in
+  return light.x - LIGHTS.carStopGap - 34 - VEHICLES[v.kind].halfWidth - carsAhead * LIGHTS.carQueueSpacing;
+}
+
+export function updateVehicles(vehicles: Vehicle[], playerSpeed: number, roadSpeed: number, player: Car, signals: Signal[] = []): Vehicle[] {
   for (const v of vehicles) {
+    // Red light ahead: slow down to the stop position (bikes filter to the front)
+    const stopAt = stopTarget(v, vehicles, signals);
+    if (stopAt !== null && v.x < stopAt + 40) {
+      const isBike = VEHICLES[v.kind].group === 'twoWheeler';
+      const speed = Math.min(roadSpeed * v.speedShare * (isBike ? 1.25 : 1), Math.max(0, (stopAt - v.x) * 0.07));
+      v.x += speed - playerSpeed;
+      if (isBike) {
+        // squeeze between the queued cars, onto the lane line
+        const home = Math.round(v.lane);
+        v.lane = Math.min(laneCount() - 1, Math.max(0, home + (Math.floor(v.x / 13) % 2 === 0 ? 0.2 : -0.2)));
+      }
+      v.lanePos = slideLane(v.lanePos, v.lane, ROAD.changeTicks * 2);
+      continue;
+    }
+    if (VEHICLES[v.kind].group === 'twoWheeler' && v.lane % 1 !== 0) v.lane = Math.round(v.lane); // light's green: back into the lane
+
     // Don't drive through a slower vehicle ahead in the same lane: follow it instead
     let share = v.speedShare;
     for (const o of v.kind === 'rempit' ? [] : vehicles) { // Mat Rempit never slow down

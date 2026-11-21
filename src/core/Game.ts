@@ -3,6 +3,7 @@ import { ACCIDENT_EVENTS, CRASH_TOW_OPTIONS } from '../config/accidents';
 import { ANIMATION, CAR, DRIVING, ECONOMY, JUICE, EFFECTS, TICKS_PER_SECOND, TOW, WORKSHOP } from '../config/game';
 import { LEVELS } from '../config/levels';
 import { tempoForLevel } from '../config/music';
+import { LIGHTS } from '../config/trafficLights';
 import { HEAT, POLICE, POLICE_CHOICES, POLICE_STOPS, type Offence } from '../config/police';
 import { POTHOLES } from '../config/potholes';
 import { ROAD_EVENTS, type EventChoice, type RoadEvent, type RoadEventId } from '../config/roadEvents';
@@ -35,6 +36,7 @@ import { addFloatingText, updateParticles } from '../world/particles';
 import { ART_HEIGHT, ART_WIDTH, makeCanvas } from '../world/pixels';
 import { findCollision, maybeSpawnPothole, movePotholes } from '../world/potholes';
 import { render } from '../world/render';
+import { blocksPotholes, placeFurniture, stopLightAhead, updateFurniture } from '../world/streetFurniture';
 import { generateRoad } from '../world/road';
 import { updateTowTruck } from '../world/towTruck';
 import { clearAround, findVehicleHit, maybeSpawnVehicle, updateVehicles } from '../world/traffic';
@@ -146,10 +148,19 @@ export class Game {
     }
 
     // Brake / gas: ease towards the target speed, and slide the car back or forward
-    const target = s.throttle < 0 ? DRIVING.brakeSpeed : s.throttle > 0 ? DRIVING.gasSpeed : 1;
-    s.pace += Math.sign(target - s.pace) * Math.min(Math.abs(target - s.pace), DRIVING.change);
+    let target = s.throttle < 0 ? DRIVING.brakeSpeed : s.throttle > 0 ? DRIVING.gasSpeed : 1;
+    let rate = DRIVING.change;
+    // Traffic lights: braking near a red / amber light brings you to a full stop, and you wait there
+    const redAhead = stopLightAhead(s.signals, car, LIGHTS.brakeZone);
+    if (redAhead && s.throttle < 0) {
+      target = 0;
+      rate *= LIGHTS.stopPower;
+    } else if (redAhead && s.pace < 0.08 && s.throttle <= 0) {
+      target = 0; // waiting at the light
+    }
+    s.pace += Math.sign(target - s.pace) * Math.min(Math.abs(target - s.pace), rate);
     s.speed = level.speed * s.pace;
-    const lean = s.pace >= 1 ? (s.pace - 1) / (DRIVING.gasSpeed - 1) : (s.pace - 1) / (1 - DRIVING.brakeSpeed);
+    const lean = Math.max(-1, s.pace >= 1 ? (s.pace - 1) / (DRIVING.gasSpeed - 1) : (s.pace - 1) / (1 - DRIVING.brakeSpeed));
     car.x = CAR.x + lean * DRIVING.carMoves;
 
     // Dust from the back wheel and puffs from the exhaust
@@ -162,11 +173,22 @@ export class Game {
     }
 
     s.roadOffset += s.speed;
-    maybeSpawnPothole(s.potholes, level, s.speed);
+    // Traffic lights and zebra crossings
+    placeFurniture(level, s.levelDistance, levelLength(level), s.placed, s.signals, s.crossings);
+    const furniture = updateFurniture(s.signals, s.crossings, s.speed, car, s.pace < 0.03);
+    s.signals = furniture.signals;
+    s.crossings = furniture.crossings;
+    for (const _ of furniture.ranRed) {
+      this.addHeat(LIGHTS.runRedHeat, 'redLight');
+      addFloatingText(s.particles, car.x, car.y - 46, 'RAN RED LIGHT!', THEME.particles.damage, 50);
+      sound.play('bad');
+    }
+
+    if (!blocksPotholes(s.signals, s.crossings)) maybeSpawnPothole(s.potholes, level, s.speed);
     s.potholes = movePotholes(s.potholes, s.speed);
     const newVehicle = maybeSpawnVehicle(s.vehicles, level.traffic, level.highway);
     if (newVehicle?.kind === 'rempit') sound.play('rev');
-    s.vehicles = updateVehicles(s.vehicles, s.speed, level.speed, car);
+    s.vehicles = updateVehicles(s.vehicles, s.speed, level.speed, car, s.signals);
     s.distance += s.speed;
     s.levelDistance += s.speed;
     s.tick++;
@@ -405,6 +427,9 @@ export class Game {
     s.levelDistance = 0;
     s.levelStartMoney = s.money;
     s.eventFired = false;
+    s.signals = [];
+    s.crossings = [];
+    s.placed = [];
     s.potholes = [];
     s.vehicles = [];
     const level = currentLevel(s);
