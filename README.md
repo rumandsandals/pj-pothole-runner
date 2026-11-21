@@ -25,6 +25,7 @@ Everything you're likely to change lives in **`src/config/`**. Edit a file, save
 | The 16-colour palette, road/car/truck colours | `src/config/theme.ts`    |
 | Pixel art (car, tow truck, palms, clouds)  | `src/config/sprites.ts`     |
 | How chunky the pixels are (`PIXEL_SIZE`)   | `src/config/game.ts`        |
+| Dust, shake, wheel spin and other effects (`ANIMATION`) | `src/config/game.ts` |
 | Menu and panel colours and fonts           | top of `src/style.css`      |
 | Jump height, gravity, money, tow timing    | `src/config/game.ts`        |
 

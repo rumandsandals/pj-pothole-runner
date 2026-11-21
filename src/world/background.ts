@@ -1,3 +1,4 @@
+import { ANIMATION } from '../config/game';
 import { CLOUD_SPRITE, PALM_SPRITE } from '../config/sprites';
 import { THEME } from '../config/theme';
 import { ART_GROUND, ART_WIDTH, drawSprite, fill, makeCanvas, seededRandom, toPx } from './pixels';
@@ -80,7 +81,7 @@ function drawLooping(ctx: CanvasRenderingContext2D, strip: HTMLCanvasElement, sc
   for (let x = offset; x < ART_WIDTH; x += strip.width) ctx.drawImage(strip, x, y);
 }
 
-export function drawBackground(ctx: CanvasRenderingContext2D, roadOffset: number): void {
+export function drawBackground(ctx: CanvasRenderingContext2D, roadOffset: number, time: number): void {
   sky ??= buildSky();
   far ??= buildFarSkyline();
   near ??= buildNearRow();
@@ -88,7 +89,7 @@ export function drawBackground(ctx: CanvasRenderingContext2D, roadOffset: number
   ctx.drawImage(sky, 0, 0);
 
   // Clouds
-  const cloudScroll = toPx(roadOffset) * PARALLAX.clouds;
+  const cloudScroll = toPx(roadOffset) * PARALLAX.clouds + time * ANIMATION.cloudDrift;
   const cloudLoop = ART_WIDTH + 40;
   for (const [cx, cy] of [
     [30, 8],

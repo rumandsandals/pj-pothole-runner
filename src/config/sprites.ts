@@ -6,10 +6,13 @@
  *   X, Y, Z  = swappable colours (set in theme.ts, e.g. car body colour)
  * Keep every row in a sprite the same length. `npm run check` and the
  * browser console will tell you if a row is the wrong length.
+ *
+ * Vehicles are drawn in two parts — body and wheels — so the wheels can
+ * spin and the body can bounce on its suspension.
  */
 
-/** Red hatchback, facing right. X = body, Y = trim, c = windows, a = headlight, e = tail light. */
-export const CAR_SPRITE = [
+/** Red hatchback body, facing right. X = body, Y = trim, c = windows, a = headlight, e = tail light. */
+export const CAR_BODY_SPRITE = [
   '.......YYYYYYYYYY.........',
   '......YXcccXccccXXY.......',
   '.....YXccccXcccccXXXY.....',
@@ -19,14 +22,10 @@ export const CAR_SPRITE = [
   'eXXXXXXXXXXXXXXXXXXXXXXXXY',
   'YXXXXXXXXXXXXXXXXXXXXXXXXY',
   'YYY000000YYYYYYYY000000YYY',
-  '...005500........005500...',
-  '...056650........056650...',
-  '...005500........005500...',
-  '....0000..........0000....',
 ];
 
-/** Tow truck: crane on the left, cab on the right. X = body, Y = stripe, Z = cab. */
-export const TOW_TRUCK_SPRITE = [
+/** Tow truck body: crane on the left, cab on the right. X = body, Y = stripe, Z = cab. */
+export const TOW_TRUCK_BODY_SPRITE = [
   '..aaaaaaa...........................',
   '..a.....a...........................',
   '..0.....a...................ZZZZZZ..',
@@ -39,11 +38,27 @@ export const TOW_TRUCK_SPRITE = [
   'XYYYYYYYYYYYYYYYYYYYYYYYYYXZZZZZZZZZ',
   'XXXXXXXXXXXXXXXXXXXXXXXXXXXZZZZZZZZZ',
   '555000000555555555555500000055555555',
-  '...005500.............005500........',
-  '...056650.............056650........',
-  '...005500.............005500........',
-  '....0000...............0000.........',
 ];
+
+/** Two wheel pictures, swapped back and forth to make the wheels spin. */
+export const WHEEL_FRAME_1 = [
+  '005500',
+  '056650',
+  '005500',
+  '.0000.',
+];
+export const WHEEL_FRAME_2 = [
+  '050050',
+  '006600',
+  '050050',
+  '.0000.',
+];
+
+/** Where the wheels sit under each body (pixels from the body's left edge). */
+export const WHEEL_POSITIONS = {
+  car: [3, 17],
+  truck: [3, 22],
+};
 
 export const PALM_SPRITE = [
   '...bb.bb...',

@@ -1,4 +1,4 @@
-import { CAR, ECONOMY, EFFECTS, TICKS_PER_SECOND, TOW, WORKSHOP } from '../config/game';
+import { ANIMATION, CAR, ECONOMY, EFFECTS, TICKS_PER_SECOND, TOW, WORKSHOP, WORLD } from '../config/game';
 import { LEVELS } from '../config/levels';
 import { POTHOLES } from '../config/potholes';
 import { ROAD_EVENTS, type EventChoice, type RoadEventId } from '../config/roadEvents';
@@ -13,7 +13,8 @@ import { flash, hideBanner, hidePanels, hideScreens, hideToast, showBanner, show
 import { showRoadEvent } from '../ui/roadEventScreen';
 import { showTowChoices } from '../ui/towScreen';
 import { showWorkshopEnd, showWorkshopStep } from '../ui/workshopPanel';
-import { canJump, jump, resetAfterRecovery, updateCar, updateSinking } from '../world/car';
+import { canJump, jump, rearWheelWorld, resetAfterRecovery, updateCar, updateSinking } from '../world/car';
+import { burst, puff, shakeOffset, startShake, updateBits, updateShake } from '../world/effects';
 import { addFloatingText, updateParticles } from '../world/particles';
 import { findCollision, maybeSpawnPothole, movePotholes } from '../world/potholes';
 import { ART_HEIGHT, ART_WIDTH, makeCanvas } from '../world/pixels';
@@ -62,15 +63,21 @@ export class Game {
     }
 
     render(this.artCtx, this.state);
-    this.viewport.present(this.ctx, this.art);
+    this.viewport.present(this.ctx, this.art, shakeOffset(this.state));
     requestAnimationFrame((t) => this.frame(t));
   }
 
   private update(): void {
     const s = this.state;
+    s.time++;
     s.particles = updateParticles(s.particles);
+    s.bits = updateBits(s.bits);
+    updateShake(s);
 
     if (s.mode === 'towArriving') {
+      if (s.tow.phase === 'incoming' && s.time % 6 === 0) {
+        puff(s.bits, s.tow.x + 36, WORLD.groundY - 4, THEME.smoke, -TOW.speed); // truck exhaust
+      }
       if (updateTowTruck(s.tow)) this.finishTow();
       return;
     }
@@ -78,12 +85,25 @@ export class Game {
 
     const level = currentLevel(s);
     const car = s.car;
-    updateCar(car);
+    if (updateCar(car)) {
+      const wheel = rearWheelWorld(car);
+      burst(s.bits, car.x, wheel.y, ANIMATION.landingDust, [THEME.smoke, 'f'], 0.5);
+    }
 
     // Stuck in an ABYSS pothole: sink, then call the tow trucks.
     if (car.sinkY > 0) {
+      if (s.time % 4 === 0) puff(s.bits, rearWheelWorld(car).x, WORLD.groundY - 2, '5', 1.5); // wheel spinning in the hole
       if (updateSinking(car)) this.openTowChoice();
       return;
+    }
+
+    // Dust from the back wheel and puffs from the exhaust
+    const wheel = rearWheelWorld(car);
+    if (car.onGround && ANIMATION.dustEvery > 0 && s.time % ANIMATION.dustEvery === 0) {
+      puff(s.bits, wheel.x, wheel.y, Math.random() < 0.5 ? THEME.smoke : 'f', s.speed);
+    }
+    if (ANIMATION.exhaustEvery > 0 && s.time % ANIMATION.exhaustEvery === 0) {
+      puff(s.bits, car.x - car.width / 2 - 4, car.y - 8, '5', s.speed);
     }
 
     s.roadOffset += s.speed;
@@ -110,6 +130,9 @@ export class Game {
     if (s.score % ECONOMY.passiveIncomeEvery === 0) {
       s.money += ECONOMY.passiveIncome;
       updateHud(s);
+      if (ANIMATION.showIncomePop) {
+        addFloatingText(s.particles, car.x + 30, car.y - 30, `+${ECONOMY.passiveIncome}`, THEME.particles.stuck, 30);
+      }
     }
 
     if (car.invulnerable <= 0 && !car.trapped) this.checkPotholeHit();
@@ -131,6 +154,8 @@ export class Game {
       car.sinkTarget = CAR.sinkDepth;
       car.sinkY = 1;
       addFloatingText(s.particles, car.x, car.y - 50, 'STUCK!', THEME.particles.stuck, 60, 2);
+      burst(s.bits, car.x, WORLD.groundY, ANIMATION.debrisOnStuck, ['5', '0', '6', '8'], 1.2);
+      startShake(s, ANIMATION.shakeOnStuck);
       flash(EFFECTS.stuckFlashMs);
       return;
     }
@@ -139,6 +164,8 @@ export class Game {
     s.health = clampHealth(s.health - type.damage);
     car.invulnerable = CAR.invulnerableAfterHit;
     addFloatingText(s.particles, car.x, car.y - 40, `-${type.damage}HP`, THEME.particles.damage);
+    burst(s.bits, hole.x, WORLD.groundY, ANIMATION.debrisOnHit, ['5', '0', '6'], type.damage >= 30 ? 1.2 : 0.8);
+    startShake(s, ANIMATION.shakeOnHit);
     flash(EFFECTS.hitFlashMs);
     updateHud(s);
     if (s.health <= 0) this.die();

@@ -177,6 +177,20 @@ canvas { display: block; image-rendering: pixelated; }
 }
 
 @keyframes blink { 50% { visibility: hidden; } }
+/* Chunky, stepped motion (no smooth easing) to feel like an old arcade machine */
+@keyframes bob { 50% { transform: translateY(-4px); } }
+@keyframes pop-in { 0% { transform: scale(0.6); } 60% { transform: scale(1.06); } 100% { transform: scale(1); } }
+@keyframes toast-in { 0% { transform: translate(-50%, -8px); } 100% { transform: translate(-50%, 0); } }
+
+#ovMenu .tit, #title { animation: bob 1.6s steps(2) infinite; }
+.ov.show .ov-card { animation: pop-in 0.22s steps(4); }
+#toast.show { animation: toast-in 0.15s steps(3); }
+.lvl-number { animation: bob 1.2s steps(2) infinite; }
+
+/* Respect players who turn off motion in their device settings */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
 
 /* ── Pop-up screens ──────────────────────────────────────────── */
 .ov {

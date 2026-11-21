@@ -28,6 +28,19 @@ export interface Car {
   trapped: boolean;
   sinkY: number;
   sinkTarget: number;
+  squash: number; // ticks left of the landing squash
+}
+
+/** A flying pixel: dust, exhaust or an asphalt chip. Positions in world units. */
+export interface Bit {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  gravity: number;
+  life: number;
+  colour: ColourKey;
+  size: number; // art pixels
 }
 
 export interface Pothole {
@@ -60,7 +73,8 @@ export interface WorkshopLogEntry {
 
 export interface GameState {
   mode: Mode;
-  tick: number;
+  time: number; // ticks since the page opened (drives animations, even when paused)
+  tick: number; // ticks spent driving this game
   score: number;
   money: number;
   health: number;
@@ -72,6 +86,8 @@ export interface GameState {
   eventFired: boolean;
   potholes: Pothole[];
   particles: Particle[];
+  bits: Bit[];
+  shake: { ticks: number; strength: number };
   road: RoadPoint[];
   roadOffset: number;
   car: Car;
@@ -91,6 +107,7 @@ export function createCar(): Car {
     trapped: false,
     sinkY: 0,
     sinkTarget: 0,
+    squash: 0,
   };
 }
 
@@ -108,6 +125,7 @@ export function createState(mode: Mode = 'menu'): GameState {
   const level = firstLevel();
   return {
     mode,
+    time: 0,
     tick: 0,
     score: 0,
     money: 0,
@@ -120,6 +138,8 @@ export function createState(mode: Mode = 'menu'): GameState {
     eventFired: false,
     potholes: [],
     particles: [],
+    bits: [],
+    shake: { ticks: 0, strength: 0 },
     road: generateRoad(level.roughness),
     roadOffset: 0,
     car: createCar(),

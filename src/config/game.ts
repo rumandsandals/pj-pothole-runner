@@ -72,6 +72,26 @@ export const EFFECTS = {
   toastMs: 2800,
 };
 
+/**
+ * ANIMATION & EFFECTS
+ * Set any "Every" value to 0, or a strength to 0, to switch that effect off.
+ */
+export const ANIMATION = {
+  wheelSpinEvery: 6, // world units driven per wheel frame (smaller = faster spin)
+  dustEvery: 5, // ticks between dust puffs from the back wheel
+  exhaustEvery: 14, // ticks between exhaust puffs
+  landingDust: 6, // dust bits when landing a jump
+  landingSquashTicks: 5, // how long the car squashes down after landing
+  roughRoadJiggle: 0.8, // roads at least this rough make the car jiggle
+  debrisOnHit: 10, // asphalt chips thrown up by a pothole hit
+  debrisOnStuck: 18,
+  shakeOnHit: { ticks: 8, strength: 1 }, // screen shake (strength in art pixels)
+  shakeOnStuck: { ticks: 18, strength: 2 },
+  cloudDrift: 0.03, // clouds drift even when the car stops
+  labelBlinkEvery: 16, // ticks between ABYSS label blinks (0 = no blink)
+  showIncomePop: true, // "+5" pop-up when passive income is earned
+};
+
 /** Screen-fitting rules. */
 export const LAYOUT = {
   maxWidth: 1600, // the game never grows wider than this (px)

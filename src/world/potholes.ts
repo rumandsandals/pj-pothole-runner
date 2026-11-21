@@ -1,4 +1,4 @@
-import { SPAWN, WORLD } from '../config/game';
+import { ANIMATION, SPAWN, WORLD } from '../config/game';
 import type { Level } from '../config/levels';
 import { POTHOLES } from '../config/potholes';
 import { THEME } from '../config/theme';
@@ -37,8 +37,10 @@ export function findCollision(car: Car, potholes: Pothole[], carInset: number): 
   return -1;
 }
 
-export function drawPotholes(ctx: CanvasRenderingContext2D, potholes: Pothole[]): void {
+export function drawPotholes(ctx: CanvasRenderingContext2D, potholes: Pothole[], time: number): void {
   const t = THEME.pothole;
+  const blinkEvery = ANIMATION.labelBlinkEvery;
+  const blinkOff = blinkEvery > 0 && Math.floor(time / blinkEvery) % 2 === 1;
 
   for (const p of potholes) {
     const cfg = POTHOLES[p.type];
@@ -59,7 +61,8 @@ export function drawPotholes(ctx: CanvasRenderingContext2D, potholes: Pothole[])
     fill(ctx, t.rim, cx + hw + 2, ART_GROUND + 1, 1, 1);
 
     // Label (DEEP / ABYSS)
-    if (cfg.label) drawText(ctx, cfg.label, cx, ART_GROUND - 12, t.label, { align: 'center', shadow: t.labelShadow });
+    // Car-trapping holes flash their warning label
+    if (cfg.label && !(cfg.trapsCar && blinkOff)) drawText(ctx, cfg.label, cx, ART_GROUND - 12, t.label, { align: 'center', shadow: t.labelShadow });
 
     // Damage dots
     const dots = Math.min(Math.ceil((cfg.damage || 1) / 10), 5);

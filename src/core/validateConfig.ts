@@ -33,6 +33,7 @@ export function validateConfig(): string[] {
   });
 
   for (const [name, rows] of Object.entries(SPRITES)) {
+    if (!Array.isArray(rows) || !rows.every((r) => typeof r === 'string')) continue; // not a picture
     const width = rows[0]?.length ?? 0;
     rows.forEach((row, i) => {
       if (row.length !== width)

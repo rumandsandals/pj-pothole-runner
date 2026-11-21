@@ -39,9 +39,18 @@ export class Viewport {
     root.setProperty('--ui-scale', String(Math.min(Math.max(cssWidth / 640, 0.85), 1.6)));
   }
 
-  /** Blows the low-res pixel art up to fill the screen, without blurring. */
-  present(ctx: CanvasRenderingContext2D, art: HTMLCanvasElement): void {
+  /**
+   * Blows the low-res pixel art up to fill the screen, without blurring.
+   * `shake` nudges the picture by whole art pixels for screen shake.
+   */
+  present(ctx: CanvasRenderingContext2D, art: HTMLCanvasElement, shake: [number, number] = [0, 0]): void {
+    const zoom = this.canvas.width / ART_WIDTH;
+    const [dx, dy] = shake;
     ctx.imageSmoothingEnabled = false;
-    ctx.drawImage(art, 0, 0, this.canvas.width, this.canvas.height);
+    if (dx !== 0 || dy !== 0) {
+      ctx.fillStyle = '#0b0b14';
+      ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    }
+    ctx.drawImage(art, Math.round(dx * zoom), Math.round(dy * zoom), this.canvas.width, this.canvas.height);
   }
 }
