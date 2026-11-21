@@ -3,6 +3,7 @@ import { ACCIDENT_EVENTS, CRASH_TOW_OPTIONS } from '../config/accidents';
 import { ANIMATION, CAR, DRIVING, ECONOMY, EFFECTS, TICKS_PER_SECOND, TOW, WORKSHOP } from '../config/game';
 import { LEVELS } from '../config/levels';
 import { WEATHER_EFFECTS } from '../config/weather';
+import { tempoForLevel } from '../config/music';
 import { HEAT, POLICE, POLICE_CHOICES, POLICE_STOPS, type Offence } from '../config/police';
 import { POTHOLES } from '../config/potholes';
 import { ROAD_EVENTS, type EventChoice, type RoadEvent, type RoadEventId } from '../config/roadEvents';
@@ -141,7 +142,6 @@ export class Game {
     const target = s.throttle < 0 ? DRIVING.brakeSpeed : s.throttle > 0 ? DRIVING.gasSpeed : 1;
     s.pace += Math.sign(target - s.pace) * Math.min(Math.abs(target - s.pace), DRIVING.change * grip(s)); // slower on a wet road
     s.speed = level.speed * s.pace;
-    sound.followSpeed(s.speed); // music tempo matches how fast you're going
     const lean = s.pace >= 1 ? (s.pace - 1) / (DRIVING.gasSpeed - 1) : (s.pace - 1) / (1 - DRIVING.brakeSpeed);
     car.x = CAR.x + lean * DRIVING.carMoves;
 
@@ -425,7 +425,7 @@ export class Game {
   private playLevelMusic(): void {
     const w = currentConditions(this.state).weather;
     sound.setTrack(currentLevel(this.state).music, w === 'rain' || w === 'storm');
-    sound.followSpeed(currentLevel(this.state).speed);
+    sound.setTempo(tempoForLevel(this.state.level, LEVELS.length)); // a little faster every level
   }
 
   // ── Player actions ─────────────────────────────────────────
