@@ -105,7 +105,7 @@ export function drawCarSprite(
   drawSprite(ctx, CAR_BODY_SPRITE, box.left, box.top + bob, paint);
 }
 
-export function drawCar(ctx: CanvasRenderingContext2D, car: Car, time: number, roadOffset: number, roughness: number): void {
+export function drawCar(ctx: CanvasRenderingContext2D, car: Car, time: number, roadOffset: number, roughness: number, pace = 1): void {
   const blinkHidden = car.invulnerable > 0 && Math.floor(time / 4) % 2 === 0;
   if (blinkHidden) return;
 
@@ -139,6 +139,21 @@ export function drawCar(ctx: CanvasRenderingContext2D, car: Car, time: number, r
   }
   drawCarSprite(ctx, { ...box, left: box.left + shiftX }, { X: THEME.car.body, Y: THEME.car.trim }, wheelFrame(roadOffset), bob, wheelDrop);
   if (sinking) ctx.restore();
+
+  if (!car.trapped && !sinking) {
+    const left = box.left + shiftX;
+    // Brake lights glow while slowing down
+    if (pace < 0.97) {
+      fill(ctx, '9', left, box.top + bob + 6, 1, 1);
+      fill(ctx, '8', left - 1, box.top + bob + 5, 1, 3);
+      fill(ctx, '8', left - 2, box.top + bob + 6, 1, 1);
+    }
+    // Speed lines while on the gas
+    if (pace > 1.1) {
+      const flicker = Math.floor(time / 3) % 2;
+      for (let i = 0; i < 3; i++) fill(ctx, '7', left - 5 - i * 4 - flicker, box.top + 3 + i * 3, 3, 1);
+    }
+  }
 
   // Smoke when stuck or wrecked
   if (car.trapped || car.sinkY > 5) {

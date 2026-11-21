@@ -47,9 +47,9 @@ const laneIsClear = (vehicles: Vehicle[], me: Vehicle, lane: Lane): boolean =>
   !vehicles.some((v) => v !== me && sameLane(v.lanePos, lane) && Math.abs(v.x - me.x) < TRAFFIC_RULES.minGapOtherLane);
 
 /** Moves traffic relative to the player and handles lane changes. */
-export function updateVehicles(vehicles: Vehicle[], playerSpeed: number, player: Car): Vehicle[] {
+export function updateVehicles(vehicles: Vehicle[], playerSpeed: number, roadSpeed: number, player: Car): Vehicle[] {
   for (const v of vehicles) {
-    v.x += playerSpeed * (v.speedShare - 1); // slower traffic drifts back towards you
+    v.x += roadSpeed * v.speedShare - playerSpeed; // brake and slow traffic pulls away; speed up and you catch it
 
     // Cars that change lane: blink first, then move over
     const ahead = v.x - player.x;

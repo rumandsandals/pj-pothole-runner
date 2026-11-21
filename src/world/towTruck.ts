@@ -7,11 +7,11 @@ import { laneY } from './lanes';
 import { drawSprite, drawText, fill, toPx } from './pixels';
 
 /** Moves the truck in, then waits while it hooks the car. Returns true when done. */
-export function updateTowTruck(tow: TowTruck): boolean {
+export function updateTowTruck(tow: TowTruck, car: Car): boolean {
   if (tow.phase === 'incoming') {
     tow.x -= TOW.speed;
-    if (tow.x <= TOW.stopAtX) {
-      tow.x = TOW.stopAtX;
+    if (tow.x <= car.x + TOW.stopAhead) {
+      tow.x = car.x + TOW.stopAhead;
       tow.phase = 'towing';
     }
     return false;

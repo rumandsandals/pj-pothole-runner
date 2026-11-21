@@ -1,6 +1,6 @@
 import { sound } from '../audio/sound';
 import { ACCIDENT_EVENTS, CRASH_TOW_OPTIONS } from '../config/accidents';
-import { ANIMATION, CAR, ECONOMY, EFFECTS, TICKS_PER_SECOND, TOW, WORKSHOP } from '../config/game';
+import { ANIMATION, CAR, DRIVING, ECONOMY, EFFECTS, TICKS_PER_SECOND, TOW, WORKSHOP } from '../config/game';
 import { LEVELS } from '../config/levels';
 import { POTHOLES } from '../config/potholes';
 import { ROAD_EVENTS, type EventChoice, type RoadEvent, type RoadEventId } from '../config/roadEvents';
@@ -95,7 +95,7 @@ export class Game {
         puff(s.bits, s.tow.x + 36, laneY(s.car.lanePos) - 4, THEME.smoke, -TOW.speed); // truck exhaust
       }
       const wasIncoming = s.tow.phase === 'incoming';
-      if (updateTowTruck(s.tow)) this.finishTow();
+      if (updateTowTruck(s.tow, s.car)) this.finishTow();
       else if (wasIncoming && s.tow.phase === 'towing') sound.play('horn');
       return;
     }
@@ -122,6 +122,13 @@ export class Game {
       return;
     }
 
+    // Brake / gas: ease towards the target speed, and slide the car back or forward
+    const target = s.throttle < 0 ? DRIVING.brakeSpeed : s.throttle > 0 ? DRIVING.gasSpeed : 1;
+    s.pace += Math.sign(target - s.pace) * Math.min(Math.abs(target - s.pace), DRIVING.change);
+    s.speed = level.speed * s.pace;
+    const lean = s.pace >= 1 ? (s.pace - 1) / (DRIVING.gasSpeed - 1) : (s.pace - 1) / (1 - DRIVING.brakeSpeed);
+    car.x = CAR.x + lean * DRIVING.carMoves;
+
     // Dust from the back wheel and puffs from the exhaust
     const wheel = rearWheelWorld(car);
     if (car.onGround && ANIMATION.dustEvery > 0 && s.time % ANIMATION.dustEvery === 0) {
@@ -136,7 +143,7 @@ export class Game {
     s.potholes = movePotholes(s.potholes, s.speed);
     const newVehicle = maybeSpawnVehicle(s.vehicles, level.traffic);
     if (newVehicle?.kind === 'rempit') sound.play('rev');
-    s.vehicles = updateVehicles(s.vehicles, s.speed, car);
+    s.vehicles = updateVehicles(s.vehicles, s.speed, level.speed, car);
     s.distance += s.speed;
     s.levelDistance += s.speed;
     s.tick++;
@@ -154,8 +161,10 @@ export class Game {
       return;
     }
 
-    s.score++;
-    if (s.score % ECONOMY.passiveIncomeEvery === 0) {
+    // Income goes by distance (normal speed = 1 point a tick), so braking can't farm money
+    const before = Math.floor(s.score / ECONOMY.passiveIncomeEvery);
+    s.score += s.pace;
+    if (Math.floor(s.score / ECONOMY.passiveIncomeEvery) > before) {
       s.money += ECONOMY.passiveIncome;
       updateHud(s);
       if (ANIMATION.showIncomePop) {
@@ -272,6 +281,7 @@ export class Game {
     s.vehicles = [];
     const level = currentLevel(s);
     s.speed = level.speed;
+    s.pace = 1;
     s.road = generateRoad(level.roughness);
     updateHud(s);
     sound.play('levelClear');
@@ -319,6 +329,11 @@ export class Game {
   moveLane(lane: Lane): void {
     const s = this.state;
     if (s.mode === 'playing' && changeLane(s.car, lane)) sound.play('lane');
+  }
+
+  /** ← / → / BRAKE / GAS: -1 = brake, 1 = gas, 0 = let go. */
+  setThrottle(throttle: -1 | 0 | 1): void {
+    this.state.throttle = throttle;
   }
 
   // ── Pop-up events (road events and accident scenes) ────────

@@ -39,7 +39,7 @@ export const PHYSICS = {
 export const MAX_HEALTH = 100;
 
 export const CAR = {
-  x: 88,
+  x: 150, // where the car sits on screen (0 = left edge, 640 = right). Further right = more room to see traffic behind you
   width: 44,
   height: 22,
   hitboxInset: 9, // makes collisions a little forgiving
@@ -47,6 +47,22 @@ export const CAR = {
   invulnerableAfterRecovery: 90, // ticks of blinking after a tow / workshop
   sinkDepth: 30, // how far the car sinks into an ABYSS pothole
   sinkSpeed: 0.9,
+};
+
+/**
+ * BRAKE & GAS
+ * Hold ← / A (or the BRAKE button) to slow down, → / D (or GAS) to speed up.
+ * Speeds are a share of each level's normal speed.
+ */
+export const DRIVING = {
+  brakeSpeed: 0.55, // speed while holding BRAKE
+  gasSpeed: 1.4, // speed while holding GAS
+  change: 0.025, // how quickly the car speeds up / slows down (bigger = snappier)
+  carMoves: 45, // how far the car slides forward (gas) or back (brake) on screen
+};
+
+export const FULL_SCREEN = {
+  autoOnTouchDevices: true, // phones & tablets switch to full screen when you press START
 };
 
 export const SPAWN = {
@@ -64,7 +80,7 @@ export const ECONOMY = {
 
 export const TOW = {
   arriveFromX: WORLD.width + 80,
-  stopAtX: 160,
+  stopAhead: 72, // where the truck parks, in front of your car
   speed: 3.5,
   waitTicks: 84, // pause while the truck hooks your car (~1.4 seconds)
   licensedHeal: 20,

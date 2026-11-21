@@ -9,6 +9,7 @@ import { Viewport } from './core/Viewport';
 import { byId } from './ui/dom';
 import { fillStaticText, showScreen } from './ui/overlays';
 import { bindSoundControls } from './ui/soundControls';
+import { autoFullScreen, bindFullScreen } from './ui/fullscreen';
 
 const problems = validateConfig();
 if (problems.length > 0) {
@@ -26,8 +27,8 @@ if (import.meta.env.DEV) Object.assign(window, { game, sound });
 
 bindInput(
   canvas,
-  { jump: byId('jumpBtn'), up: byId('laneUpBtn'), down: byId('laneDownBtn') },
-  { jump: () => game.jump(), lane: (lane) => game.moveLane(lane) },
+  { jump: byId('jumpBtn'), up: byId('laneUpBtn'), down: byId('laneDownBtn'), brake: byId('brakeBtn'), gas: byId('gasBtn') },
+  { jump: () => game.jump(), lane: (lane) => game.moveLane(lane), throttle: (value) => game.setThrottle(value) },
 );
 
 // Browsers allow sound only after the player clicks or presses a key.
@@ -35,6 +36,7 @@ for (const type of ['pointerdown', 'keydown'] as const) {
   document.addEventListener(type, () => sound.unlock(), { capture: true });
 }
 bindSoundControls();
+bindFullScreen();
 
 // Menu buttons: any element with data-action="start" | "howto" | "menu"
 document.addEventListener('click', (e) => {
@@ -42,7 +44,10 @@ document.addEventListener('click', (e) => {
   if (!target) return;
   const action = target.dataset.action;
   sound.play('click');
-  if (action === 'start') game.start();
+  if (action === 'start') {
+    autoFullScreen();
+    game.start();
+  }
   else if (action === 'howto') showScreen('howto');
   else if (action === 'menu') game.showMenu();
 });

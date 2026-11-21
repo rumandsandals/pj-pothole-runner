@@ -4,6 +4,15 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>PJ Pothole Runner</title>
+    <!-- "Add to Home Screen" opens the game full screen, like an app -->
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
+    <link rel="icon" type="image/png" href="./icon-192.png" />
+    <meta name="theme-color" content="#0b0b14" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Pothole Run" />
   </head>
   <body>
     <main id="app">
@@ -55,9 +64,11 @@
       </section>
 
       <div id="controls">
+        <button class="lane-btn pedal" id="brakeBtn" data-text="brakeButton"></button>
         <button class="lane-btn" id="laneUpBtn" data-text="laneUpButton"></button>
         <button id="jumpBtn" data-text="jumpButton"></button>
         <button class="lane-btn" id="laneDownBtn" data-text="laneDownButton"></button>
+        <button class="lane-btn pedal" id="gasBtn" data-text="gasButton"></button>
       </div>
       <div id="hint" data-text="controlsHint"></div>
       <div id="rotateHint" data-text="rotateHint"></div>
@@ -67,6 +78,7 @@
     <div id="soundControls">
       <button class="snd" id="sfxBtn" title="Sound effects on/off"></button>
       <button class="snd" id="musicBtn" title="Music on/off (M)"></button>
+      <button class="snd" id="fsBtn" title="Full screen on/off (F)"></button>
     </div>
 
     <!-- Pop-up screens -->

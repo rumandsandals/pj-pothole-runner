@@ -2,6 +2,13 @@
 
 Dodge Petaling Jaya's potholes, survive dodgy tow trucks and Workshop Hell, and learn your consumer rights along the way.
 
+## Controls
+
+↑ ↓ (W S) change lane · hold ← → (A D) to brake / speed up · Space jumps · M music · F full screen.
+On phones: on-screen buttons, or swipe up/down on the road and tap to jump.
+
+**Full screen on iPhone:** open the game in Safari, tap Share → **Add to Home Screen**. The icon then opens the game full screen like an app.
+
 ## Play it on your Mac
 
 **Just play:** double-click **`Play PJ Pothole Runner.html`** in this folder.
@@ -39,6 +46,10 @@ Everything you're likely to change lives in **`src/config/`**. Edit a file, save
 | Background music: notes, tempo, drums      | `src/config/music.ts`       |
 | Menu and panel colours and fonts           | top of `src/style.css`      |
 | When phones switch to sideways / upright layout | `LAYOUT` in `src/config/game.ts` |
+| Where the car sits on screen               | `CAR.x` in `src/config/game.ts` |
+| Brake / gas speeds and how far the car slides | `DRIVING` in `src/config/game.ts` |
+| Auto full screen on phones (on/off)        | `FULL_SCREEN` in `src/config/game.ts` |
+| Home Screen app name, icon and colours     | `public/manifest.webmanifest`, `public/icon-*.png` |
 | Phone button positions and sizes           | "Phone layouts" at the bottom of `src/style.css` |
 | Jump height, gravity, money, tow timing    | `src/config/game.ts`        |
 

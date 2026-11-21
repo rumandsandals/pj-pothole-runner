@@ -10,14 +10,15 @@ export const TEXT = {
   pressStart: '- PRESS START -',
 
   menuIntro: `
-    ↑ ↓ switch lanes · SPACE / TAP to jump potholes<br>
+    ↑ ↓ switch lanes · ← → brake / speed up · SPACE / TAP to jump<br>
     Dodge cars & motorcycles — crashes mean claims!<br>
     <b>ABYSS potholes = tow truck encounter!</b><br>
     Choose the right tow — or enter Workshop Hell 🔧`,
 
   howTo: `
     <b>CONTROLS:</b> ↑ ↓ (or W S, swipe, LANE buttons) switch lanes<br>
-    SPACE / CLICK / TAP to jump · M = music on/off<br>
+    Hold ← → (or A D, BRAKE / GAS buttons) to slow down or speed up<br>
+    SPACE / CLICK / TAP to jump · M = music on/off · F = full screen<br>
     <b>POTHOLES:</b><br>
     &nbsp;· · · · = Shallow (−5 HP)&nbsp;&nbsp;──── = Medium (−15 HP)<br>
     &nbsp;━━━━━ = Deep (−30 HP)&nbsp;&nbsp;<b>[ABYSS]</b> = Car gets stuck!<br><br>
@@ -78,8 +79,13 @@ export const TEXT = {
   musicOff: '🎵 MUSIC',
 
   jumpButton: 'JUMP',
-  controlsHint: '↑ ↓ LANES · SPACE / TAP JUMP',
+  controlsHint: '↑ ↓ LANES · ← → BRAKE / GAS · SPACE JUMP · F FULL SCREEN',
   laneUpButton: '▲ LANE',
   laneDownButton: '▼ LANE',
+  brakeButton: '◀ BRAKE',
+  gasButton: 'GAS ▶',
+  fullScreenEnter: '⛶ FULL',
+  fullScreenExit: '⛶ EXIT',
+  fullScreenIphoneTip: 'iPhone: tap Share ⬆ then “Add to Home Screen” — the game then opens full screen like an app.',
   rotateHint: '↻ Tip: turn your phone sideways for a bigger road',
 };

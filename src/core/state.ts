@@ -104,6 +104,8 @@ export interface GameState {
   level: number; // 1-based
   levelStartMoney: number; // to show what was earned on the level pop-up
   speed: number;
+  pace: number; // 1 = normal speed; lower while braking, higher on gas
+  throttle: -1 | 0 | 1; // -1 brake held, 1 gas held, 0 neither
   eventFired: boolean;
   potholes: Pothole[];
   vehicles: Vehicle[];
@@ -161,6 +163,8 @@ export function createState(mode: Mode = 'menu'): GameState {
     level: 1,
     levelStartMoney: 0,
     speed: level.speed,
+    pace: 1,
+    throttle: 0,
     eventFired: false,
     potholes: [],
     vehicles: [],

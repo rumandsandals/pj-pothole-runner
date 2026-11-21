@@ -28,7 +28,7 @@ export function render(ctx: CanvasRenderingContext2D, state: GameState): void {
     drawVehicles(ctx, state.vehicles, lane, state.time, state.roadOffset);
     if (carLane === lane) {
       drawTowTruck(ctx, state.tow, state.car, state.time);
-      drawCar(ctx, state.car, state.time, state.roadOffset, roughness);
+      drawCar(ctx, state.car, state.time, state.roadOffset, roughness, state.mode === 'playing' ? state.pace : 1);
     }
   }
 
