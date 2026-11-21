@@ -16,7 +16,7 @@ Everything you're likely to change lives in **`src/config/`**. Edit a file, save
 
 | I want to change…                          | Edit this file              |
 | ------------------------------------------ | --------------------------- |
-| Levels (names, speed, which potholes)      | `src/config/levels.ts`      |
+| Levels (names, length in seconds, intro text, speed, potholes) | `src/config/levels.ts` |
 | Pothole sizes, damage, labels              | `src/config/potholes.ts`    |
 | Police / insurance / workshop pop-ups      | `src/config/roadEvents.ts`  |
 | The two tow truck choices                  | `src/config/towTrucks.ts`   |

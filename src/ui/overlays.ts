@@ -5,6 +5,7 @@ import { byId } from './dom';
 const SCREENS = {
   menu: 'ovMenu',
   howto: 'ovHowTo',
+  level: 'ovLevel',
   event: 'ovEvent',
   tow: 'ovTow',
   dead: 'ovDead',

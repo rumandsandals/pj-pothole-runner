@@ -1,4 +1,4 @@
-import { CAR, ECONOMY, EFFECTS, LEVEL_LENGTH, TICKS_PER_SECOND, TOW, WORKSHOP } from '../config/game';
+import { CAR, ECONOMY, EFFECTS, TICKS_PER_SECOND, TOW, WORKSHOP } from '../config/game';
 import { LEVELS } from '../config/levels';
 import { POTHOLES } from '../config/potholes';
 import { ROAD_EVENTS, type EventChoice, type RoadEventId } from '../config/roadEvents';
@@ -7,6 +7,7 @@ import { THEME } from '../config/theme';
 import { TOW_OPTIONS, type TowOption } from '../config/towTrucks';
 import { WORKSHOP_STEPS, type WorkshopChoice } from '../config/workshop';
 import { showDead, showWin } from '../ui/endScreens';
+import { showLevelCard, type LevelCardInfo } from '../ui/levelCard';
 import { updateHud } from '../ui/hud';
 import { flash, hideBanner, hidePanels, hideScreens, hideToast, showBanner, showScreen, showToast } from '../ui/overlays';
 import { showRoadEvent } from '../ui/roadEventScreen';
@@ -19,11 +20,12 @@ import { ART_HEIGHT, ART_WIDTH, makeCanvas } from '../world/pixels';
 import { render } from '../world/render';
 import { generateRoad } from '../world/road';
 import { updateTowTruck } from '../world/towTruck';
-import { clampHealth, createState, createTow, currentLevel, type GameState } from './state';
+import { clampHealth, createState, createTow, currentLevel, levelLength, type GameState } from './state';
 import type { Viewport } from './Viewport';
 
 const TICK_MS = 1000 / TICKS_PER_SECOND;
 const MAX_FRAME_MS = 250; // after a pause (e.g. switching tabs), don't fast-forward
+const CARD_KEY_DELAY_MS = 700; // so a player mashing Space doesn't skip the level card by accident
 
 /**
  * Runs the game. Logic updates at a fixed 60 ticks per second no matter
@@ -37,6 +39,7 @@ export class Game {
   private readonly artCtx: CanvasRenderingContext2D;
   private lastTime = 0;
   private accumulator = 0;
+  private cardShownAt = 0;
 
   constructor(canvas: HTMLCanvasElement, private readonly viewport: Viewport) {
     const ctx = canvas.getContext('2d');
@@ -90,18 +93,17 @@ export class Game {
     s.levelDistance += s.speed;
     s.tick++;
 
-    if (!s.eventFired && level.event && s.levelDistance > level.eventAt) {
+    const length = levelLength(level);
+    if (!s.eventFired && level.event && s.levelDistance > level.eventAt * length) {
       s.eventFired = true;
       this.openRoadEvent(level.event);
       return;
     }
 
-    if (s.levelDistance >= LEVEL_LENGTH) {
-      if (s.level >= LEVELS.length) {
-        this.win();
-        return;
-      }
-      this.nextLevel();
+    if (s.levelDistance >= length) {
+      if (s.level >= LEVELS.length) this.win();
+      else this.completeLevel();
+      return;
     }
 
     s.score++;
@@ -142,31 +144,53 @@ export class Game {
     if (s.health <= 0) this.die();
   }
 
-  private nextLevel(): void {
+  /** Finished a level: set up the next one and pause on the level card. */
+  private completeLevel(): void {
     const s = this.state;
+    const cleared = { number: s.level, earned: s.money - s.levelStartMoney };
     s.level++;
-    s.levelDistance -= LEVEL_LENGTH;
+    s.levelDistance = 0;
+    s.levelStartMoney = s.money;
     s.eventFired = false;
+    s.potholes = [];
     const level = currentLevel(s);
     s.speed = level.speed;
     s.road = generateRoad(level.roughness);
     updateHud(s);
-    showToast(`⬆️ LVL ${s.level}: ${level.name}`);
+    this.openLevelCard(cleared);
+  }
+
+  private openLevelCard(cleared: LevelCardInfo['cleared']): void {
+    const s = this.state;
+    s.mode = 'levelCard';
+    this.cardShownAt = performance.now();
+    hideToast();
+    showLevelCard({ cleared, nextNumber: s.level, health: s.health, money: s.money }, () => this.go(true));
+  }
+
+  /** Leaves the level card and starts driving. Keys are ignored for a moment so Space-mashing doesn't skip it. */
+  go(clicked = false): void {
+    if (this.state.mode !== 'levelCard') return;
+    if (!clicked && performance.now() - this.cardShownAt < CARD_KEY_DELAY_MS) return;
+    hideScreens();
+    this.state.mode = 'playing';
   }
 
   // ── Player actions ─────────────────────────────────────────
   start(): void {
-    this.state = createState('playing');
+    this.state = createState();
     hideScreens();
     hidePanels();
     hideBanner();
-    hideToast();
     updateHud(this.state);
+    this.openLevelCard(null);
   }
 
+  /** Space / tap / jump button. On the level card it acts as GO. */
   jump(): void {
     const s = this.state;
-    if (s.mode === 'playing' && canJump(s.car)) jump(s.car);
+    if (s.mode === 'levelCard') this.go();
+    else if (s.mode === 'playing' && canJump(s.car)) jump(s.car);
   }
 
   // ── Road events ─────────────────────────────────────────────

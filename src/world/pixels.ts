@@ -119,7 +119,7 @@ export function drawText(
 function drawGlyphs(ctx: CanvasRenderingContext2D, text: string, left: number, top: number, key: ColourKey, scale: number): void {
   ctx.fillStyle = PALETTE[key];
   for (let i = 0; i < text.length; i++) {
-    const glyph = GLYPHS[text[i] as string] ?? GLYPHS['?'] ?? '';
+    const glyph = GLYPHS[text[i] as string] ?? ''; // characters the font lacks (e.g. emoji) are left blank
     const gx = left + i * 4 * scale;
     for (let d = 0; d < 15; d++) {
       if (glyph[d] === '1') ctx.fillRect(gx + (d % 3) * scale, top + Math.floor(d / 3) * scale, scale, scale);

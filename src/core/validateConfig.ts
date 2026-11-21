@@ -1,4 +1,3 @@
-import { LEVEL_LENGTH } from '../config/game';
 import { LEVELS } from '../config/levels';
 import { ROAD_EVENTS } from '../config/roadEvents';
 import * as SPRITES from '../config/sprites';
@@ -18,8 +17,9 @@ export function validateConfig(): string[] {
     const where = `levels.ts, level ${i + 1} ("${level.name}")`;
     if (level.potholes.length === 0) problems.push(`${where}: "potholes" list is empty.`);
     if (level.speed <= 0) problems.push(`${where}: speed must be above 0.`);
-    if (level.event && level.eventAt >= LEVEL_LENGTH)
-      problems.push(`${where}: eventAt (${level.eventAt}) must be less than LEVEL_LENGTH (${LEVEL_LENGTH}) or the event never shows.`);
+    if (level.seconds <= 0) problems.push(`${where}: seconds must be above 0.`);
+    if (level.event && (level.eventAt <= 0 || level.eventAt >= 1))
+      problems.push(`${where}: eventAt (${level.eventAt}) must be between 0 and 1 (e.g. 0.8 = 80% through the level).`);
   });
 
   for (const [id, event] of Object.entries(ROAD_EVENTS)) {

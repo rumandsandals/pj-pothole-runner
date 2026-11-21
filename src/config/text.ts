@@ -32,6 +32,12 @@ export const TEXT = {
     MACC: <b>1-800-88-6000</b> · Tribunal: <b>1-800-886-800</b><br>
     JPJ Parts: <b>1-800-88-5983</b> · BNM: <b>1-300-88-5465</b>`,
 
+  levelClearTitle: '🏁 LEVEL {n} CLEAR!',
+  levelFirstLabel: 'GET READY',
+  levelNextLabel: 'NEXT UP',
+  goButton: '▶ GO!',
+  goHint: 'or press SPACE / tap JUMP',
+
   towChoiceTitle: '🚨 CAR STUCK IN ABYSS POTHOLE!',
   towChoiceIntro: `
     Your car has sunk into a pothole so deep it can't escape.<br>

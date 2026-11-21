@@ -221,6 +221,18 @@ canvas { display: block; image-rendering: pixelated; }
 .score { font-size: 22px; color: var(--text); line-height: 1.4; margin-bottom: 14px; }
 .score b { color: var(--yellow); font-weight: normal; }
 .hotlines { font-size: 17px; color: var(--text-soft); line-height: 1.3; margin-bottom: 16px; }
+/* Level card */
+#lvlResult { width: 100%; }
+#lvlResult:not(:empty) { border-bottom: 3px dashed var(--grey); padding-bottom: 14px; margin-bottom: 16px; }
+.lvl-stats { font-size: 21px; color: var(--text); }
+.lvl-kicker { font: 9px var(--font-arcade); color: var(--text-soft); margin-bottom: 10px; animation: blink 1.2s steps(2) infinite; }
+.lvl-number { font: clamp(18px, 5vw, 28px) var(--font-arcade); color: var(--heading); text-shadow: 4px 4px 0 var(--heading-shadow); margin-bottom: 10px; }
+.lvl-title { font: 12px/1.6 var(--font-arcade); color: var(--white); margin-bottom: 12px; }
+.lvl-facts { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 18px; font-size: 20px; color: var(--yellow); margin-bottom: 18px; }
+.new-tag { font: 7px var(--font-arcade); background: var(--red); color: var(--white); padding: 3px 4px; margin-left: 4px; vertical-align: middle; }
+.btn.go { font-size: 14px; padding: 14px 40px; }
+.lvl-hint { font-size: 17px; color: var(--text-soft); margin-top: 8px; }
+
 .choices { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; width: 100%; }
 
 .btn {

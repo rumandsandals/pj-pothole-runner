@@ -25,9 +25,6 @@ export const PHYSICS = {
   jumpForce: -12, // more negative = higher jump
 };
 
-/** How far you drive in each level before the next one starts. */
-export const LEVEL_LENGTH = 900;
-
 export const MAX_HEALTH = 100;
 
 export const CAR = {

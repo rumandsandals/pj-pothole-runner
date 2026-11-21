@@ -63,5 +63,7 @@ export const THEME = {
 
   particles: { damage: '8' as C, stuck: 'a' as C, shadow: '0' as C },
 
+  levelBadge: { box: '1' as C, number: 'a' as C, name: '7' as C, timer: '7' as C, timerWarn: '8' as C, shadow: '0' as C },
+
   progress: { track: '0' as C, fill: 'a' as C, tick: '6' as C, text: '7' as C, textShadow: '0' as C },
 };
