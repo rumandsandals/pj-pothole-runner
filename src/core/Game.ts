@@ -1,6 +1,6 @@
 import { sound } from '../audio/sound';
 import { ACCIDENT_EVENTS, CRASH_TOW_OPTIONS } from '../config/accidents';
-import { ANIMATION, CAR, DRIVING, ECONOMY, JUICE, EFFECTS, TICKS_PER_SECOND, TOW, WORKSHOP } from '../config/game';
+import { ANIMATION, CAR, DRIVING, ECONOMY, GAME_OVER, JUICE, EFFECTS, TICKS_PER_SECOND, TOW, WORKSHOP } from '../config/game';
 import { LEVELS } from '../config/levels';
 import { tempoForLevel } from '../config/music';
 import { LIGHTS } from '../config/trafficLights';
@@ -361,7 +361,7 @@ export class Game {
     sound.play(type.damage >= 30 ? 'hitBig' : 'hit');
     flash(EFFECTS.hitFlashMs);
     updateHud(s);
-    if (s.health <= 0) this.die();
+    this.totalled();
   }
 
   // ── Traffic accidents ───────────────────────────────────────
@@ -396,10 +396,7 @@ export class Game {
     flash(serious ? EFFECTS.stuckFlashMs : EFFECTS.hitFlashMs);
     updateHud(s);
 
-    if (s.health <= 0) {
-      this.die();
-      return;
-    }
+    if (this.totalled()) return;
     if (serious) {
       // The car is wrecked: it stops, smokes, then the tow trucks arrive.
       car.trapped = true;
@@ -548,8 +545,25 @@ export class Game {
     sound.play(choice.tone === 'bad' ? 'bad' : choice.tone === 'good' ? 'good' : 'click');
     showToast(choice.message);
     hideScreens();
-    if (s.health <= 0) this.die();
-    else s.mode = 'playing';
+    if (!this.totalled()) s.mode = 'playing';
+  }
+
+  /**
+   * Out of HP? From GAME_OVER.fromLevel that's game over ("VEHICLE TOTALLED").
+   * On earlier levels you limp on with 1 HP instead. Returns true if the game ended.
+   */
+  private totalled(): boolean {
+    const s = this.state;
+    if (s.health > 0) return false;
+    if (s.level < GAME_OVER.fromLevel) {
+      s.health = 1;
+      updateHud(s);
+      addFloatingText(s.particles, s.car.x, s.car.y - 60, 'PHEW! 1 HP', THEME.particles.stuck, 60);
+      showToast(TEXT.limpingOn);
+      return false;
+    }
+    this.die();
+    return true;
   }
 
   // ── Tow trucks ──────────────────────────────────────────────

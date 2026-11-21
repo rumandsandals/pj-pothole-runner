@@ -64,6 +64,7 @@ export const TEXT = {
     one you called, and one you didn't. <b>Choose wisely!</b>`,
 
   deadTitle: '💥 VEHICLE TOTALLED',
+  limpingOn: '🛟 Battered, but still driving! From level 7 on, 0 HP means your car is totalled.',
   deadHotlines: `
     MBPJ: www.mbpj.gov.my · 03-7625 4688<br>
     MACC: 1-800-88-6000 · Tribunal: 1-800-886-800`,

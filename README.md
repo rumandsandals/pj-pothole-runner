@@ -47,6 +47,7 @@ Everything you're likely to change lives in **`src/config/`**. Edit a file, save
 | Menu and panel colours and fonts           | top of `src/style.css`      |
 | When phones switch to sideways / upright layout | `LAYOUT` in `src/config/game.ts` |
 | Juice: lean, jump stretch, landing squash and dip, money roll | `JUICE` in `src/config/game.ts` |
+| From which level 0 HP means game over ("VEHICLE TOTALLED") | `GAME_OVER` in `src/config/game.ts` |
 | Engine sound: volume, pitch, gear points | `ENGINE` in `src/config/sounds.ts` |
 | Pedestrians: how often people cross, how fast, dogs, strollers, give-way heat | `src/config/pedestrians.ts` |
 | Traffic lights and zebra crossings: where (per level) and how they behave | `trafficLights` / `crossings` in `levels.ts`; `LIGHTS` in `src/config/trafficLights.ts` |

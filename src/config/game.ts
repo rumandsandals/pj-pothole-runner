@@ -43,6 +43,11 @@ export const PHYSICS = {
 
 export const MAX_HEALTH = 100;
 
+/** "VEHICLE TOTALLED" (game over) can only happen from this level on. Before it, you limp on with 1 HP. */
+export const GAME_OVER = {
+  fromLevel: 7,
+};
+
 export const CAR = {
   x: 150, // where the car sits on screen (0 = left edge, 640 = right). Further right = more room to see traffic behind you
   width: 56, // collision size (the Mazda sprite is 60 wide)
