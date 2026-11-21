@@ -4,6 +4,13 @@ Dodge Petaling Jaya's potholes, survive dodgy tow trucks and Workshop Hell, and 
 
 ## Play it on your Mac
 
+**Just play:** double-click **`Play PJ Pothole Runner.html`** in this folder.
+After changing any settings, run `npm run play` in Terminal to rebuild that file.
+
+> Don't double-click `index.html` — it's the unbuilt source and shows a blank, dead page.
+
+**While editing (live updates):**
+
 1. Open **Terminal** in this folder.
 2. First time only: `npm install`
 3. Every time: `npm run dev`, then open the link it shows (usually http://localhost:5173).
