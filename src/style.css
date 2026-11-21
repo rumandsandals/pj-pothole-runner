@@ -500,12 +500,13 @@ body[data-lanes='1'] #laneDownBtn { opacity: 0.3 !important; pointer-events: non
 
 /* ── Title screen: logo on top, the live street in the middle, menu at the bottom ── */
 #ovMenu {
-  background: linear-gradient(rgba(11, 11, 20, 0.7), rgba(11, 11, 20, 0.05) 32%, rgba(11, 11, 20, 0.05) 52%, rgba(11, 11, 20, 0.9));
+  background: radial-gradient(ellipse at center, rgba(11, 11, 20, 0.55), rgba(11, 11, 20, 0.25) 70%);
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: flex-start; /* centred by the auto margins below, which never clip on short screens */
   align-items: center;
+  gap: 18px;
 }
-#ovMenu .logo { text-align: center; margin-top: 4vh; }
+#ovMenu .logo { text-align: center; margin: auto 0 0; }
 .logo-title {
   font: clamp(20px, 5.5vw, 44px) / 1.3 var(--font-arcade);
   color: var(--heading);
@@ -513,9 +514,9 @@ body[data-lanes='1'] #laneDownBtn { opacity: 0.3 !important; pointer-events: non
   letter-spacing: 2px;
 }
 .logo-sub { font-size: clamp(16px, 2.6vw, 24px); color: var(--white); text-shadow: 2px 2px 0 var(--black); margin-top: 8px; }
-#ovMenu .menu-card { margin: 0 auto 2vh; max-width: 560px; background: rgba(29, 43, 83, 0.92); }
+#ovMenu .menu-card { margin: 0 0 auto; max-width: 560px; background: rgba(29, 43, 83, 0.92); }
 .best { font: 9px var(--font-arcade); color: var(--yellow); margin-top: 10px; min-height: 9px; }
-body[data-layout='sideways'] #ovMenu .logo { margin-top: 1vh; }
+body[data-layout='sideways'] #ovMenu { gap: 6px; }
 body[data-layout='sideways'] .logo-title { font-size: 18px; }
 body[data-layout='sideways'] .logo-sub { font-size: 15px; margin-top: 2px; }
 body[data-layout='sideways'] #ovMenu .menu-card .intro { display: none; }
