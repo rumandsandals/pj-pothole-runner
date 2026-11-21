@@ -9,6 +9,7 @@ import { Viewport } from './core/Viewport';
 import { byId } from './ui/dom';
 import { fillStaticText, showScreen } from './ui/overlays';
 import { bindSoundControls } from './ui/soundControls';
+import { showMenuBest } from './ui/best';
 import { autoFullScreen, bindFullScreen } from './ui/fullscreen';
 
 const problems = validateConfig();
@@ -52,4 +53,5 @@ document.addEventListener('click', (e) => {
   else if (action === 'menu') game.showMenu();
 });
 
+showMenuBest();
 showScreen('menu');

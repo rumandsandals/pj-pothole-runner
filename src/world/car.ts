@@ -1,4 +1,4 @@
-import { ANIMATION, CAR, PHYSICS, ROAD } from '../config/game';
+import { ANIMATION, CAR, JUICE, PHYSICS, ROAD } from '../config/game';
 import { VEHICLE_ART, type VehicleArt } from '../config/sprites';
 import { THEME } from '../config/theme';
 import type { Car } from '../core/state';
@@ -92,6 +92,16 @@ export function rearWheelWorld(car: Car): { x: number; y: number } {
   return { x: car.x - box.width / 2 + (PLAYER_ART.wheelX[0] ?? 10), y: car.y + car.sinkY - 2 };
 }
 
+/** A soft oval shadow on the road (darker and smaller when `strength` is lower, e.g. high in the air). */
+export function groundShadow(ctx: CanvasRenderingContext2D, cx: number, y: number, halfWidth: number, strength = 1): void {
+  if (halfWidth < 2) return;
+  ctx.fillStyle = `rgba(11, 11, 20, ${0.28 * strength})`;
+  for (let row = -2; row <= 1; row++) {
+    const half = Math.round(halfWidth * Math.sqrt(1 - (row / 3) ** 2));
+    ctx.fillRect(Math.round(cx - half), Math.round(y + row), half * 2, 1);
+  }
+}
+
 /**
  * Draws any vehicle from its art (see VEHICLE_ART in sprites.ts): the body,
  * then the wheels on top. `bob` lifts/drops the body for suspension;
@@ -105,7 +115,9 @@ export function drawVehicleArt(
   frame: 0 | 1,
   bob = 0,
   wheelDrop = 0,
+  shadow = true,
 ): void {
+  if (shadow) groundShadow(ctx, box.left + box.width / 2, box.top + box.height, box.width / 2 + 2);
   drawSprite(ctx, art.body, box.left, box.top + bob, paint);
   const wheel = art.wheels[frame];
   const r = Math.floor(wheel.length / 2);
@@ -121,8 +133,6 @@ export function drawCar(ctx: CanvasRenderingContext2D, car: Car, time: number, r
   let bob = 0;
   if (car.trapped) {
     shiftX = Math.floor(time / 3) % 2 === 0 ? -2 : 2; // engine straining / wreck shuddering
-  } else if (car.squash > 0) {
-    bob = 2; // squashed after landing
   } else if (car.onGround && ANIMATION.roughRoadJiggle > 0 && roughness >= ANIMATION.roughRoadJiggle) {
     const period = Math.max(3, Math.round(12 - roughness * 3));
     bob = Math.floor(time / period) % 2; // suspension jiggling over a rough road
@@ -130,10 +140,10 @@ export function drawCar(ctx: CanvasRenderingContext2D, car: Car, time: number, r
   const wheelDrop = car.onGround ? 0 : 2; // wheels hang lower in the air
   const surface = toPx(laneY(car.lanePos));
 
-  // Shadow on the road while jumping
-  if (!car.onGround) {
-    const shrink = Math.min(Math.floor(car.hop / 8), 14);
-    fill(ctx, '0', box.left + 6 + shrink, surface, box.width - 12 - shrink * 2, 2);
+  // Soft shadow on the road: shrinks and fades as the car jumps higher
+  if (car.sinkY === 0) {
+    const height = Math.min(car.hop / 120, 1);
+    groundShadow(ctx, box.left + box.width / 2, surface + 1, (box.width / 2 + 2) * (1 - height * 0.5), 1 - height * 0.6);
   }
 
   // Sinking into an ABYSS: hide the part of the car below the road surface
@@ -145,7 +155,23 @@ export function drawCar(ctx: CanvasRenderingContext2D, car: Car, time: number, r
     ctx.clip();
   }
   const left = box.left + shiftX;
-  drawVehicleArt(ctx, PLAYER_ART, { ...box, left }, { X: THEME.car.body, Y: THEME.car.trim }, wheelFrame(roadOffset), bob, wheelDrop);
+
+  // Juice: lean into lane changes, stretch on the way up, squash on landing
+  const leanDir = Math.sign(car.lane - car.lanePos); // moving to a further lane (up the screen) or a nearer one
+  const rot = car.onGround && Math.abs(car.lane - car.lanePos) > 0.02 ? -leanDir * JUICE.lean : 0;
+  const rising = !car.onGround && car.vy < 0;
+  const squashing = car.squash > 0;
+  const sx = rising ? 1 - JUICE.stretch : squashing ? 1 + JUICE.squash : 1;
+  const sy = rising ? 1 + JUICE.stretch : squashing ? 1 - JUICE.squash : 1;
+  const cx = left + box.width / 2;
+  const bottom = box.top + box.height;
+  ctx.save();
+  ctx.translate(cx, bottom);
+  ctx.rotate(rot);
+  ctx.scale(sx, sy);
+  ctx.translate(-cx, -bottom);
+  drawVehicleArt(ctx, PLAYER_ART, { ...box, left }, { X: THEME.car.body, Y: THEME.car.trim }, wheelFrame(roadOffset), bob, wheelDrop, false);
+  ctx.restore();
   if (sinking) ctx.restore();
 
   if (!car.trapped && !sinking) {

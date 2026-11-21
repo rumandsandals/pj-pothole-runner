@@ -74,6 +74,9 @@
       <div id="rotateHint" data-text="rotateHint"></div>
     </main>
 
+    <!-- Pixel wipe between screens -->
+    <div id="wipe"></div>
+
     <!-- Sound buttons: always on top, even over menus -->
     <div id="soundControls">
       <button class="snd" id="sfxBtn" title="Sound effects on/off"></button>
@@ -83,13 +86,17 @@
 
     <!-- Pop-up screens -->
     <div class="ov" id="ovMenu">
-      <div class="ov-card">
-        <div class="tit" data-text="title"></div>
-        <div class="sub" data-text="tagline"></div>
+      <!-- Title screen: the logo at the top, the street showing through, buttons at the bottom -->
+      <div class="logo">
+        <div class="logo-title" data-text="title"></div>
+        <div class="logo-sub" data-text="tagline"></div>
+      </div>
+      <div class="ov-card menu-card">
         <div class="intro" data-text="menuIntro"></div>
         <div class="press-start" data-text="pressStart"></div>
         <button class="btn" data-action="start">▶ START DRIVING</button>
         <button class="btn sec" data-action="howto">? HOW TO PLAY</button>
+        <div class="best" id="menuBest"></div>
       </div>
     </div>
 

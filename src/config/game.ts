@@ -65,6 +65,19 @@ export const DRIVING = {
   carMoves: 45, // how far the car slides forward (gas) or back (brake) on screen
 };
 
+/**
+ * JUICE — little touches that make driving feel alive.
+ * Set any to 0 to switch it off.
+ */
+export const JUICE = {
+  lean: 0.06, // how far the car tilts when changing lane (radians)
+  stretch: 0.07, // how much the car stretches upward when jumping
+  squash: 0.1, // how much it squashes on landing
+  landingDip: 2, // camera dips this many pixels when you land
+  landingDipTicks: 8,
+  moneyRollSpeed: 0.18, // how fast the RM counter rolls to its new value (0–1)
+};
+
 export const FULL_SCREEN = {
   autoOnTouchDevices: true, // phones & tablets switch to full screen when you press START
 };

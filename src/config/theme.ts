@@ -28,6 +28,14 @@ export const PALETTE = {
   h: '#8e8e9a', // steel grey
   i: '#a8183f', // dark red
   j: '#3a5a8c', // tinted glass
+  // Bland, sun-faded PJ building colours (used for the everyday buildings, so landmarks stand out)
+  k: '#cfc6b2', // faded beige
+  l: '#a39b8b', // dull taupe
+  m: '#a8705a', // weathered roof tile
+  n: '#b9b8b0', // concrete grey
+  o: '#3e4652', // dark window
+  p: '#8f9c86', // faded sage
+  q: '#d9d4c7', // off-white
 } as const;
 
 export type ColourKey = keyof typeof PALETTE;

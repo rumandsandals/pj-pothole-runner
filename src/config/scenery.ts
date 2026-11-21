@@ -1,13 +1,18 @@
 /**
  * SCENERY
- * What you drive past on each level (set `scenery` in levels.ts).
- *   buildings — the row of buildings behind the road
- *   roadside  — what's right next to the road
+ * The everyday buildings and roadside for each level (set `scenery` in
+ * levels.ts). They're deliberately bland and sun-faded, like real PJ, so the
+ * colourful landmarks (landmarks.ts) stand out.
+ *   buildings — suburb (link houses, bungalows, shoplots),
+ *               city (70s–80s concrete blocks), outskirts (warehouses, flats),
+ *               soundWalls (highway walls)
+ *   roadside  — pjStreet (rain trees, hedges, drains, lamps, bus stop)
+ *               or highway (lamps, green signs, verge)
  * The pictures are drawn in src/world/scenery.ts.
  */
 
-export type BuildingsId = 'houses' | 'shophouses' | 'policeStation' | 'flats' | 'offices' | 'workshops' | 'soundWalls' | 'factories' | 'cityCentre';
-export type RoadsideId = 'trees' | 'palms' | 'lamps';
+export type BuildingsId = 'suburb' | 'city' | 'outskirts' | 'soundWalls';
+export type RoadsideId = 'pjStreet' | 'highway';
 
 export interface Scenery {
   buildings: BuildingsId;
@@ -15,15 +20,11 @@ export interface Scenery {
 }
 
 export const SCENERY = {
-  pjHouses: { buildings: 'houses', roadside: 'trees' },
-  ss2Shophouses: { buildings: 'shophouses', roadside: 'palms' },
-  policeHQ: { buildings: 'policeStation', roadside: 'palms' },
-  flats: { buildings: 'flats', roadside: 'trees' },
-  offices: { buildings: 'offices', roadside: 'palms' },
-  workshops: { buildings: 'workshops', roadside: 'trees' },
-  federalHighway: { buildings: 'soundWalls', roadside: 'lamps' },
-  industrial: { buildings: 'factories', roadside: 'lamps' },
-  cityCentre: { buildings: 'cityCentre', roadside: 'lamps' },
+  suburb: { buildings: 'suburb', roadside: 'pjStreet' },
+  city: { buildings: 'city', roadside: 'pjStreet' },
+  outskirts: { buildings: 'outskirts', roadside: 'pjStreet' },
+  highwayOutskirts: { buildings: 'outskirts', roadside: 'highway' },
+  highwayCity: { buildings: 'city', roadside: 'highway' },
 } satisfies Record<string, Scenery>;
 
 export type SceneryId = keyof typeof SCENERY;

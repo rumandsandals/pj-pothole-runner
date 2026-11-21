@@ -3,12 +3,13 @@ import { LEVELS } from '../config/levels';
 import { POTHOLES, type PotholeId } from '../config/potholes';
 import { TEXT } from '../config/text';
 import { TIMES, type TimeId } from '../config/timeOfDay';
+import type { LevelStats } from '../core/state';
 import { byId, formatRM, make } from './dom';
 import { showScreen } from './overlays';
 
 export interface LevelCardInfo {
   /** The level just finished, or null before level 1. */
-  cleared: { number: number; earned: number } | null;
+  cleared: { number: number; earned: number; stats: LevelStats; stars: number } | null;
   nextNumber: number;
   health: number;
   money: number;
@@ -38,14 +39,29 @@ export function showLevelCard(info: LevelCardInfo, onGo: () => void): void {
   const result = byId('lvlResult');
   result.replaceChildren();
   if (info.cleared) {
+    const { stats, stars } = info.cleared;
+    const starRow = make('div', 'stars');
+    for (let i = 0; i < 3; i++) {
+      const star = make('span', i < stars ? 'star on' : 'star', '★');
+      star.style.animationDelay = `${0.15 + i * 0.18}s`;
+      starRow.append(star);
+    }
+    const earned = make('span', 'roll', 'RM 0');
+    const money = make('div', 'lvl-stats');
+    money.append('Earned ', earned, ` · HP ${Math.round((info.health / MAX_HEALTH) * 100)}% · Total ${formatRM(info.money)}`);
+    const detail = [
+      stats.damage > 0 ? `−${stats.damage} HP` : 'No damage',
+      `${stats.potholes} pothole${stats.potholes === 1 ? '' : 's'}`,
+      `${stats.crashes} crash${stats.crashes === 1 ? '' : 'es'}`,
+      `${stats.stops} police stop${stats.stops === 1 ? '' : 's'}`,
+    ].join(' · ');
     result.append(
       make('div', 'tit', TEXT.levelClearTitle.replace('{n}', String(info.cleared.number))),
-      make(
-        'div',
-        'lvl-stats',
-        `Earned ${formatRM(Math.max(0, info.cleared.earned))} · HP ${Math.round((info.health / MAX_HEALTH) * 100)}% · Total ${formatRM(info.money)}`,
-      ),
+      starRow,
+      money,
+      make('div', 'lvl-detail', detail),
     );
+    rollNumber(earned, Math.max(0, info.cleared.earned));
   }
 
   byId('lvlKicker').textContent = info.cleared ? TEXT.levelNextLabel : TEXT.levelFirstLabel;
@@ -103,4 +119,16 @@ export function showLevelCard(info: LevelCardInfo, onGo: () => void): void {
   go.onclick = () => onGo();
   showScreen('level');
   go.focus({ preventScroll: true });
+}
+
+/** Counts a number up from 0 (e.g. money earned) for a little arcade flourish. */
+function rollNumber(el: HTMLElement, to: number): void {
+  const start = performance.now();
+  const ms = 700;
+  const tick = (now: number): void => {
+    const t = Math.min(1, (now - start) / ms);
+    el.textContent = formatRM(Math.round(to * (1 - (1 - t) ** 3)));
+    if (t < 1) requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
 }

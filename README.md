@@ -46,6 +46,7 @@ Everything you're likely to change lives in **`src/config/`**. Edit a file, save
 | Background music: notes, tempo, drums      | `src/config/music.ts`       |
 | Menu and panel colours and fonts           | top of `src/style.css`      |
 | When phones switch to sideways / upright layout | `LAYOUT` in `src/config/game.ts` |
+| Juice: lean, jump stretch, landing squash and dip, money roll | `JUICE` in `src/config/game.ts` |
 | Where the car sits on screen               | `CAR.x` in `src/config/game.ts` |
 | Number of lanes (1, 2 or 3) and highway look per level | `lanes` and `highway` in `src/config/levels.ts` |
 | Lane width (the road grows with more lanes) and where vehicles sit | `ROAD` in `src/config/game.ts` |

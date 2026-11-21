@@ -4,10 +4,14 @@ import { THEME, type ColourKey } from '../config/theme';
 import { drawSprite, drawText, fill, makeCanvas, seededRandom } from './pixels';
 
 /**
- * The scenery strips you drive past. Each strip is two pictures:
+ * The everyday scenery you drive past: deliberately bland, sun-faded
+ * PJ buildings (so the colourful landmarks stand out), and the roadside
+ * that gives Petaling Jaya its look — big umbrella rain trees, trimmed
+ * hedges with bougainvillea, concrete monsoon drains, lamps and bus stops.
+ *
+ * Each strip is two pictures:
  *   image  — what you see in daylight
- *   lights — only the things that glow at dusk (windows, signs, lamps),
- *            drawn on top after the scene is darkened
+ *   lights — only what glows at dusk (windows, lamps), drawn on top
  * Strips repeat side by side as the road scrolls.
  */
 
@@ -16,184 +20,171 @@ export interface Strip {
   lights: HTMLCanvasElement;
 }
 
-type Draw = (ctx: CanvasRenderingContext2D, glow: CanvasRenderingContext2D, w: number, h: number, random: () => number) => void;
+type G = CanvasRenderingContext2D;
+type Draw = (ctx: G, glow: G, w: number, h: number, random: () => number) => void;
 
 const WIDTH = 720;
 const pickFrom = <T,>(list: T[], random: () => number): T => list[Math.floor(random() * list.length)] as T;
 
-/** A lit window: drawn normally by day, and into the lights layer if it's lit at dusk. */
-function windowAt(ctx: CanvasRenderingContext2D, glow: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, random: () => number, lit = 0.6): void {
-  fill(ctx, '1', x, y, w, h);
+/** Bland PJ wall colours: faded beige, off-white, concrete, taupe, sage. */
+const WALLS: ColourKey[] = ['k', 'q', 'n', 'k', 'l', 'p', 'q'];
+
+/** A window: dark by day, sometimes lit at dusk. */
+function windowAt(ctx: G, glow: G, x: number, y: number, w: number, h: number, random: () => number, lit = 0.55): void {
+  fill(ctx, 'o', x, y, w, h);
   if (random() < lit) fill(glow, random() < 0.8 ? 'a' : 'f', x, y, w, h);
+}
+
+/** A hipped tiled roof (wider at the bottom). */
+function hipRoof(ctx: G, x: number, bottom: number, w: number, rise: number, colour: ColourKey): void {
+  for (let r = 0; r < rise; r++) {
+    const inset = Math.round(((rise - r) / rise) * (w * 0.32));
+    fill(ctx, colour, x - 2 + inset, bottom - rise + r, w + 4 - inset * 2, 1);
+  }
+  fill(ctx, '5', x - 2, bottom, w + 4, 1);
 }
 
 // ── Buildings ────────────────────────────────────────────────
 const BUILDINGS: Record<BuildingsId, { height: number; draw: Draw }> = {
-  /** PJ terrace houses: pastel walls, terracotta roofs, gates and porches. */
-  houses: {
-    height: 54,
+  /**
+   * SUBURB: rows of double-storey link houses with hipped tile roofs,
+   * the odd bungalow, and short rows of 2–3 storey shoplots.
+   */
+  suburb: {
+    height: 62,
     draw: (ctx, glow, w, h, random) => {
-      const walls: ColourKey[] = ['f', '7', 'e', '6', 'b'];
       let x = 0;
       while (x < w) {
-        const unit = 36;
-        const wall = pickFrom(walls, random);
-        const top = h - 40;
-        // pitched roof
-        for (let r = 0; r < 10; r++) fill(ctx, r < 2 ? '4' : '9', x + 5 - Math.floor(r / 2), top - 10 + r, unit - 10 + r, 1);
-        fill(ctx, '0', x, top, unit, 40);
-        fill(ctx, wall, x + 1, top + 1, unit - 2, 39);
-        windowAt(ctx, glow, x + 5, top + 6, 9, 8, random);
-        windowAt(ctx, glow, x + 21, top + 6, 9, 8, random);
-        fill(ctx, '4', x + 22, top + 22, 8, 18); // door
-        windowAt(ctx, glow, x + 5, top + 22, 12, 8, random, 0.4);
-        // front gate
-        for (let gx = x; gx < x + unit; gx += 3) fill(ctx, '0', gx, h - 10, 1, 10);
-        fill(ctx, '0', x, h - 10, unit, 1);
-        x += unit;
-      }
-    },
-  },
-
-  /** Two-storey shophouses with signboards and awnings. */
-  shophouses: {
-    height: 64,
-    draw: (ctx, glow, w, h, random) => {
-      const walls: ColourKey[] = ['f', 'e', '9', '6', 'c', 'b'];
-      const signs: ColourKey[] = ['8', '1', '3', '2', 'a'];
-      let x = 0;
-      while (x < w) {
-        const blocks = 3 + Math.floor(random() * 4);
-        const bh = 46 + Math.floor(random() * 14);
-        const top = h - bh;
-        for (let b = 0; b < blocks && x < w; b++) {
-          const unit = 28;
-          const wall = pickFrom(walls, random);
-          fill(ctx, '0', x, top - 1, unit, bh + 1);
-          fill(ctx, wall, x + 1, top, unit - 2, bh);
-          fill(ctx, '5', x + 1, top, unit - 2, 2);
-          for (const wx of [x + 4, x + 16]) {
-            windowAt(ctx, glow, wx, top + 6, 8, 10, random);
-            fill(ctx, '6', wx + 3, top + 6, 1, 10);
+        const kind = random();
+        if (kind < 0.6) {
+          // a terrace of link houses
+          const units = 3 + Math.floor(random() * 4);
+          for (let u = 0; u < units && x < w; u++) {
+            const unit = 30;
+            const top = h - 30;
+            hipRoof(ctx, x, top, unit, 9, random() < 0.7 ? 'm' : 'l');
+            fill(ctx, '5', x, top, unit, 30);
+            fill(ctx, pickFrom(WALLS, random), x + 1, top + 1, unit - 2, 29);
+            windowAt(ctx, glow, x + 4, top + 5, 8, 6, random);
+            windowAt(ctx, glow, x + 17, top + 5, 8, 6, random);
+            fill(ctx, 'l', x + 1, top + 14, unit - 2, 1); // first-floor ledge
+            fill(ctx, 'o', x + 18, top + 18, 7, 12); // door
+            windowAt(ctx, glow, x + 4, top + 18, 10, 6, random, 0.4);
+            fill(ctx, 'n', x + 1, h - 7, unit - 2, 2); // car porch slab
+            for (let gx = x; gx < x + unit; gx += 3) fill(ctx, '5', gx, h - 5, 1, 5); // gate
+            x += unit;
           }
-          const sign = pickFrom(signs, random);
-          fill(ctx, sign, x + 2, top + 20, unit - 4, 6);
-          fill(ctx, '7', x + 5, top + 22, unit - 10, 1);
-          if (random() < 0.7) fill(glow, sign === '1' ? 'c' : sign, x + 2, top + 20, unit - 4, 6); // lit signboard
-          fill(ctx, '4', x, top + 27, unit, 3);
-          fill(ctx, '2', x + 1, top + 30, unit - 2, bh - 30);
-          fill(ctx, '1', x + 6, top + 33, unit - 12, bh - 33);
-          if (random() < 0.5) fill(glow, 'f', x + 6, top + 33, unit - 12, bh - 33); // shop still open
-          fill(ctx, wall, x + 1, top + 30, 2, bh - 30);
-          fill(ctx, wall, x + unit - 3, top + 30, 2, bh - 30);
-          x += unit;
-        }
-        x += 10 + Math.floor(random() * 30);
-      }
-    },
-  },
-
-  /** Shophouses with a police station (balai polis) every so often. */
-  policeStation: {
-    height: 64,
-    draw: (ctx, glow, w, h, random) => {
-      BUILDINGS.shophouses.draw(ctx, glow, w, h, random);
-      for (let x = 120; x < w - 100; x += 360) {
-        const top = h - 58;
-        fill(ctx, '0', x - 1, top - 1, 98, 59);
-        fill(ctx, '7', x, top, 96, 58);
-        fill(ctx, '1', x, top + 18, 96, 8); // navy band
-        drawText(ctx, 'POLIS', x + 48, top + 20, '7', { align: 'center', scale: 0.5 });
-        fill(glow, 'c', x, top + 18, 96, 8);
-        drawText(glow, 'POLIS', x + 48, top + 20, '7', { align: 'center', scale: 0.5 });
-        for (let wx = x + 6; wx < x + 90; wx += 14) {
-          windowAt(ctx, glow, wx, top + 5, 9, 9, random, 0.7);
-          windowAt(ctx, glow, wx, top + 32, 9, 9, random, 0.5);
-        }
-        fill(ctx, '1', x + 40, top + 44, 16, 14); // doors
-        // flagpole with a striped flag
-        fill(ctx, '6', x + 100, top - 20, 1, 78);
-        for (let s = 0; s < 6; s++) fill(ctx, s % 2 ? '7' : '8', x + 101, top - 20 + s * 2, 14, 2);
-        fill(ctx, '1', x + 101, top - 20, 6, 6);
-        fill(ctx, 'a', x + 103, top - 18, 2, 2);
-      }
-    },
-  },
-
-  /** Low-cost flats: tall blocks with corridors, laundry and lots of windows. */
-  flats: {
-    height: 100,
-    draw: (ctx, glow, w, h, random) => {
-      let x = 0;
-      while (x < w) {
-        const bw = 60 + Math.floor(random() * 24);
-        const bh = 70 + Math.floor(random() * 30);
-        const top = h - bh;
-        const wall = pickFrom<ColourKey>(['f', '6', 'e', '9'], random);
-        fill(ctx, '0', x, top - 1, bw, bh + 1);
-        fill(ctx, wall, x + 1, top, bw - 2, bh);
-        for (let fy = top + 6; fy < h - 6; fy += 9) {
-          fill(ctx, '5', x + 1, fy + 6, bw - 2, 1); // corridor rail
-          for (let wx = x + 4; wx < x + bw - 6; wx += 7) windowAt(ctx, glow, wx, fy, 4, 5, random, 0.55);
-          if (random() < 0.4) fill(ctx, pickFrom<ColourKey>(['8', 'c', 'a', 'b', '7'], random), x + 6 + Math.floor(random() * (bw - 16)), fy + 3, 6, 2); // laundry
-        }
-        x += bw + 6 + Math.floor(random() * 20);
-      }
-    },
-  },
-
-  /** Glass office towers (Insurance Row). */
-  offices: {
-    height: 130,
-    draw: (ctx, glow, w, h, random) => {
-      let x = 0;
-      while (x < w) {
-        const bw = 40 + Math.floor(random() * 36);
-        const bh = 70 + Math.floor(random() * 60);
-        const top = h - bh;
-        const glass = pickFrom<ColourKey>(['j', 'c', 'd', '1'], random);
-        fill(ctx, '0', x, top - 1, bw, bh + 1);
-        fill(ctx, glass, x + 1, top, bw - 2, bh);
-        for (let fy = top + 4; fy < h - 2; fy += 5) fill(ctx, '6', x + 1, fy, bw - 2, 1); // floor lines
-        for (let fx = x + 6; fx < x + bw - 2; fx += 8) fill(ctx, glass === '1' ? 'j' : '1', fx, top, 1, bh); // mullions
-        fill(ctx, '7', x + 3, top + 3, 2, Math.floor(bh / 2)); // reflection
-        for (let fy = top + 5; fy < h - 2; fy += 5)
-          for (let fx = x + 2; fx < x + bw - 4; fx += 8) if (random() < 0.45) fill(glow, 'f', fx, fy, 5, 3);
-        if (random() < 0.5) fill(ctx, '8', x + Math.floor(bw / 2) - 1, top - 6, 2, 6); // antenna
-        fill(glow, '8', x + Math.floor(bw / 2) - 1, top - 6, 2, 2);
-        x += bw + 4 + Math.floor(random() * 14);
-      }
-    },
-  },
-
-  /** Workshops: zinc roofs, roller shutters, BENGKEL signs and tyre stacks. */
-  workshops: {
-    height: 52,
-    draw: (ctx, glow, w, h, random) => {
-      let x = 0;
-      while (x < w) {
-        const bw = 70 + Math.floor(random() * 30);
-        const top = h - 40;
-        for (let r = 0; r < 8; r++) fill(ctx, r % 2 ? 'h' : '6', x - 2, top - 8 + r, bw + 4, 1); // zinc roof
-        fill(ctx, '0', x, top, bw, 40);
-        fill(ctx, pickFrom<ColourKey>(['f', '9', '6', 'b'], random), x + 1, top + 1, bw - 2, 39);
-        const sign = pickFrom<ColourKey>(['8', '1', 'a', '3'], random);
-        fill(ctx, sign, x + 6, top + 3, bw - 12, 9);
-        drawText(ctx, 'BENGKEL', x + bw / 2, top + 5, sign === 'a' ? '0' : '7', { align: 'center', scale: 0.5 });
-        fill(glow, sign === '1' ? 'c' : sign, x + 6, top + 3, bw - 12, 9);
-        drawText(glow, 'BENGKEL', x + bw / 2, top + 5, sign === 'a' ? '0' : '7', { align: 'center', scale: 0.5 });
-        // roller shutters, one half-open with a lit inside
-        for (let sx = x + 6; sx < x + bw - 22; sx += 24) {
-          fill(ctx, '5', sx, top + 16, 20, 24);
-          for (let ly = top + 17; ly < top + 40; ly += 2) fill(ctx, 'h', sx, ly, 20, 1);
-          if (random() < 0.5) {
-            fill(ctx, '0', sx, top + 28, 20, 12);
-            fill(glow, 'a', sx, top + 28, 20, 12);
+        } else if (kind < 0.8) {
+          // bungalow on a bigger plot
+          const bw = 48;
+          const top = h - 22;
+          hipRoof(ctx, x + 6, top, bw - 12, 11, 'm');
+          fill(ctx, '5', x + 6, top, bw - 12, 22);
+          fill(ctx, pickFrom(WALLS, random), x + 7, top + 1, bw - 14, 21);
+          windowAt(ctx, glow, x + 11, top + 6, 8, 7, random);
+          windowAt(ctx, glow, x + 27, top + 6, 8, 7, random);
+          fill(ctx, '5', x, h - 6, bw, 1); // fence
+          for (let gx = x; gx < x + bw; gx += 4) fill(ctx, '5', gx, h - 6, 1, 6);
+          x += bw;
+        } else {
+          // short row of shoplots
+          const units = 3 + Math.floor(random() * 3);
+          const floors = 2 + Math.floor(random() * 2);
+          const top = h - floors * 16 - 4;
+          for (let u = 0; u < units && x < w; u++) {
+            const unit = 26;
+            fill(ctx, '5', x, top, unit, h - top);
+            fill(ctx, pickFrom(WALLS, random), x + 1, top + 1, unit - 2, h - top - 1);
+            for (let f = 0; f < floors - 1; f++) {
+              windowAt(ctx, glow, x + 4, top + 4 + f * 16, 18, 7, random);
+              fill(ctx, 'l', x + 1, top + 13 + f * 16, unit - 2, 1);
+            }
+            fill(ctx, 'n', x + 1, h - 18, unit - 2, 3); // faded signboard
+            fill(ctx, 'l', x, h - 15, unit, 2); // five-foot-way awning
+            fill(ctx, 'o', x + 4, h - 13, unit - 8, 13); // shop front
+            if (random() < 0.5) fill(glow, 'f', x + 4, h - 13, unit - 8, 13);
+            x += unit;
           }
         }
-        // tyre stack
-        for (let t = 0; t < 4; t++) fill(ctx, '0', x + bw - 12, h - 4 - t * 4, 9, 3);
-        x += bw + 12 + Math.floor(random() * 24);
+        x += 6 + Math.floor(random() * 18);
+      }
+    },
+  },
+
+  /**
+   * CITY: 1970s–80s concrete office and apartment blocks — flat roofs,
+   * horizontal window bands, water tanks and stained, faded walls.
+   */
+  city: {
+    height: 120,
+    draw: (ctx, glow, w, h, random) => {
+      let x = 0;
+      while (x < w) {
+        const bw = 44 + Math.floor(random() * 40);
+        const floors = 6 + Math.floor(random() * 12);
+        const top = h - floors * 6 - 6;
+        const wall = pickFrom(WALLS, random);
+        fill(ctx, '5', x, top - 1, bw, h - top + 1);
+        fill(ctx, wall, x + 1, top, bw - 2, h - top);
+        const banded = random() < 0.6;
+        for (let f = 0; f < floors; f++) {
+          const y = top + 3 + f * 6;
+          if (banded) {
+            fill(ctx, 'o', x + 3, y, bw - 6, 3); // ribbon windows
+            for (let gx = x + 3; gx < x + bw - 4; gx += 5) if (random() < 0.4) fill(glow, 'f', gx, y, 4, 3);
+          } else {
+            for (let gx = x + 3; gx < x + bw - 5; gx += 6) windowAt(ctx, glow, gx, y, 3, 3, random, 0.45);
+          }
+        }
+        // rain stains and a rooftop water tank
+        for (let s = 0; s < 3; s++) fill(ctx, 'l', x + 4 + Math.floor(random() * (bw - 8)), top + 2, 1, 6 + Math.floor(random() * 16));
+        fill(ctx, 'n', x + Math.floor(bw / 2) - 5, top - 6, 10, 5);
+        fill(ctx, '5', x + Math.floor(bw / 2) - 5, top - 6, 10, 1);
+        x += bw + 3 + Math.floor(random() * 10);
+      }
+    },
+  },
+
+  /**
+   * OUTSKIRTS: industrial PJ — grey warehouses with zinc roofs, factory
+   * blocks, a few low-cost flats behind.
+   */
+  outskirts: {
+    height: 80,
+    draw: (ctx, glow, w, h, random) => {
+      let x = 0;
+      while (x < w) {
+        if (random() < 0.25) {
+          // low-cost flats behind
+          const bw = 56;
+          const top = h - 70;
+          fill(ctx, '5', x, top - 1, bw, h - top + 1);
+          fill(ctx, pickFrom<ColourKey>(['k', 'q', 'n'], random), x + 1, top, bw - 2, h - top);
+          for (let y = top + 4; y < h - 4; y += 8) {
+            fill(ctx, 'l', x + 1, y + 5, bw - 2, 1);
+            for (let gx = x + 3; gx < x + bw - 4; gx += 6) windowAt(ctx, glow, gx, y, 3, 4, random, 0.5);
+          }
+          x += bw + 8;
+          continue;
+        }
+        // warehouse / factory
+        const bw = 80 + Math.floor(random() * 50);
+        const top = h - 34;
+        for (let r = 0; r < 7; r++) fill(ctx, r % 2 ? 'h' : 'n', x - 2, top - 7 + r, bw + 4, 1); // zinc roof
+        fill(ctx, '5', x, top, bw, 34);
+        fill(ctx, pickFrom<ColourKey>(['n', 'k', 'l'], random), x + 1, top + 1, bw - 2, 33);
+        for (let sx = x + 6; sx < x + bw - 22; sx += 26) {
+          fill(ctx, 'h', sx, top + 12, 20, 22); // roller shutters
+          for (let ly = top + 13; ly < h; ly += 2) fill(ctx, 'l', sx, ly, 20, 1);
+        }
+        for (let wx = x + 4; wx < x + bw - 8; wx += 10) windowAt(ctx, glow, wx, top + 4, 6, 3, random, 0.3);
+        if (random() < 0.4) {
+          const cx = x + bw - 14;
+          fill(ctx, 'l', cx, h - 64, 6, 30); // chimney
+          fill(ctx, 'n', cx - 4, h - 72, 10, 5); // smoke
+          fill(ctx, 'n', cx - 10, h - 78, 12, 5);
+        }
+        x += bw + 8 + Math.floor(random() * 20);
       }
     },
   },
@@ -211,61 +202,10 @@ const BUILDINGS: Record<BuildingsId, { height: number; draw: Draw }> = {
       }
     },
   },
-
-  /** Factories: warehouses with saw-tooth roofs, chimneys and smoke. */
-  factories: {
-    height: 96,
-    draw: (ctx, glow, w, h, random) => {
-      let x = 0;
-      while (x < w) {
-        const bw = 90 + Math.floor(random() * 40);
-        const top = h - 44;
-        fill(ctx, '0', x, top - 1, bw, 45);
-        fill(ctx, pickFrom<ColourKey>(['6', 'h', 'f'], random), x + 1, top, bw - 2, 44);
-        for (let rx = x; rx < x + bw - 12; rx += 14) {
-          for (let r = 0; r < 10; r++) fill(ctx, 'h', rx + r, top - 10 + r, 14 - r, 1); // saw-tooth roof
-          fill(ctx, 'j', rx + 10, top - 6, 3, 6);
-        }
-        for (let wx = x + 6; wx < x + bw - 10; wx += 12) windowAt(ctx, glow, wx, top + 10, 8, 5, random, 0.5);
-        fill(ctx, '5', x + 10, h - 16, 24, 16); // loading bay
-        // chimney with stripes and smoke
-        const cx = x + bw - 24;
-        fill(ctx, '0', cx - 1, h - 94, 10, 50);
-        for (let s = 0; s < 5; s++) fill(ctx, s % 2 ? '7' : '8', cx, h - 93 + s * 10, 8, 10);
-        fill(glow, '8', cx + 3, h - 96, 2, 2); // aircraft warning light
-        for (let p = 0; p < 4; p++) fill(ctx, '6', cx - 6 - p * 7, h - 104 - p * 3, 8 + p * 2, 6);
-        x += bw + 10 + Math.floor(random() * 30);
-      }
-    },
-  },
-
-  /** City centre: dense, tall towers with crowns and lots of lights. */
-  cityCentre: {
-    height: 150,
-    draw: (ctx, glow, w, h, random) => {
-      let x = 0;
-      while (x < w) {
-        const bw = 30 + Math.floor(random() * 30);
-        const bh = 90 + Math.floor(random() * 60);
-        const top = h - bh;
-        const wall = pickFrom<ColourKey>(['j', 'd', '6', 'c', 'h'], random);
-        fill(ctx, '0', x, top - 1, bw, bh + 1);
-        fill(ctx, wall, x + 1, top, bw - 2, bh);
-        if (random() < 0.5) fill(ctx, wall, x + 5, top - 8, bw - 10, 8); // stepped crown
-        if (random() < 0.4) fill(ctx, '6', x + Math.floor(bw / 2), top - 24, 1, 16); // spire
-        for (let fy = top + 4; fy < h - 3; fy += 6)
-          for (let fx = x + 3; fx < x + bw - 4; fx += 5) {
-            fill(ctx, '1', fx, fy, 3, 3);
-            if (random() < 0.55) fill(glow, random() < 0.85 ? 'a' : 'c', fx, fy, 3, 3);
-          }
-        x += bw + 2 + Math.floor(random() * 6);
-      }
-    },
-  },
 };
 
 // ── Roadside ─────────────────────────────────────────────────
-function lampPost(ctx: CanvasRenderingContext2D, glow: CanvasRenderingContext2D, x: number, h: number): void {
+function lampPost(ctx: G, glow: G, x: number, h: number): void {
   const { pole, light } = THEME.highway.lamp;
   fill(ctx, pole, x, 8, 3, h - 8);
   fill(ctx, pole, x, 8, 18, 2);
@@ -274,54 +214,72 @@ function lampPost(ctx: CanvasRenderingContext2D, glow: CanvasRenderingContext2D,
   fill(glow, 'a', x + 13, 10, 8, 3);
 }
 
-function hedge(ctx: CanvasRenderingContext2D, w: number, h: number, random: () => number): void {
-  const { dark, light } = THEME.bushes;
-  for (let bx = 0; bx < w; bx += 8) {
-    const bh = 5 + Math.floor(random() * 5);
-    fill(ctx, dark, bx, h - bh, 8, bh);
-    fill(ctx, light, bx + 2, h - bh, 3, 1);
-    fill(ctx, light, bx + 1, h - bh + 1, 1, 1);
-    fill(ctx, '0', bx, h - 1, 8, 1);
+/** A big PJ rain tree / angsana: tall trunk, wide spreading umbrella canopy. */
+function rainTree(ctx: G, x: number, h: number, size: number, random: () => number): void {
+  const trunkTop = h - 40 - size;
+  fill(ctx, '4', x - 2, trunkTop, 4, h - trunkTop - 8); // trunk
+  // spreading branches
+  for (let i = 0; i < 12; i++) {
+    fill(ctx, '4', x - 2 - i, trunkTop + 6 - Math.floor(i / 2), 2, 1);
+    fill(ctx, '4', x + 1 + i, trunkTop + 5 - Math.floor(i / 2), 2, 1);
   }
+  // canopy: a wide, flat-bottomed umbrella with a ragged top
+  const wide = 40 + size * 2;
+  const tall = 20 + Math.floor(size / 2);
+  const base = trunkTop + 2;
+  for (let row = 0; row < tall; row++) {
+    const t = row / tall; // 0 = bottom, 1 = top
+    const half = Math.round(wide * Math.sqrt(Math.max(0, 1 - t * t)) * (0.85 + random() * 0.15));
+    fill(ctx, t > 0.55 ? 'b' : '3', x - half, base - row, half * 2, 1);
+  }
+  // clumps of lighter leaves and shadow underneath
+  for (let i = 0; i < 18; i++) fill(ctx, 'b', x - wide + 6 + Math.floor(random() * (wide * 2 - 12)), base - tall + 4 + Math.floor(random() * (tall - 6)), 3, 2);
+  fill(ctx, '3', x - wide + 4, base, wide * 2 - 8, 2);
+}
+
+/** Trimmed roadside hedge with pink bougainvillea, over a concrete monsoon drain. */
+function hedgeAndDrain(ctx: G, w: number, h: number, random: () => number): void {
+  const { dark, light } = THEME.bushes;
+  fill(ctx, 'n', 0, h - 5, w, 5); // monsoon drain wall
+  fill(ctx, '5', 0, h - 3, w, 1);
+  fill(ctx, dark, 0, h - 16, w, 11); // trimmed hedge, flat-topped
+  fill(ctx, light, 0, h - 16, w, 2);
+  for (let x = 0; x < w; x += 3) if (random() < 0.45) fill(ctx, light, x, h - 14 + Math.floor(random() * 8), 1, 1);
+  for (let x = 0; x < w; x += 2) if (random() < 0.2) fill(ctx, 'e', x, h - 16 + Math.floor(random() * 6), 2, 2); // bougainvillea
+  for (let x = 0; x < w; x += 24) fill(ctx, '5', x, h - 5, 1, 5); // drain joints
+}
+
+/** A simple PJ bus stop shelter. */
+function busStop(ctx: G, glow: G, x: number, h: number): void {
+  fill(ctx, '0', x, h - 24, 34, 3);
+  fill(ctx, '1', x + 1, h - 23, 32, 2);
+  fill(ctx, '6', x + 2, h - 21, 2, 17);
+  fill(ctx, '6', x + 30, h - 21, 2, 17);
+  fill(ctx, 'n', x + 4, h - 10, 26, 2); // bench
+  fill(ctx, 'c', x + 6, h - 20, 22, 6); // route map board
+  fill(glow, 'f', x + 6, h - 20, 22, 6);
 }
 
 const ROADSIDE: Record<RoadsideId, { height: number; width: number; draw: Draw }> = {
-  /** Big round rain trees, a hedge and the odd street lamp. */
-  trees: {
-    height: 60,
-    width: 760,
+  /** The classic PJ road edge: rain trees, hedge, drain, lamps and a bus stop. */
+  pjStreet: {
+    height: 96,
+    width: 840,
     draw: (ctx, glow, w, h, random) => {
-      for (let x = 30; x < w - 40; x += 110 + Math.floor(random() * 90)) {
-        fill(ctx, '4', x + 14, h - 26, 4, 26);
-        for (const [dx, dy, r] of [[16, h - 34, 15], [6, h - 30, 10], [27, h - 30, 11], [16, h - 44, 10]] as const) {
-          for (let yy = -r; yy <= r; yy++) {
-            const half = Math.round(Math.sqrt(r * r - yy * yy));
-            fill(ctx, yy < -r / 3 ? 'b' : '3', x + dx - half, dy + yy, half * 2, 1);
-          }
-        }
-      }
-      for (let x = 90; x < w; x += 250) lampPost(ctx, glow, x, h);
-      hedge(ctx, w, h, random);
+      for (let x = 50; x < w - 50; x += 120 + Math.floor(random() * 60)) rainTree(ctx, x, h, Math.floor(random() * 10), random);
+      for (let x = 70; x < w; x += 200) lampPost(ctx, glow, x, h);
+      busStop(ctx, glow, 440, h - 4);
+      hedgeAndDrain(ctx, w, h, random);
     },
   },
 
-  /** Palm trees, a hedge and street lamps. */
-  palms: {
-    height: 52,
-    width: 760,
-    draw: (ctx, glow, w, h, random) => {
-      for (let x = 10; x < w - 30; x += 80 + Math.floor(random() * 130)) drawSprite(ctx, PALM, x, h - PALM.length);
-      for (let x = 60; x < w; x += 260) lampPost(ctx, glow, x, h);
-      hedge(ctx, w, h, random);
-    },
-  },
-
-  /** Highway: lamp posts, green direction signs, a few palms. */
-  lamps: {
-    height: 70,
+  /** Highway verge: lamp posts, green direction signs, rain trees and a few palms. */
+  highway: {
+    height: 84,
     width: 900,
-    draw: (ctx, glow, w, h) => {
+    draw: (ctx, glow, w, h, random) => {
       const sign = THEME.highway.sign;
+      for (const x of [60, 380, 720]) rainTree(ctx, x, h, 4, random);
       for (let x = 40; x < w; x += 150) lampPost(ctx, glow, x, h);
       ['PJ 3 KM', 'KL 12 KM', 'SUBANG 8', 'SHAH ALAM'].forEach((text, i) => {
         const x = 100 + i * 220;
@@ -332,9 +290,11 @@ const ROADSIDE: Record<RoadsideId, { height: number; width: number; draw: Draw }
         fill(ctx, sign.text, x + 2, 10, 74, 1);
         fill(ctx, sign.text, x + 2, 29, 74, 1);
         drawText(ctx, text, x + 39, 15, sign.text, { align: 'center' });
-        drawText(glow, text, x + 39, 15, sign.text, { align: 'center' }); // reflective lettering
+        drawText(glow, text, x + 39, 15, sign.text, { align: 'center' });
       });
-      for (const x of [10, 330, 610, 820]) drawSprite(ctx, PALM, x, h - PALM.length);
+      for (const x of [230, 820]) drawSprite(ctx, PALM, x, h - PALM.length);
+      fill(ctx, THEME.bushes.dark, 0, h - 6, w, 6); // grass verge
+      fill(ctx, THEME.bushes.light, 0, h - 6, w, 1);
     },
   },
 };

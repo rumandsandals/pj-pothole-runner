@@ -124,6 +124,8 @@ export interface GameState {
   police: { x: number; waited: number } | null; // the police car pulling you over
   policeCooldown: number; // ticks before another stop can happen
   jumpedOver: boolean; // already counted a vehicle jumped over during this jump
+  dip: number; // ticks of landing camera-dip left
+  levelStats: LevelStats; // how this level is going (for the stars on the level card)
   times: TimeId[]; // time of day for each level (shuffled every game)
   workshop: { bill: number; step: number; log: WorkshopLogEntry[] };
 }
@@ -189,9 +191,25 @@ export function createState(mode: Mode = 'menu'): GameState {
     police: null,
     policeCooldown: 0,
     jumpedOver: false,
+    dip: 0,
+    levelStats: freshLevelStats(),
     times: shuffleTimes(),
     workshop: { bill: WORKSHOP.startingBill, step: 0, log: [] },
   };
+}
+
+export interface LevelStats {
+  damage: number; // HP lost this level
+  crashes: number;
+  stops: number; // police stops
+  potholes: number; // potholes hit
+}
+
+export const freshLevelStats = (): LevelStats => ({ damage: 0, crashes: 0, stops: 0, potholes: 0 });
+
+/** 3 stars = no damage and no trouble with the law; 2 = one of those; 1 = both. */
+export function starsFor(stats: LevelStats): number {
+  return 3 - (stats.damage > 0 ? 1 : 0) - (stats.crashes + stats.stops > 0 ? 1 : 0);
 }
 
 /** Picks one key from a table of { chance } entries (bigger chance = more likely). */

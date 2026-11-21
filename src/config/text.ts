@@ -79,10 +79,10 @@ export const TEXT = {
     🔩 Report stolen parts: JPJ Hotline <b>1-800-88-5983</b><br>
     📑 Insurance disputes: BNM BNMTELELINK <b>1-300-88-5465</b>`,
 
-  effectsOn: '🔊 SFX',
-  effectsOff: '🔇 SFX',
-  musicOn: '🎵 MUSIC',
-  musicOff: '🎵 MUSIC',
+  effectsOn: 'SFX',
+  effectsOff: 'SFX',
+  musicOn: 'MUSIC',
+  musicOff: 'MUSIC',
 
   jumpButton: 'JUMP',
   controlsHint: '↑ ↓ LANES · HOLD A / D BRAKE · GAS · SPACE JUMP · F FULL SCREEN',
@@ -90,8 +90,8 @@ export const TEXT = {
   laneDownButton: '▼ LANE',
   brakeButton: '◀ BRAKE',
   gasButton: 'GAS ▶',
-  fullScreenEnter: '⛶ FULL',
-  fullScreenExit: '⛶ EXIT',
+  fullScreenEnter: 'FULL',
+  fullScreenExit: 'EXIT',
   fullScreenIphoneTip: 'iPhone: tap Share ⬆ then “Add to Home Screen” — the game then opens full screen like an app.',
   policeStopTitle: '🚨 POLICE! PULL OVER',
   policeStopText: 'A patrol car is pulling you over…',

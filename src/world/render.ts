@@ -27,7 +27,7 @@ export function render(ctx: CanvasRenderingContext2D, state: GameState): void {
   const roughness = level.roughness;
   setLaneCount(level.lanes);
   const carLane = drawLane(state.car.lanePos);
-  const timeOfDay = currentTime(state);
+  const timeOfDay = state.mode === 'menu' ? 'sunset' : currentTime(state); // the title screen is always at golden hour
   // Landmarks on this level, and how far down the road each one is
   const length = levelLength(level);
   const landmarks = LANDMARKS.filter((l) => l.level === state.level).map((l) => ({ id: l.id, ahead: l.at * length - state.levelDistance }));
@@ -87,6 +87,7 @@ function drawLevelBadge(ctx: CanvasRenderingContext2D, state: GameState): void {
 }
 
 function drawProgressBar(ctx: CanvasRenderingContext2D, state: GameState): void {
+  if (state.mode === 'menu') return;
   const t = THEME.progress;
   // Top-left corner (the level badge is top-right), clear of the road
   const left = 12;

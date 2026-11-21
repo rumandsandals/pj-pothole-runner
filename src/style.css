@@ -195,7 +195,7 @@ canvas { display: block; image-rendering: pixelated; }
 @keyframes pop-in { 0% { transform: scale(0.6); } 60% { transform: scale(1.06); } 100% { transform: scale(1); } }
 @keyframes toast-in { 0% { transform: translate(-50%, -8px); } 100% { transform: translate(-50%, 0); } }
 
-#ovMenu .tit, #title { animation: bob 1.6s steps(2) infinite; }
+#ovMenu .logo-title, #title { animation: bob 1.6s steps(2) infinite; }
 .ov.show .ov-card { animation: pop-in 0.22s steps(4); }
 #toast.show { animation: toast-in 0.15s steps(3); }
 .lvl-number { animation: bob 1.2s steps(2) infinite; }
@@ -482,3 +482,74 @@ body[data-layout='sideways'] .tow-desc { font-size: 16px; }
 /* One-lane road (level 1): nothing to switch to, so the lane buttons are dimmed */
 body[data-lanes='1'] #laneUpBtn,
 body[data-lanes='1'] #laneDownBtn { opacity: 0.3 !important; pointer-events: none; }
+
+/* ── Pixel wipe between screens: chunky bars that close, then open ── */
+#wipe {
+  position: fixed;
+  inset: 0;
+  z-index: 35;
+  pointer-events: none;
+  visibility: hidden;
+  background:
+    repeating-linear-gradient(90deg, var(--black) 0 24px, var(--navy) 24px 26px);
+}
+#wipe.cover { visibility: visible; animation: wipe-cover 0.23s steps(6) forwards; }
+#wipe.reveal { visibility: visible; animation: wipe-reveal 0.23s steps(6) forwards; }
+@keyframes wipe-cover { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+@keyframes wipe-reveal { from { clip-path: inset(0 0 0 0); } to { clip-path: inset(0 0 0 100%); } }
+
+/* ── Title screen: logo on top, the live street in the middle, menu at the bottom ── */
+#ovMenu {
+  background: linear-gradient(rgba(11, 11, 20, 0.7), rgba(11, 11, 20, 0.05) 32%, rgba(11, 11, 20, 0.05) 52%, rgba(11, 11, 20, 0.9));
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+}
+#ovMenu .logo { text-align: center; margin-top: 4vh; }
+.logo-title {
+  font: clamp(20px, 5.5vw, 44px) / 1.3 var(--font-arcade);
+  color: var(--heading);
+  text-shadow: 4px 4px 0 var(--heading-shadow), 0 0 18px rgba(255, 0, 77, 0.35);
+  letter-spacing: 2px;
+}
+.logo-sub { font-size: clamp(16px, 2.6vw, 24px); color: var(--white); text-shadow: 2px 2px 0 var(--black); margin-top: 8px; }
+#ovMenu .menu-card { margin: 0 auto 2vh; max-width: 560px; background: rgba(29, 43, 83, 0.92); }
+.best { font: 9px var(--font-arcade); color: var(--yellow); margin-top: 10px; min-height: 9px; }
+body[data-layout='sideways'] #ovMenu .logo { margin-top: 1vh; }
+body[data-layout='sideways'] .logo-title { font-size: 18px; }
+body[data-layout='sideways'] .logo-sub { font-size: 15px; margin-top: 2px; }
+body[data-layout='sideways'] #ovMenu .menu-card .intro { display: none; }
+
+/* ── Tidier menus ─────────────────────────────────────────── */
+/* Pop-ups slide up in arcade steps instead of popping */
+@keyframes slide-up { 0% { transform: translateY(28px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
+.ov.show .ov-card { animation: slide-up 0.24s steps(4); }
+.ov-card > * + * { margin-top: 2px; }
+.btn { transition: transform 0.08s steps(2), box-shadow 0.08s steps(2); }
+.btn:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 var(--black); filter: brightness(1.12); }
+/* Pixel icons on the corner buttons */
+.snd::before {
+  content: '';
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 5px;
+  vertical-align: -1px;
+  background: center / contain no-repeat;
+  image-rendering: pixelated;
+}
+#sfxBtn::before { background-image: url("data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%208%208%27%20shape-rendering%3D%27crispEdges%27%20fill%3D%27white%27%3E%3Crect%20x%3D%273%27%20y%3D%270%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%272%27%20y%3D%271%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%273%27%20y%3D%271%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%276%27%20y%3D%271%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%270%27%20y%3D%272%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%271%27%20y%3D%272%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%272%27%20y%3D%272%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%274%27%20y%3D%272%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%277%27%20y%3D%272%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%270%27%20y%3D%273%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%271%27%20y%3D%273%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%272%27%20y%3D%273%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%275%27%20y%3D%273%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%277%27%20y%3D%273%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%270%27%20y%3D%274%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%271%27%20y%3D%274%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%272%27%20y%3D%274%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%275%27%20y%3D%274%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%277%27%20y%3D%274%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%270%27%20y%3D%275%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%271%27%20y%3D%275%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%272%27%20y%3D%275%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%274%27%20y%3D%275%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%277%27%20y%3D%275%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%272%27%20y%3D%276%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%273%27%20y%3D%276%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%276%27%20y%3D%276%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%273%27%20y%3D%277%27%20width%3D%271%27%20height%3D%271%27/%3E%3C/svg%3E"); }
+#musicBtn::before { background-image: url("data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%208%208%27%20shape-rendering%3D%27crispEdges%27%20fill%3D%27white%27%3E%3Crect%20x%3D%273%27%20y%3D%270%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%274%27%20y%3D%270%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%275%27%20y%3D%270%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%276%27%20y%3D%270%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%273%27%20y%3D%271%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%276%27%20y%3D%271%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%273%27%20y%3D%272%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%276%27%20y%3D%272%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%273%27%20y%3D%273%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%276%27%20y%3D%273%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%271%27%20y%3D%274%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%272%27%20y%3D%274%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%273%27%20y%3D%274%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%275%27%20y%3D%274%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%276%27%20y%3D%274%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%277%27%20y%3D%274%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%270%27%20y%3D%275%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%271%27%20y%3D%275%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%272%27%20y%3D%275%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%273%27%20y%3D%275%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%274%27%20y%3D%275%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%275%27%20y%3D%275%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%276%27%20y%3D%275%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%277%27%20y%3D%275%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%270%27%20y%3D%276%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%271%27%20y%3D%276%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%272%27%20y%3D%276%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%275%27%20y%3D%276%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%276%27%20y%3D%276%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%277%27%20y%3D%276%27%20width%3D%271%27%20height%3D%271%27/%3E%3C/svg%3E"); }
+#fsBtn::before { background-image: url("data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%208%208%27%20shape-rendering%3D%27crispEdges%27%20fill%3D%27white%27%3E%3Crect%20x%3D%270%27%20y%3D%270%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%271%27%20y%3D%270%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%272%27%20y%3D%270%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%275%27%20y%3D%270%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%276%27%20y%3D%270%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%277%27%20y%3D%270%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%270%27%20y%3D%271%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%277%27%20y%3D%271%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%270%27%20y%3D%272%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%277%27%20y%3D%272%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%270%27%20y%3D%275%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%277%27%20y%3D%275%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%270%27%20y%3D%276%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%277%27%20y%3D%276%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%270%27%20y%3D%277%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%271%27%20y%3D%277%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%272%27%20y%3D%277%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%275%27%20y%3D%277%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%276%27%20y%3D%277%27%20width%3D%271%27%20height%3D%271%27/%3E%3Crect%20x%3D%277%27%20y%3D%277%27%20width%3D%271%27%20height%3D%271%27/%3E%3C/svg%3E"); }
+.snd.off::before { opacity: 0.4; }
+
+/* ── Level results: stars pop in one by one ── */
+.stars { font-size: 30px; letter-spacing: 6px; margin: 2px 0 6px; line-height: 1; }
+.star { color: var(--grey); display: inline-block; animation: star-pop 0.3s steps(3) both; }
+.star.on { color: var(--yellow); text-shadow: 2px 2px 0 var(--orange); }
+@keyframes star-pop { 0% { transform: scale(0); } 70% { transform: scale(1.3); } 100% { transform: scale(1); } }
+.roll { color: var(--yellow); }
+.lvl-detail { font-size: 17px; color: var(--text-soft); margin-top: 4px; }
+.new-best { color: var(--yellow); font-family: var(--font-arcade); font-size: 11px; animation: blink 0.8s steps(2) infinite; }
+body[data-layout='sideways'] .stars { font-size: 22px; margin: 0 0 2px; }
+body[data-layout='sideways'] .lvl-detail { font-size: 15px; }

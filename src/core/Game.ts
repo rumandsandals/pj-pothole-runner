@@ -1,6 +1,6 @@
 import { sound } from '../audio/sound';
 import { ACCIDENT_EVENTS, CRASH_TOW_OPTIONS } from '../config/accidents';
-import { ANIMATION, CAR, DRIVING, ECONOMY, EFFECTS, TICKS_PER_SECOND, TOW, WORKSHOP } from '../config/game';
+import { ANIMATION, CAR, DRIVING, ECONOMY, JUICE, EFFECTS, TICKS_PER_SECOND, TOW, WORKSHOP } from '../config/game';
 import { LEVELS } from '../config/levels';
 import { tempoForLevel } from '../config/music';
 import { HEAT, POLICE, POLICE_CHOICES, POLICE_STOPS, type Offence } from '../config/police';
@@ -12,9 +12,10 @@ import { TOW_OPTIONS, type TowOption } from '../config/towTrucks';
 import { ACCIDENT_SEVERITY, TRAFFIC_RULES, VEHICLES } from '../config/traffic';
 import { WORKSHOP_STEPS, type WorkshopChoice } from '../config/workshop';
 import { showDead, showWin } from '../ui/endScreens';
+import { showMenuBest } from '../ui/best';
 import { updateHud } from '../ui/hud';
 import { showLevelCard, type LevelCardInfo } from '../ui/levelCard';
-import { flash, hideBanner, hidePanels, hideScreens, hideToast, showBanner, showScreen, showToast } from '../ui/overlays';
+import { flash, hideBanner, hidePanels, hideScreens, hideToast, showBanner, showScreen, showToast, wipe } from '../ui/overlays';
 import { showRoadEvent } from '../ui/roadEventScreen';
 import { showTowChoices } from '../ui/towScreen';
 import { showWorkshopEnd, showWorkshopStep } from '../ui/workshopPanel';
@@ -37,11 +38,12 @@ import { render } from '../world/render';
 import { generateRoad } from '../world/road';
 import { updateTowTruck } from '../world/towTruck';
 import { clearAround, findVehicleHit, maybeSpawnVehicle, updateVehicles } from '../world/traffic';
-import { clampHealth, createState, createTow, currentLevel, currentTime, levelLength, type GameState } from './state';
+import { clampHealth, createState, createTow, currentLevel, currentTime, freshLevelStats, levelLength, starsFor, type GameState } from './state';
 import type { Viewport } from './Viewport';
 
 const TICK_MS = 1000 / TICKS_PER_SECOND;
 const MAX_FRAME_MS = 250; // after a pause (e.g. switching tabs), don't fast-forward
+const TITLE_CRUISE_SPEED = 1.6; // how fast the street scrolls behind the title screen
 const CARD_KEY_DELAY_MS = 700; // so a player mashing Space doesn't skip the level card by accident
 
 const pickOne = <T,>(list: T[]): T | undefined => list[Math.floor(Math.random() * list.length)];
@@ -81,7 +83,10 @@ export class Game {
     }
 
     render(this.artCtx, this.state);
-    this.viewport.present(this.ctx, this.art, shakeOffset(this.state));
+    const [dx, dy] = shakeOffset(this.state);
+    const s = this.state;
+    const dip = s.dip > 0 ? Math.round(Math.sin((s.dip / JUICE.landingDipTicks) * Math.PI) * JUICE.landingDip) : 0;
+    this.viewport.present(this.ctx, this.art, [dx, dy + dip]);
     requestAnimationFrame((t) => this.frame(t));
   }
 
@@ -89,6 +94,7 @@ export class Game {
     const s = this.state;
     setLaneCount(currentLevel(s).lanes);
     s.time++;
+    if (s.dip > 0) s.dip--;
     s.particles = updateParticles(s.particles);
     s.bits = updateBits(s.bits);
     updateShake(s);
@@ -102,6 +108,14 @@ export class Game {
       else if (wasIncoming && s.tow.phase === 'towing') sound.play('horn');
       return;
     }
+    // Title screen: your Mazda cruises slowly past PJ behind the menu
+    if (s.mode === 'menu') {
+      s.roadOffset += TITLE_CRUISE_SPEED;
+      s.levelDistance = (s.levelDistance + TITLE_CRUISE_SPEED) % levelLength(currentLevel(s));
+      updateCar(s.car);
+      return;
+    }
+
     if (s.mode === 'pullover') {
       this.updatePullover();
       return;
@@ -112,6 +126,7 @@ export class Game {
     const car = s.car;
     if (updateCar(car)) {
       sound.play('land');
+      s.dip = JUICE.landingDipTicks;
       burst(s.bits, car.x, rearWheelWorld(car).y, ANIMATION.landingDust, [THEME.smoke, 'f'], 0.5);
     }
     this.checkJumpOver();
@@ -254,6 +269,7 @@ export class Game {
   private openPoliceStop(): void {
     const s = this.state;
     hideBanner();
+    s.levelStats.stops++;
     const stop = POLICE_STOPS[s.lastOffence ?? 'speeding'];
     const { pay, bribe } = POLICE_CHOICES;
     const honest = Math.random() < POLICE.honestChance;
@@ -291,6 +307,7 @@ export class Game {
       hole.x = car.x;
       snapToLane(car, hole.lane);
       car.trapped = true;
+      s.levelStats.potholes++;
       car.sinkTarget = CAR.sinkDepth;
       car.sinkY = 1;
       addFloatingText(s.particles, car.x, car.y - 50, 'STUCK!', THEME.particles.stuck, 60, 2);
@@ -303,6 +320,8 @@ export class Game {
 
     s.potholes.splice(index, 1);
     s.health = clampHealth(s.health - type.damage);
+    s.levelStats.damage += type.damage;
+    s.levelStats.potholes++;
     car.invulnerable = CAR.invulnerableAfterHit;
     addFloatingText(s.particles, car.x, car.y - 40, `-${type.damage}HP`, THEME.particles.damage);
     burst(s.bits, hole.x, laneY(hole.lane), ANIMATION.debrisOnHit, ['5', '0', '6'], type.damage >= 30 ? 1.2 : 0.8);
@@ -334,6 +353,8 @@ export class Game {
     if (vehicle.kind !== 'rempit') this.addHeat(serious ? HEAT.accident.serious : isCar ? HEAT.accident.fender : HEAT.accident.minor, 'accident');
 
     s.health = clampHealth(s.health - damage);
+    s.levelStats.damage += damage;
+    s.levelStats.crashes++;
     car.invulnerable = TRAFFIC_RULES.invulnerableAfterAccident;
     s.vehicles = clearAround(s.vehicles, car.x, TRAFFIC_RULES.clearAroundAfterAccident);
     addFloatingText(s.particles, car.x, car.y - 40, `-${damage}HP`, THEME.particles.damage);
@@ -378,7 +399,8 @@ export class Game {
   /** Finished a level: set up the next one and pause on the level card. */
   private completeLevel(): void {
     const s = this.state;
-    const cleared = { number: s.level, earned: s.money - s.levelStartMoney };
+    const cleared = { number: s.level, earned: s.money - s.levelStartMoney, stats: { ...s.levelStats }, stars: starsFor(s.levelStats) };
+    s.levelStats = freshLevelStats();
     s.level++;
     s.levelDistance = 0;
     s.levelStartMoney = s.money;
@@ -391,7 +413,8 @@ export class Game {
     s.road = generateRoad(level.roughness);
     updateHud(s);
     sound.play('levelClear');
-    this.openLevelCard(cleared);
+    s.mode = 'levelCard'; // pause straight away; the card appears behind the wipe
+    wipe(() => this.openLevelCard(cleared));
   }
 
   private openLevelCard(cleared: LevelCardInfo['cleared']): void {
@@ -407,11 +430,17 @@ export class Game {
   go(clicked = false): void {
     if (this.state.mode !== 'levelCard') return;
     if (!clicked && performance.now() - this.cardShownAt < CARD_KEY_DELAY_MS) return;
-    hideScreens();
-    this.state.mode = 'playing';
+    if (this.goPressed) return;
+    this.goPressed = true;
     sound.play('go');
-    this.playLevelMusic();
+    wipe(() => {
+      hideScreens();
+      this.state.mode = 'playing';
+      this.goPressed = false;
+      this.playLevelMusic();
+    });
   }
+  private goPressed = false;
 
   /** Each level's tune. */
   private playLevelMusic(): void {
@@ -422,11 +451,14 @@ export class Game {
   // ── Player actions ─────────────────────────────────────────
   start(): void {
     this.state = createState();
-    hideScreens();
-    hidePanels();
-    hideBanner();
-    updateHud(this.state);
-    this.openLevelCard(null);
+    this.state.mode = 'levelCard';
+    wipe(() => {
+      hideScreens();
+      hidePanels();
+      hideBanner();
+      updateHud(this.state);
+      this.openLevelCard(null);
+    });
   }
 
   /** Space / tap / jump button. On the level card it acts as GO. */
@@ -572,19 +604,22 @@ export class Game {
 
   // ── Endings ─────────────────────────────────────────────────
   private die(): void {
+    if (this.state.mode === 'dead' || this.state.mode === 'win') return; // only once per game
     sound.play('crash');
     this.state.mode = 'dead';
-    showDead(this.state);
+    wipe(() => showDead(this.state));
   }
 
   private win(): void {
+    if (this.state.mode === 'dead' || this.state.mode === 'win') return; // only once per game
     sound.play('win');
     this.state.mode = 'win';
-    showWin(this.state);
+    wipe(() => showWin(this.state));
   }
 
   showMenu(): void {
     if (this.state.mode === 'playing') return;
+    showMenuBest();
     showScreen('menu');
   }
 }

@@ -1,7 +1,7 @@
 import { ANIMATION } from '../config/game';
 import type { Scenery } from '../config/scenery';
 import { CLOUD } from '../config/sprites';
-import { THEME } from '../config/theme';
+import { PALETTE, THEME } from '../config/theme';
 import { SKIES, type TimeId } from '../config/timeOfDay';
 import { groundPx } from './lanes';
 import { ART_HEIGHT, ART_WIDTH, drawSprite, fill, makeCanvas, seededRandom, toPx } from './pixels';
@@ -16,29 +16,23 @@ import type { LandmarkId } from '../config/landmarks';
  */
 
 const PARALLAX = { clouds: 0.06, buildings: 0.3, roadside: 0.5 };
+const HAZE = 'rgba(225, 235, 255, 0.16)'; // distance haze over the background buildings
 
-// 2×2 ordered dither: which pixels switch colour first as the sky fades.
-const BAYER = [
-  [0, 2],
-  [3, 1],
-];
 
 const skies = new Map<TimeId, HTMLCanvasElement>();
 
-/** Sky for a time of day: three colours dithered top to horizon (plus a low sun at sunset, first stars at dusk). */
+/** Sky for a time of day: a smooth gradient from the top of the sky to the horizon. */
 function buildSky(time: TimeId): HTMLCanvasElement {
   const { top, middle, horizon } = SKIES[time];
   const { fadeStart, fadeEnd } = THEME.sky;
   const [canvas, ctx] = makeCanvas(ART_WIDTH, ART_HEIGHT);
-  fill(ctx, top, 0, 0, ART_WIDTH, ART_HEIGHT);
-  const band = (from: number, to: number, colour: typeof top): void => {
-    for (let y = from; y < ART_HEIGHT; y++) {
-      const amount = Math.min((y - from) / Math.max(to - from, 1), 1) * 4;
-      for (let x = 0; x < ART_WIDTH; x++) if ((BAYER[y % 2]?.[x % 2] ?? 0) < amount) fill(ctx, colour, x, y, 1, 1);
-    }
-  };
-  if (middle !== top) band(fadeStart - 60, fadeStart, middle);
-  band(fadeStart, fadeEnd, horizon);
+  const gradient = ctx.createLinearGradient(0, 0, 0, ART_HEIGHT);
+  gradient.addColorStop(0, PALETTE[top]);
+  gradient.addColorStop(Math.max(0.01, (fadeStart - 30) / ART_HEIGHT), PALETTE[middle]);
+  gradient.addColorStop(Math.min(0.99, fadeEnd / ART_HEIGHT), PALETTE[horizon]);
+  gradient.addColorStop(1, PALETTE[horizon]);
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, ART_WIDTH, ART_HEIGHT);
   if (time === 'dusk') {
     const random = seededRandom(5);
     for (let i = 0; i < 25; i++) fill(ctx, random() < 0.8 ? '7' : 'a', Math.floor(random() * ART_WIDTH), Math.floor(random() * 120), 1, 1);
@@ -111,6 +105,9 @@ export function drawBackground(
   ];
   const [buildingLayer, roadsideLayer] = layers as [typeof layers[0], typeof layers[0]];
   drawLooping(ctx, buildingLayer.strip.image, buildingLayer.scroll, buildingLayer.y);
+  // A light haze over the everyday buildings pushes them into the distance, so landmarks pop
+  ctx.fillStyle = HAZE;
+  ctx.fillRect(0, buildingLayer.y - 40, ART_WIDTH, ground - buildingLayer.y + 40);
 
   // PJ landmarks slide past with the buildings (same parallax), standing in front of them
   placed = [];

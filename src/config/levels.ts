@@ -58,7 +58,7 @@ export const LEVELS: Level[] = [
     intro: 'A single-lane road and nothing but potholes. SPACE (or tap) to jump them!',
     potholes: ['shallow'], speed: 3.2, spawnChance: 0.003, event: null, eventAt: 0.8, roughness: 0.25,
     lanes: 1, highway: false,
-    scenery: 'pjHouses', music: 'town',
+    scenery: 'suburb', music: 'town',
     traffic: null,
   },
   {
@@ -66,7 +66,7 @@ export const LEVELS: Level[] = [
     intro: 'The road opens to TWO lanes, and traffic arrives! ↑ ↓ switch lanes to pass slower cars and bikes.',
     potholes: ['shallow', 'medium'], speed: 3.8, spawnChance: 0.0035, event: null, eventAt: 0.8, roughness: 0.55,
     lanes: 2, highway: false,
-    scenery: 'ss2Shophouses', music: 'town',
+    scenery: 'suburb', music: 'town',
     traffic: { spawnChance: 0.007, maxOnScreen: 2, motorcycleShare: 0.5, rempitChance: 0, laneChangeChance: 0 },
   },
   {
@@ -74,7 +74,7 @@ export const LEVELS: Level[] = [
     intro: "A good cop is patrolling. If help is offered, it's your right to take it.",
     potholes: ['shallow', 'medium', 'medium'], speed: 4.4, spawnChance: 0.0038, event: 'police_good', eventAt: 0.8, roughness: 0.8,
     lanes: 2, highway: false,
-    scenery: 'policeHQ', music: 'town',
+    scenery: 'suburb', music: 'town',
     traffic: { spawnChance: 0.0075, maxOnScreen: 2, motorcycleShare: 0.45, rempitChance: 0, laneChangeChance: 0 },
   },
   {
@@ -82,7 +82,7 @@ export const LEVELS: Level[] = [
     intro: "DEEP potholes, and Mat Rempit race up from behind, splitting lanes — watch the ! warning, and jump if they're on your line.",
     potholes: ['medium', 'medium', 'deep'], speed: 5.0, spawnChance: 0.004, event: 'police_bad', eventAt: 0.8, roughness: 1.05,
     lanes: 2, highway: false,
-    scenery: 'flats', music: 'city',
+    scenery: 'city', music: 'city',
     traffic: { spawnChance: 0.006, maxOnScreen: 2, motorcycleShare: 0.45, rempitChance: 0.15, laneChangeChance: 0 },
   },
   {
@@ -90,7 +90,7 @@ export const LEVELS: Level[] = [
     intro: 'The road widens to THREE lanes! Busier traffic — an honest adjuster is somewhere nearby.',
     potholes: ['medium', 'deep'], speed: 5.6, spawnChance: 0.0043, event: 'ins_good', eventAt: 0.8, roughness: 1.3,
     lanes: 3, highway: false,
-    scenery: 'offices', music: 'city',
+    scenery: 'city', music: 'city',
     traffic: { spawnChance: 0.007, maxOnScreen: 3, motorcycleShare: 0.4, rempitChance: 0.18, laneChangeChance: 0 },
   },
   {
@@ -98,7 +98,7 @@ export const LEVELS: Level[] = [
     intro: 'Cars now change lanes — watch for blinking indicators. Crashes can get serious.',
     potholes: ['medium', 'deep', 'deep'], speed: 6.2, spawnChance: 0.0045, event: 'ins_bad', eventAt: 0.8, roughness: 1.55,
     lanes: 3, highway: false,
-    scenery: 'workshops', music: 'city',
+    scenery: 'city', music: 'city',
     traffic: { spawnChance: 0.008, maxOnScreen: 3, motorcycleShare: 0.4, rempitChance: 0.2, laneChangeChance: 0.25 },
   },
   {
@@ -106,7 +106,7 @@ export const LEVELS: Level[] = [
     intro: 'Onto the HIGHWAY! Three fast lanes, and ABYSS potholes begin — get stuck and you must choose a tow truck.',
     potholes: ['deep', 'deep', 'abyss'], speed: 6.9, spawnChance: 0.0048, event: 'ws_good', eventAt: 0.8, roughness: 1.8,
     lanes: 3, highway: true,
-    scenery: 'federalHighway', music: 'highway',
+    scenery: 'highwayOutskirts', music: 'highway',
     traffic: { spawnChance: 0.009, maxOnScreen: 3, motorcycleShare: 0.4, rempitChance: 0.22, laneChangeChance: 0.3 },
   },
   {
@@ -114,7 +114,7 @@ export const LEVELS: Level[] = [
     intro: 'Fast, brutal and packed. Dodgy workshops are waiting for your catalytic converter.',
     potholes: ['deep', 'abyss'], speed: 7.7, spawnChance: 0.0052, event: 'ws_bad', eventAt: 0.8, roughness: 2.1,
     lanes: 3, highway: true,
-    scenery: 'industrial', music: 'highway',
+    scenery: 'highwayOutskirts', music: 'highway',
     traffic: { spawnChance: 0.01, maxOnScreen: 4, motorcycleShare: 0.4, rempitChance: 0.25, laneChangeChance: 0.35 },
   },
   {
@@ -122,7 +122,7 @@ export const LEVELS: Level[] = [
     intro: 'Final stretch in rush-hour traffic! Survive, collect your evidence and claim from MBPJ.',
     potholes: ['medium', 'deep', 'abyss'], speed: 8.6, spawnChance: 0.0055, event: 'council', eventAt: 0.8, roughness: 2.4,
     lanes: 3, highway: true,
-    scenery: 'cityCentre', music: 'highway',
+    scenery: 'highwayCity', music: 'highway',
     traffic: { spawnChance: 0.012, maxOnScreen: 4, motorcycleShare: 0.4, rempitChance: 0.3, laneChangeChance: 0.4 },
   },
 ];

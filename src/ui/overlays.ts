@@ -69,3 +69,34 @@ export function showBanner(title: string, text: string): void {
 export function hideBanner(): void {
   byId('banner').classList.remove('show');
 }
+
+// ── Pixel wipe between screens ───────────────────────────────
+const WIPE_MS = 230;
+let wiping = false;
+
+/**
+ * Covers the screen with a chunky pixel wipe, runs `during` while it's
+ * covered (switch screens, start a level…), then uncovers. Players who
+ * turn off motion in their device settings get an instant switch.
+ */
+export function wipe(during: () => void): void {
+  const el = byId('wipe');
+  if (wiping) {
+    during();
+    return;
+  }
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    during();
+    return;
+  }
+  wiping = true;
+  el.className = 'cover';
+  window.setTimeout(() => {
+    during();
+    el.className = 'reveal';
+    window.setTimeout(() => {
+      el.className = '';
+      wiping = false;
+    }, WIPE_MS);
+  }, WIPE_MS);
+}
