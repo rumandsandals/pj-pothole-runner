@@ -1,3 +1,5 @@
+import '@fontsource/press-start-2p/400.css';
+import '@fontsource/vt323/400.css';
 import './style.css';
 import { bindInput } from './core/Input';
 import { Game } from './core/Game';

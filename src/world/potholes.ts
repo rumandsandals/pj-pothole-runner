@@ -3,8 +3,7 @@ import type { Level } from '../config/levels';
 import { POTHOLES } from '../config/potholes';
 import { THEME } from '../config/theme';
 import type { Car, Pothole } from '../core/state';
-
-const MAX_DEPTH = Math.max(...Object.values(POTHOLES).map((p) => p.depth));
+import { ART_GROUND, drawText, fill, toPx } from './pixels';
 
 export function maybeSpawnPothole(potholes: Pothole[], level: Level, speed: number): void {
   const onScreen = potholes.filter((p) => p.x > 0 && p.x < WORLD.width).length;
@@ -39,59 +38,31 @@ export function findCollision(car: Car, potholes: Pothole[], carInset: number): 
 }
 
 export function drawPotholes(ctx: CanvasRenderingContext2D, potholes: Pothole[]): void {
-  const g = WORLD.groundY;
   const t = THEME.pothole;
 
   for (const p of potholes) {
     const cfg = POTHOLES[p.type];
-    const hw = cfg.halfWidth;
+    const cx = toPx(p.x);
+    const hw = Math.max(toPx(cfg.halfWidth), 2);
+    const depth = Math.max(toPx(cfg.depth), 2);
 
-    // Hole
-    ctx.fillStyle = t.fill;
-    ctx.beginPath();
-    ctx.moveTo(p.x - hw, g + 1);
-    ctx.bezierCurveTo(p.x - hw * 0.45, g + cfg.depth, p.x + hw * 0.45, g + cfg.depth, p.x + hw, g + 1);
-    ctx.closePath();
-    ctx.fill();
-
-    // Inner shading — deeper holes look darker
-    const shade = 0.25 + Math.min(cfg.depth / MAX_DEPTH, 1) * 0.5;
-    ctx.fillStyle = `rgba(${t.shadeRgb},${shade})`;
-    ctx.beginPath();
-    ctx.moveTo(p.x - hw * 0.5, g + 2);
-    ctx.bezierCurveTo(p.x - hw * 0.2, g + cfg.depth * 0.72, p.x + hw * 0.2, g + cfg.depth * 0.72, p.x + hw * 0.5, g + 2);
-    ctx.closePath();
-    ctx.fill();
-
-    // Cracks either side
-    ctx.strokeStyle = t.crack;
-    ctx.lineWidth = 0.8;
-    ctx.setLineDash([3, 3]);
-    ctx.beginPath();
-    ctx.moveTo(p.x - hw - 10, g);
-    ctx.lineTo(p.x - hw, g + 1);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(p.x + hw + 10, g);
-    ctx.lineTo(p.x + hw, g + 1);
-    ctx.stroke();
-    ctx.setLineDash([]);
+    // Bowl-shaped hole, one pixel column at a time
+    for (let i = -hw; i <= hw; i++) {
+      const t01 = i / hw;
+      const d = Math.max(1, Math.round(depth * (1 - t01 * t01)));
+      fill(ctx, t.hole, cx + i, ART_GROUND, 1, d);
+    }
+    // Broken edges
+    fill(ctx, t.rim, cx - hw - 1, ART_GROUND, 1, 1);
+    fill(ctx, t.rim, cx + hw + 1, ART_GROUND, 1, 1);
+    fill(ctx, t.rim, cx - hw - 3, ART_GROUND + 1, 1, 1);
+    fill(ctx, t.rim, cx + hw + 2, ART_GROUND + 1, 1, 1);
 
     // Label (DEEP / ABYSS)
-    if (cfg.label) {
-      ctx.fillStyle = t.label;
-      ctx.font = `bold ${cfg.depth >= 60 ? 11 : 9}px ${THEME.font}`;
-      ctx.textAlign = 'center';
-      ctx.fillText(cfg.label, p.x, g - 7);
-    }
+    if (cfg.label) drawText(ctx, cfg.label, cx, ART_GROUND - 12, t.label, { align: 'center', shadow: t.labelShadow });
 
     // Damage dots
     const dots = Math.min(Math.ceil((cfg.damage || 1) / 10), 5);
-    ctx.fillStyle = t.damageDot;
-    for (let i = 0; i < dots; i++) {
-      ctx.beginPath();
-      ctx.arc(p.x - (dots - 1) * 3 + i * 6, g - 17, 2, 0, Math.PI * 2);
-      ctx.fill();
-    }
+    for (let i = 0; i < dots; i++) fill(ctx, t.damageDot, cx - (dots - 1) * 1.5 + i * 3, ART_GROUND - 5, 2, 2);
   }
 }

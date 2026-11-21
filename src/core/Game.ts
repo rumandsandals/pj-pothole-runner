@@ -3,17 +3,19 @@ import { LEVELS } from '../config/levels';
 import { POTHOLES } from '../config/potholes';
 import { ROAD_EVENTS, type EventChoice, type RoadEventId } from '../config/roadEvents';
 import { TEXT } from '../config/text';
+import { THEME } from '../config/theme';
 import { TOW_OPTIONS, type TowOption } from '../config/towTrucks';
 import { WORKSHOP_STEPS, type WorkshopChoice } from '../config/workshop';
 import { showDead, showWin } from '../ui/endScreens';
 import { updateHud } from '../ui/hud';
-import { flash, hideBanner, hidePanels, hideScreens, showBanner, showScreen, showToast } from '../ui/overlays';
+import { flash, hideBanner, hidePanels, hideScreens, hideToast, showBanner, showScreen, showToast } from '../ui/overlays';
 import { showRoadEvent } from '../ui/roadEventScreen';
 import { showTowChoices } from '../ui/towScreen';
 import { showWorkshopEnd, showWorkshopStep } from '../ui/workshopPanel';
 import { canJump, jump, resetAfterRecovery, updateCar, updateSinking } from '../world/car';
 import { addFloatingText, updateParticles } from '../world/particles';
 import { findCollision, maybeSpawnPothole, movePotholes } from '../world/potholes';
+import { ART_HEIGHT, ART_WIDTH, makeCanvas } from '../world/pixels';
 import { render } from '../world/render';
 import { generateRoad } from '../world/road';
 import { updateTowTruck } from '../world/towTruck';
@@ -30,6 +32,9 @@ const MAX_FRAME_MS = 250; // after a pause (e.g. switching tabs), don't fast-for
 export class Game {
   state: GameState = createState();
   private readonly ctx: CanvasRenderingContext2D;
+  /** Small low-res canvas the pixel art is drawn on, before being scaled up. */
+  private readonly art: HTMLCanvasElement;
+  private readonly artCtx: CanvasRenderingContext2D;
   private lastTime = 0;
   private accumulator = 0;
 
@@ -37,6 +42,7 @@ export class Game {
     const ctx = canvas.getContext('2d');
     if (!ctx) throw new Error('This browser cannot draw the game (no canvas support).');
     this.ctx = ctx;
+    [this.art, this.artCtx] = makeCanvas(ART_WIDTH, ART_HEIGHT);
     updateHud(this.state);
     requestAnimationFrame((t) => this.frame(t));
   }
@@ -52,8 +58,8 @@ export class Game {
       this.accumulator -= TICK_MS;
     }
 
-    this.viewport.apply(this.ctx);
-    render(this.ctx, this.state);
+    render(this.artCtx, this.state);
+    this.viewport.present(this.ctx, this.art);
     requestAnimationFrame((t) => this.frame(t));
   }
 
@@ -115,20 +121,22 @@ export class Game {
     const hole = s.potholes[index];
     if (!hole) return;
     const type = POTHOLES[hole.type];
-    s.potholes.splice(index, 1);
 
     if (type.trapsCar) {
+      // Keep the hole on screen, centred under the car, until it's rescued.
+      hole.x = car.x;
       car.trapped = true;
       car.sinkTarget = CAR.sinkDepth;
       car.sinkY = 1;
-      addFloatingText(s.particles, car.x, car.y - 40, 'STUCK!', 60, 13);
+      addFloatingText(s.particles, car.x, car.y - 50, 'STUCK!', THEME.particles.stuck, 60, 2);
       flash(EFFECTS.stuckFlashMs);
       return;
     }
 
+    s.potholes.splice(index, 1);
     s.health = clampHealth(s.health - type.damage);
     car.invulnerable = CAR.invulnerableAfterHit;
-    addFloatingText(s.particles, car.x, car.y - 36, `-${type.damage}HP`);
+    addFloatingText(s.particles, car.x, car.y - 40, `-${type.damage}HP`, THEME.particles.damage);
     flash(EFFECTS.hitFlashMs);
     updateHud(s);
     if (s.health <= 0) this.die();
@@ -152,6 +160,7 @@ export class Game {
     hideScreens();
     hidePanels();
     hideBanner();
+    hideToast();
     updateHud(this.state);
   }
 
@@ -200,6 +209,7 @@ export class Game {
 
     if (option.licensed) {
       resetAfterRecovery(s.car);
+      s.potholes = s.potholes.filter((p) => Math.abs(p.x - s.car.x) > s.car.width);
       s.money = Math.max(0, s.money - option.cost);
       s.health = clampHealth(s.health + TOW.licensedHeal);
       updateHud(s);

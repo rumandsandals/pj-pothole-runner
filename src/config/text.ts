@@ -7,6 +7,8 @@ export const TEXT = {
   title: '🚗 PJ POTHOLE RUNNER',
   tagline: "Navigate PJ's roads · Avoid potholes · Know your rights",
 
+  pressStart: '- PRESS START -',
+
   menuIntro: `
     SPACE / TAP to jump over potholes<br>
     Deeper pits = more damage to your car<br>

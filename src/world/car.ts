@@ -1,6 +1,8 @@
 import { CAR, PHYSICS, WORLD } from '../config/game';
+import { CAR_SPRITE } from '../config/sprites';
 import { THEME } from '../config/theme';
 import type { Car } from '../core/state';
+import { drawSprite, fill, toPx } from './pixels';
 
 export function updateCar(car: Car): void {
   if (!car.onGround) {
@@ -38,63 +40,38 @@ export function resetAfterRecovery(car: Car): void {
   car.invulnerable = CAR.invulnerableAfterRecovery;
 }
 
+const SPRITE_W = CAR_SPRITE[0]?.length ?? 0;
+const SPRITE_H = CAR_SPRITE.length;
+
+/** Where the car's sprite is drawn, in art pixels. */
+export function carSpriteBox(car: Car): { left: number; top: number; width: number; height: number } {
+  return {
+    left: toPx(car.x) - Math.floor(SPRITE_W / 2),
+    top: toPx(car.y + car.sinkY) - SPRITE_H + 1,
+    width: SPRITE_W,
+    height: SPRITE_H,
+  };
+}
+
 export function drawCar(ctx: CanvasRenderingContext2D, car: Car, tick: number): void {
   const blinkHidden = car.invulnerable > 0 && Math.floor(tick / 4) % 2 === 0;
   if (blinkHidden) return;
 
-  const t = THEME.car;
-  const stuck = car.trapped || car.sinkY > 0;
-  ctx.globalAlpha = stuck ? 0.65 : 1;
-  const x = car.x - car.width / 2;
-  const y = car.y - car.height + car.sinkY;
-  const w = car.width;
-  const h = car.height;
+  const box = carSpriteBox(car);
 
-  // Shadow
-  ctx.fillStyle = t.shadow;
-  ctx.beginPath();
-  ctx.ellipse(car.x, WORLD.groundY + 2, w / 2, 4, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Body + roof
-  ctx.fillStyle = t.body;
-  ctx.fillRect(x, y, w, h);
-  ctx.fillStyle = t.roof;
-  ctx.fillRect(x + 8, y - 11, w - 16, 11);
-
-  // Windows
-  ctx.fillStyle = t.window;
-  ctx.fillRect(x + 10, y - 10, 11, 8);
-  ctx.fillRect(x + 24, y - 10, 10, 8);
-  ctx.fillStyle = t.glare;
-  ctx.fillRect(x + 10, y - 10, 4, 3);
-  ctx.fillRect(x + 24, y - 10, 3, 3);
-
-  // Headlights
-  ctx.fillStyle = t.headlight;
-  ctx.fillRect(x + w - 4, y + 4, 4, 4);
-  ctx.fillRect(x + w - 4, y + h - 9, 4, 4);
-
-  // Wheels
-  for (const wx of [x + 7, x + w - 13]) {
-    ctx.fillStyle = t.tyre;
-    ctx.fillRect(wx - 1, y + h - 4, 12, 9);
-    ctx.fillStyle = t.rim;
-    ctx.fillRect(wx + 1, y + h - 2, 8, 5);
-    ctx.fillStyle = t.hub;
-    ctx.beginPath();
-    ctx.arc(wx + 5, y + h, 3, 0, Math.PI * 2);
-    ctx.fill();
+  // Shadow on the road while jumping
+  if (!car.onGround) {
+    const shrink = Math.min(Math.floor((WORLD.groundY - car.y) / 12), 6);
+    fill(ctx, '0', box.left + 3 + shrink, toPx(WORLD.groundY) + 1, SPRITE_W - 6 - shrink * 2, 1);
   }
+
+  drawSprite(ctx, CAR_SPRITE, box.left, box.top, { X: THEME.car.body, Y: THEME.car.trim });
 
   // Smoke when stuck
   if (car.trapped || car.sinkY > 5) {
     for (let i = 0; i < 4; i++) {
-      ctx.fillStyle = `rgba(${t.smokeRgb},${0.45 - i * 0.1})`;
-      ctx.beginPath();
-      ctx.arc(x - 5 - i * 6, y + h - 8 + i * 1.5, 3 + i, 0, Math.PI * 2);
-      ctx.fill();
+      const size = 2 + Math.floor(i / 2);
+      fill(ctx, THEME.smoke, box.left - 3 - i * 3, box.top + 6 - i * 2 - ((tick >> 3) % 2), size, size);
     }
   }
-  ctx.globalAlpha = 1;
 }

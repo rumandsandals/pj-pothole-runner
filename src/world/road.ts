@@ -1,5 +1,6 @@
 import { WORLD } from '../config/game';
 import { THEME } from '../config/theme';
+import { ART_GROUND, ART_HEIGHT, ART_WIDTH, fill, seededRandom, toPx } from './pixels';
 
 export interface RoadPoint {
   x: number;
@@ -7,8 +8,11 @@ export interface RoadPoint {
 }
 
 const STEP = 3;
+const KERB_BLOCK = 4; // width of each red/white kerb block (art pixels)
+const LANE_Y = 9; // lane line, art pixels below the kerb
+const LANE_DASH = 10;
 
-/** Builds a bumpy road line. Higher roughness = bumpier. */
+/** Builds the road's bumps. Higher roughness = bumpier kerb and more cracks. */
 export function generateRoad(roughness: number): RoadPoint[] {
   const points: RoadPoint[] = [];
   for (let x = 0; x <= WORLD.width + 120; x += STEP) {
@@ -22,40 +26,46 @@ export function generateRoad(roughness: number): RoadPoint[] {
   return points;
 }
 
+// Fixed speckle pattern for the asphalt texture.
+const SPECKLES = (() => {
+  const random = seededRandom(3);
+  return Array.from({ length: 220 }, () => ({
+    x: Math.floor(random() * 400),
+    y: 3 + Math.floor(random() * (ART_HEIGHT - ART_GROUND - 3)),
+    shade: random() < 0.6 ? 0 : 1,
+    rank: random(), // smoother roads show fewer speckles
+  }));
+})();
+
+const wrap = (value: number, length: number): number => ((value % length) + length) % length;
+
 export function drawRoad(ctx: CanvasRenderingContext2D, road: RoadPoint[], offset: number, roughness: number): void {
-  const { width, groundY } = WORLD;
+  const scroll = toPx(offset);
 
-  // Faint texture dashes under the road
-  ctx.strokeStyle = THEME.roadTexture;
-  ctx.lineWidth = 1;
-  ctx.setLineDash([4, 13]);
-  for (let row = 0; row < 3; row++) {
-    const y = groundY + 6 + row * 8;
-    ctx.beginPath();
-    ctx.moveTo(0, y);
-    ctx.lineTo(width, y);
-    ctx.stroke();
-  }
-  ctx.setLineDash([]);
+  // Asphalt
+  fill(ctx, THEME.road, 0, ART_GROUND, ART_WIDTH, ART_HEIGHT - ART_GROUND);
 
-  // The road surface line, scrolling and wrapping around
-  const totalLength = road.length * STEP;
-  const shift = offset % totalLength;
-  ctx.strokeStyle = THEME.roadLine;
-  ctx.lineWidth = 1.3 + roughness * 0.32;
-  ctx.beginPath();
-  let started = false;
-  for (const point of road) {
-    let px = point.x - shift;
-    while (px < -4) px += totalLength;
-    while (px > width + 4) px -= totalLength;
-    const py = groundY + point.y;
-    if (!started) {
-      ctx.moveTo(px, py);
-      started = true;
-    } else {
-      ctx.lineTo(px, py);
-    }
+  // Speckles: rougher roads get more
+  const visibleShare = Math.min(0.25 + roughness * 0.3, 1);
+  for (const s of SPECKLES) {
+    if (s.rank > visibleShare) continue;
+    const x = wrap(s.x - scroll, 400);
+    if (x < ART_WIDTH) fill(ctx, THEME.roadSpeckles[s.shade] ?? THEME.road, x, ART_GROUND + s.y, 1, 1);
   }
-  ctx.stroke();
+
+  // Dashed yellow lane line
+  for (let x = -wrap(scroll, LANE_DASH * 2); x < ART_WIDTH; x += LANE_DASH * 2) {
+    fill(ctx, THEME.laneLine, x, ART_GROUND + LANE_Y, LANE_DASH, 1);
+  }
+
+  // Red/white kerb, nudged up and down by the road's bumps
+  const roadLength = road.length;
+  for (let x = 0; x < ART_WIDTH; x++) {
+    const worldX = (x * WORLD.width) / ART_WIDTH + offset;
+    const point = road[Math.floor(wrap(worldX / STEP, roadLength))];
+    const bump = Math.max(-1, Math.min(2, Math.round((point?.y ?? 0) / 2)));
+    const block = Math.floor((x + scroll) / KERB_BLOCK) % THEME.kerb.length;
+    const colour = THEME.kerb[block] ?? THEME.road;
+    fill(ctx, colour, x, ART_GROUND + bump, 1, 2 - Math.min(bump, 0));
+  }
 }

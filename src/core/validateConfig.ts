@@ -1,6 +1,8 @@
 import { LEVEL_LENGTH } from '../config/game';
 import { LEVELS } from '../config/levels';
 import { ROAD_EVENTS } from '../config/roadEvents';
+import * as SPRITES from '../config/sprites';
+import { PALETTE } from '../config/theme';
 import { TOW_OPTIONS } from '../config/towTrucks';
 import { WORKSHOP_STEPS } from '../config/workshop';
 
@@ -29,6 +31,18 @@ export function validateConfig(): string[] {
   WORKSHOP_STEPS.forEach((step, i) => {
     if (step.choices.length === 0) problems.push(`workshop.ts, round ${i + 1} ("${step.title}"): needs at least one choice.`);
   });
+
+  for (const [name, rows] of Object.entries(SPRITES)) {
+    const width = rows[0]?.length ?? 0;
+    rows.forEach((row, i) => {
+      if (row.length !== width)
+        problems.push(`sprites.ts, ${name} row ${i + 1}: is ${row.length} pixels wide, but row 1 is ${width}.`);
+      for (const ch of row) {
+        if (ch !== '.' && ch !== ' ' && !'XYZ'.includes(ch) && !(ch in PALETTE))
+          problems.push(`sprites.ts, ${name} row ${i + 1}: "${ch}" isn't a palette colour (0-9, a-f), X/Y/Z, or ".".`);
+      }
+    });
+  }
 
   return problems;
 }

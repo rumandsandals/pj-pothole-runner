@@ -12,6 +12,12 @@ export const WORLD = {
   groundY: 148, // where the road surface sits
 };
 
+/**
+ * Size of one art pixel in world units. 2 = the screen is 320×100 chunky
+ * pixels. 4 = even chunkier (160×50). 1 = fine detail (no retro feel).
+ */
+export const PIXEL_SIZE = 2;
+
 export const TICKS_PER_SECOND = 60;
 
 export const PHYSICS = {
@@ -74,5 +80,5 @@ export const LAYOUT = {
   maxWidth: 1600, // the game never grows wider than this (px)
   minWidth: 280,
   sideGutter: 16, // space kept on each side of the screen
-  reservedHeight: 170, // room for the title, HUD and jump button
+  reservedHeight: 200, // room for the title, HUD and jump button
 };

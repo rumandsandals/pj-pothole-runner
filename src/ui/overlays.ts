@@ -47,6 +47,11 @@ export function showToast(message: string): void {
   toastTimer = window.setTimeout(() => toast.classList.remove('show'), EFFECTS.toastMs);
 }
 
+export function hideToast(): void {
+  window.clearTimeout(toastTimer);
+  byId('toast').classList.remove('show');
+}
+
 export function flash(ms: number): void {
   const el = byId('flash');
   el.classList.add('show');

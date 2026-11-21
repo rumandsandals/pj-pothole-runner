@@ -1,12 +1,12 @@
-import { LAYOUT, WORLD } from '../config/game';
+import { LAYOUT } from '../config/game';
+import { ART_HEIGHT, ART_WIDTH } from '../world/pixels';
 
 /**
  * Fits the game to any screen: keeps the road's shape, fills the space
- * available, and draws at full sharpness on Retina / high-DPI displays.
+ * available, and scales the pixel art by whole numbers where possible so
+ * every pixel is the same size (crisp on Retina / high-DPI displays too).
  */
 export class Viewport {
-  private pixelRatio = 1;
-
   constructor(private readonly canvas: HTMLCanvasElement) {
     window.addEventListener('resize', () => this.fit());
     window.addEventListener('orientationchange', () => this.fit());
@@ -14,29 +14,34 @@ export class Viewport {
   }
 
   fit(): void {
-    const aspect = WORLD.width / WORLD.height;
+    const aspect = ART_WIDTH / ART_HEIGHT;
     const availableWidth = Math.min(window.innerWidth - LAYOUT.sideGutter * 2, LAYOUT.maxWidth);
     const availableHeight = Math.max(window.innerHeight - LAYOUT.reservedHeight, 100);
 
-    let width = Math.min(availableWidth, availableHeight * aspect);
-    width = Math.max(width, Math.min(availableWidth, LAYOUT.minWidth));
-    width = Math.floor(width);
-    const height = Math.round(width / aspect);
+    let cssWidth = Math.min(availableWidth, availableHeight * aspect);
+    cssWidth = Math.max(cssWidth, Math.min(availableWidth, LAYOUT.minWidth));
 
+    // Snap to a whole-number zoom of the pixel art if it costs < 15% of the size.
     const dpr = Math.min(window.devicePixelRatio || 1, 3);
-    this.canvas.style.width = `${width}px`;
-    this.canvas.style.height = `${height}px`;
-    this.canvas.width = Math.round(width * dpr);
-    this.canvas.height = Math.round(height * dpr);
-    this.pixelRatio = this.canvas.width / WORLD.width;
+    let deviceWidth = Math.floor(cssWidth * dpr);
+    const zoom = Math.floor(deviceWidth / ART_WIDTH);
+    if (zoom >= 1 && zoom * ART_WIDTH >= deviceWidth * 0.85) deviceWidth = zoom * ART_WIDTH;
+    const deviceHeight = Math.round((deviceWidth * ART_HEIGHT) / ART_WIDTH);
+    cssWidth = deviceWidth / dpr;
+
+    this.canvas.width = deviceWidth;
+    this.canvas.height = deviceHeight;
+    this.canvas.style.width = `${cssWidth}px`;
+    this.canvas.style.height = `${deviceHeight / dpr}px`;
 
     const root = document.documentElement.style;
-    root.setProperty('--game-width', `${width}px`);
-    root.setProperty('--ui-scale', String(Math.min(Math.max(width / WORLD.width, 0.85), 1.6)));
+    root.setProperty('--game-width', `${cssWidth}px`);
+    root.setProperty('--ui-scale', String(Math.min(Math.max(cssWidth / 640, 0.85), 1.6)));
   }
 
-  /** Call before drawing so world units map to screen pixels. */
-  apply(ctx: CanvasRenderingContext2D): void {
-    ctx.setTransform(this.pixelRatio, 0, 0, this.pixelRatio, 0, 0);
+  /** Blows the low-res pixel art up to fill the screen, without blurring. */
+  present(ctx: CanvasRenderingContext2D, art: HTMLCanvasElement): void {
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(art, 0, 0, this.canvas.width, this.canvas.height);
   }
 }

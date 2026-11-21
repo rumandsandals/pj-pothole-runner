@@ -1,6 +1,7 @@
 import { CAR, MAX_HEALTH, TOW, WORKSHOP, WORLD } from '../config/game';
 import { LEVELS, type Level } from '../config/levels';
 import type { PotholeId } from '../config/potholes';
+import type { ColourKey } from '../config/theme';
 import type { TowOption } from '../config/towTrucks';
 import { generateRoad, type RoadPoint } from '../world/road';
 
@@ -30,9 +31,9 @@ export interface Particle {
   y: number;
   vx: number;
   text: string;
-  color: string;
+  colour: ColourKey;
   life: number;
-  size: number;
+  scale: number;
 }
 
 export interface TowTruck {
