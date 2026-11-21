@@ -10,13 +10,12 @@ import { buildingsStrip, roadsideStrip, type Strip } from './scenery';
 import type { LandmarkId } from '../config/landmarks';
 
 /**
- * Sky, clouds, the distant city skyline, then the level's buildings and
- * roadside (see scenery.ts). Layers further away scroll slower than the
+ * Sky, clouds, then the level's buildings, PJ landmarks and roadside
+ * (see scenery.ts and landmarks.ts). Layers further away scroll slower than the
  * road (parallax), which gives a sense of depth.
  */
 
-const PARALLAX = { clouds: 0.06, far: 0.12, buildings: 0.3, roadside: 0.5 };
-const FAR_HEIGHT = 150; // tallest distant towers
+const PARALLAX = { clouds: 0.06, buildings: 0.3, roadside: 0.5 };
 
 // 2×2 ordered dither: which pixels switch colour first as the sky fades.
 const BAYER = [
@@ -25,7 +24,6 @@ const BAYER = [
 ];
 
 const skies = new Map<TimeId, HTMLCanvasElement>();
-let far: Strip | null = null;
 
 /** Sky for a time of day: three colours dithered top to horizon (plus a low sun at sunset, first stars at dusk). */
 function buildSky(time: TimeId): HTMLCanvasElement {
@@ -61,34 +59,6 @@ function buildSky(time: TimeId): HTMLCanvasElement {
   return canvas;
 }
 
-/** Distant towers: flat colour with windows (lit at dusk). */
-function buildFarSkyline(): Strip {
-  const { body, windows } = THEME.farBuildings;
-  const [image, ctx] = makeCanvas(ART_WIDTH, FAR_HEIGHT);
-  const [lights, glow] = makeCanvas(ART_WIDTH, FAR_HEIGHT);
-  const random = seededRandom(7);
-  let x = 0;
-  while (x < ART_WIDTH) {
-    const w = 22 + Math.floor(random() * 34);
-    const h = 40 + Math.floor(random() * (FAR_HEIGHT - 50));
-    const top = FAR_HEIGHT - h;
-    fill(ctx, body, x, top, w - 2, h);
-    if (random() < 0.4) fill(ctx, body, x + 4, top - 6, w - 10, 6);
-    if (random() < 0.3) {
-      fill(ctx, body, x + Math.floor(w / 2) - 1, top - 16, 2, 16);
-      fill(glow, '8', x + Math.floor(w / 2) - 1, top - 16, 2, 2);
-    }
-    for (let wy = top + 5; wy < FAR_HEIGHT - 4; wy += 6) {
-      for (let wx = x + 3; wx < x + w - 5; wx += 4) {
-        if (random() < 0.5) fill(ctx, windows, wx, wy, 2, 3);
-        if (random() < 0.3) fill(glow, 'a', wx, wy, 2, 3);
-      }
-    }
-    x += w;
-  }
-  return { image, lights };
-}
-
 /** Draws a strip side by side so it scrolls forever without a gap. */
 function drawLooping(ctx: CanvasRenderingContext2D, strip: HTMLCanvasElement, scroll: number, y: number): void {
   const offset = -(Math.floor(scroll) % strip.width);
@@ -115,7 +85,6 @@ export function drawBackground(
 ): void {
   let sky = skies.get(timeOfDay);
   if (!sky) skies.set(timeOfDay, (sky = buildSky(timeOfDay)));
-  far ??= buildFarSkyline();
   ctx.drawImage(sky, 0, 0);
   const ground = groundPx(); // moves up when the road has more lanes
 
@@ -137,12 +106,10 @@ export function drawBackground(
   const buildings = buildingsStrip(scenery.buildings);
   const roadside = roadsideStrip(scenery.roadside);
   layers = [
-    { strip: far, scroll: toPx(roadOffset) * PARALLAX.far, y: ground - FAR_HEIGHT - 20 },
     { strip: buildings, scroll: toPx(roadOffset) * PARALLAX.buildings, y: ground - buildings.image.height - 8 },
     { strip: roadside, scroll: toPx(roadOffset) * PARALLAX.roadside, y: ground - roadside.image.height },
   ];
-  const [farLayer, buildingLayer, roadsideLayer] = layers as [typeof layers[0], typeof layers[0], typeof layers[0]];
-  drawLooping(ctx, farLayer.strip.image, farLayer.scroll, farLayer.y);
+  const [buildingLayer, roadsideLayer] = layers as [typeof layers[0], typeof layers[0]];
   drawLooping(ctx, buildingLayer.strip.image, buildingLayer.scroll, buildingLayer.y);
 
   // PJ landmarks slide past with the buildings (same parallax), standing in front of them

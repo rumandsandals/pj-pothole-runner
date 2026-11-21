@@ -294,23 +294,35 @@ const DRAWINGS: Record<LandmarkId, { w: number; h: number; draw: Draw }> = {
     },
   },
 
-  /** "A&Wah": an orange drive-in with a root-beer mug sign (a look-alike). */
+  /** The old PJ A&W drive-in (Lorong Sultan, 1965): a tall triangular A-frame roof over the counter, and a parking canopy. */
   aAndWah: {
-    w: 100,
-    h: 70,
+    w: 150,
+    h: 90,
     draw: (ctx, glow, _w, h) => {
-      fill(ctx, '0', 4, h - 26, 70, 26);
-      fill(ctx, '9', 5, h - 25, 68, 25);
-      // drive-in canopy
-      fill(ctx, '8', 0, h - 34, 80, 6);
-      for (let x = 2; x < 80; x += 8) fill(ctx, '7', x, h - 34, 4, 6);
-      fill(ctx, '4', 10, h - 18, 50, 12);
-      fill(glow, 'f', 10, h - 18, 50, 12);
-      poleSign(ctx, glow, 62, 6, 36, 18, '9', 'A&WAH', '4', h);
-      // root-beer mug
-      fill(ctx, '4', 86, 28, 8, 10);
-      fill(ctx, '7', 86, 26, 8, 3);
-      fill(ctx, '7', 94, 30, 2, 5);
+      // A-frame roof
+      for (let y = 0; y < 56; y++) {
+        const half = Math.round(y * 0.78);
+        fill(ctx, y < 2 ? '0' : '4', 50 - half, h - 70 + y, half * 2 + 1, 1);
+        fill(ctx, '9', 50 - half, h - 70 + y, 2, 1);
+        fill(ctx, '9', 50 + half - 1, h - 70 + y, 2, 1);
+      }
+      fill(ctx, '0', 6, h - 15, 88, 2);
+      fill(ctx, 'f', 20, h - 30, 60, 16); // counter windows under the roof
+      fill(glow, 'f', 20, h - 30, 60, 16);
+      fill(ctx, '9', 14, h - 13, 72, 13);
+      // drive-in parking canopy
+      fill(ctx, '0', 92, h - 30, 56, 4);
+      fill(ctx, '9', 92, h - 29, 56, 3);
+      for (const x of [96, 120, 144]) fill(ctx, '6', x, h - 26, 2, 26);
+      fill(glow, 'a', 94, h - 26, 52, 1);
+      // sign with a root-beer mug
+      fill(ctx, '0', 46, h - 88, 34, 16);
+      fill(ctx, '9', 47, h - 87, 32, 14);
+      drawText(ctx, 'A&WAH', 63, h - 84, '4', { align: 'center', scale: 0.75 });
+      fill(glow, '9', 47, h - 87, 32, 14);
+      drawText(glow, 'A&WAH', 63, h - 84, '4', { align: 'center', scale: 0.75 });
+      fill(ctx, '4', 84, h - 86, 7, 9);
+      fill(ctx, '7', 84, h - 88, 7, 3);
     },
   },
 
@@ -472,6 +484,248 @@ const DRAWINGS: Record<LandmarkId, { w: number; h: number; draw: Draw }> = {
       fill(ctx, '8', 6, h - 80, 60, 9);
       drawText(ctx, 'SIN CHEW', 36, h - 79, '7', { align: 'center', scale: 0.5 });
       drawText(glow, 'SIN CHEW', 36, h - 79, '7', { align: 'center', scale: 0.5 });
+    },
+  },
+  /** Menara MBPJ: the city council's tall tower over its plaza. */
+  menaraMbpj: {
+    w: 110,
+    h: 175,
+    draw: (ctx, glow, w, h) => {
+      fill(ctx, '0', 0, h - 18, w, 18);
+      fill(ctx, '6', 1, h - 17, w - 2, 17); // plaza block
+      tower(ctx, glow, 24, 20, 62, h - 17, 'f', '1', 131);
+      for (let y = 30; y < h - 20; y += 20) fill(ctx, '4', 24, y, 62, 2); // brown bands
+      fill(ctx, '0', 34, 6, 42, 15);
+      fill(ctx, '4', 35, 7, 40, 13); // crown
+      drawText(ctx, 'MBPJ', w / 2, 10, '7', { align: 'center', scale: 0.75 });
+      drawText(glow, 'MBPJ', w / 2, 10, 'a', { align: 'center', scale: 0.75 });
+    },
+  },
+
+  /** Sunway Pyramid: the pyramid mall guarded by its giant lion-headed sphinx. */
+  sunwayPyramid: {
+    w: 200,
+    h: 110,
+    draw: (ctx, glow, _w, h) => {
+      // pyramid
+      for (let y = 0; y < 80; y++) {
+        const half = Math.round(y * 0.95);
+        fill(ctx, '9', 120 - half, h - 80 + y, half * 2 + 1, 1);
+        if (y % 8 === 0) fill(ctx, '4', 120 - half, h - 80 + y, half * 2 + 1, 1);
+      }
+      fill(ctx, '0', 104, h - 26, 32, 26);
+      fill(ctx, 'j', 106, h - 24, 28, 24); // glass entrance
+      fill(glow, 'f', 106, h - 24, 28, 24);
+      drawText(ctx, 'SUNWAY PYRAMID', 120, h - 36, '4', { align: 'center', scale: 0.5 });
+      // lion sphinx lying in front
+      fill(ctx, '0', 4, h - 22, 70, 22);
+      fill(ctx, 'f', 5, h - 21, 68, 21); // body
+      fill(ctx, 'f', 6, h - 46, 26, 26); // head & mane
+      fill(ctx, '9', 4, h - 48, 30, 6); // headdress top
+      for (let y = h - 42; y < h - 20; y += 4) fill(ctx, '9', 4, y, 4, 2); // striped headdress
+      fill(ctx, '0', 22, h - 38, 3, 2); // eye
+      fill(ctx, '4', 24, h - 30, 6, 2); // mouth
+      fill(ctx, 'f', 30, h - 8, 44, 8); // front paws
+      fill(ctx, '4', 30, h - 2, 44, 2);
+    },
+  },
+
+  /** Amcorp Trade Centre: the mall between two 18-storey towers (PJ Tower and Amcorp Tower). */
+  amcorp: {
+    w: 180,
+    h: 120,
+    draw: (ctx, glow, w, h) => {
+      tower(ctx, glow, 4, 14, 50, h, 'h', 'j', 141);
+      tower(ctx, glow, 126, 14, 50, h, 'h', 'j', 142);
+      for (const x of [4, 126]) {
+        for (let r = 0; r < 12; r++) fill(ctx, '4', x + r * 2, 14 - r, 50 - r * 4, 1); // stepped tops
+      }
+      fill(ctx, '0', 54, h - 46, 72, 46);
+      fill(ctx, 'f', 55, h - 45, 70, 45); // mall
+      fill(ctx, 'j', 62, h - 36, 56, 22);
+      fill(glow, 'f', 62, h - 36, 56, 22);
+      fill(ctx, '8', 55, h - 45, 70, 7);
+      drawText(ctx, 'AMCORP', w / 2, h - 44, '7', { align: 'center', scale: 0.75 });
+      drawText(glow, 'AMCORP', w / 2, h - 44, '7', { align: 'center', scale: 0.75 });
+    },
+  },
+
+  /** Menara CelcomDigi (PJ Sentral): a blue-glass tower on a six-level podium. */
+  celcomDigi: {
+    w: 110,
+    h: 160,
+    draw: (ctx, glow, w, h) => {
+      fill(ctx, '0', 0, h - 36, w, 36);
+      fill(ctx, '6', 1, h - 35, w - 2, 35); // podium
+      for (let y = h - 31; y < h - 2; y += 6) fill(ctx, '5', 1, y, w - 2, 2);
+      tower(ctx, glow, 18, 16, 74, h - 35, 'c', '1', 151);
+      fill(ctx, '1', 18, 16, 74, 10);
+      fill(ctx, 'c', 18, 16, 74, 2);
+      drawText(ctx, 'CELCOMDIGI', w / 2, 18, '7', { align: 'center', scale: 0.5 });
+      drawText(glow, 'CELCOMDIGI', w / 2, 18, 'c', { align: 'center', scale: 0.5 });
+    },
+  },
+
+  /** "Sheratown": PJ's tallest building, a slim golden tower by the Federal Highway (a look-alike name). */
+  sheratown: {
+    w: 80,
+    h: 210,
+    draw: (ctx, glow, w, h) => {
+      tower(ctx, glow, 16, 22, 48, h, 'a', '9', 161);
+      for (let y = 28; y < h; y += 12) fill(ctx, '9', 16, y, 48, 1); // golden bands
+      fill(ctx, '7', 18, 24, 2, h - 30); // sheen
+      for (let r = 0; r < 14; r++) fill(ctx, 'a', 16 + r, 22 - r, 48 - r * 2, 1); // tapered crown
+      fill(ctx, '0', 39, 0, 2, 10);
+      fill(glow, '8', 39, 0, 2, 2);
+      drawText(ctx, 'SHERATOWN', w / 2, h - 12, '4', { align: 'center', scale: 0.5 });
+    },
+  },
+
+  /** Tow Boo Keong: a Chinese temple with red pillars, a curved green-tiled roof and dragons. */
+  towBooKeong: {
+    w: 140,
+    h: 80,
+    draw: (ctx, glow, _w, h) => {
+      // curved roof with up-swept eaves
+      for (let y = 0; y < 14; y++) {
+        const half = 60 + Math.round((y / 14) ** 2 * 6);
+        fill(ctx, '3', 70 - half, h - 54 + y, half * 2, 1);
+      }
+      fill(ctx, 'b', 10, h - 54, 120, 2);
+      fill(ctx, '3', 2, h - 46, 6, 3); // eave tips
+      fill(ctx, '3', 132, h - 46, 6, 3);
+      // dragons on the ridge
+      for (const [x, dir] of [[30, 1], [110, -1]] as const) {
+        for (let i = 0; i < 16; i++) fill(ctx, i % 4 < 2 ? 'a' : '9', x + i * dir, h - 58 - Math.round(Math.sin(i / 2) * 3), 2, 3);
+      }
+      fill(ctx, 'a', 66, h - 62, 8, 8); // pearl
+      // hall
+      fill(ctx, '0', 14, h - 40, 112, 40);
+      fill(ctx, 'f', 15, h - 39, 110, 39);
+      for (const x of [20, 46, 90, 116]) fill(ctx, '8', x, h - 39, 5, 39); // red pillars
+      fill(ctx, '8', 58, h - 30, 24, 30); // doors
+      fill(ctx, 'a', 69, h - 30, 2, 30);
+      fill(ctx, '1', 50, h - 39, 40, 7);
+      drawText(ctx, 'TOW BOO KEONG', 70, h - 38, 'a', { align: 'center', scale: 0.5 });
+      // lanterns
+      for (const x of [32, 104]) {
+        fill(ctx, '8', x, h - 34, 6, 7);
+        fill(glow, '8', x, h - 34, 6, 7);
+      }
+    },
+  },
+
+  /** Wat Chetawan: the gilded Thai temple with multi-tiered roofs and chofah finials. */
+  watChetawan: {
+    w: 140,
+    h: 110,
+    draw: (ctx, glow, _w, h) => {
+      // hall
+      fill(ctx, '0', 20, h - 40, 100, 40);
+      fill(ctx, '7', 21, h - 39, 98, 39);
+      for (let x = 26; x < 116; x += 14) {
+        fill(ctx, 'a', x, h - 39, 3, 39); // gilded pillars
+        fill(ctx, '1', x + 5, h - 30, 6, 16);
+        fill(glow, 'a', x + 5, h - 30, 6, 16);
+      }
+      // three tiered roofs, red with green and gold edges
+      const tiers: Array<[number, number, ColourKey]> = [[60, 40, '8'], [46, 58, '3'], [32, 76, '8']];
+      tiers.forEach(([half, top], i) => {
+        for (let y = 0; y < 16; y++) {
+          const hw = Math.round(half * (0.35 + 0.65 * (y / 16)));
+          fill(ctx, tiers[i]?.[2] ?? '8', 70 - hw, h - top - 16 + y, hw * 2, 1);
+        }
+        fill(ctx, 'a', 70 - half, h - top - 1, half * 2, 2); // gold eave trim
+        fill(ctx, 'a', 70 - half - 3, h - top - 6, 3, 6); // chofah
+        fill(ctx, 'a', 70 + half, h - top - 6, 3, 6);
+      });
+      fill(ctx, 'a', 69, h - 104, 2, 12); // spire
+    },
+  },
+
+  /** "AIA" office in Section 14 (its look here is a best guess). */
+  aia: {
+    w: 90,
+    h: 130,
+    draw: (ctx, glow, w, h) => {
+      tower(ctx, glow, 12, 18, 66, h, '7', 'j', 171);
+      fill(ctx, '0', 12, 6, 66, 13);
+      fill(ctx, '8', 13, 7, 64, 11);
+      drawText(ctx, 'AIA', w / 2, 9, '7', { align: 'center', scale: 0.75 });
+      drawText(glow, 'AIA', w / 2, 9, '7', { align: 'center', scale: 0.75 });
+    },
+  },
+
+  /** Durianman (SS2): a roadside durian stall with crates of spiky durians. */
+  durianman: {
+    w: 110,
+    h: 60,
+    draw: (ctx, glow, _w, h) => {
+      fill(ctx, '0', 4, h - 38, 100, 6);
+      for (let x = 4; x < 104; x += 10) fill(ctx, x % 20 ? 'a' : '3', x, h - 37, 10, 4); // striped awning
+      for (const x of [8, 98]) fill(ctx, '6', x, h - 32, 2, 32);
+      fill(glow, 'a', 10, h - 32, 88, 1);
+      // crates of durians
+      for (let i = 0; i < 4; i++) {
+        const x = 14 + i * 22;
+        fill(ctx, '4', x, h - 12, 18, 12);
+        for (let d = 0; d < 3; d++) {
+          fill(ctx, '3', x + 1 + d * 6, h - 18, 5, 6);
+          fill(ctx, 'b', x + 2 + d * 6, h - 18, 1, 1);
+          fill(ctx, 'b', x + 4 + d * 6, h - 16, 1, 1);
+        }
+      }
+      fill(ctx, '0', 20, h - 58, 70, 16);
+      fill(ctx, '3', 21, h - 57, 68, 14);
+      drawText(ctx, 'DURIANMAN', 55, h - 54, 'a', { align: 'center', scale: 0.75 });
+      drawText(glow, 'DURIANMAN', 55, h - 54, 'a', { align: 'center', scale: 0.75 });
+    },
+  },
+
+  /** "Petronasi": a teal-and-green petrol station (a look-alike, no real logo). */
+  petronasi: {
+    w: 130,
+    h: 70,
+    draw: (ctx, glow, _w, h) => {
+      fill(ctx, '0', 0, h - 46, 100, 9);
+      fill(ctx, '3', 1, h - 45, 98, 7);
+      fill(ctx, 'b', 1, h - 40, 98, 2);
+      fill(glow, '7', 4, h - 38, 92, 1);
+      for (const x of [14, 50, 84]) fill(ctx, '6', x, h - 37, 3, 37);
+      for (const x of [26, 64]) {
+        fill(ctx, '0', x - 1, h - 17, 10, 17);
+        fill(ctx, '7', x, h - 16, 8, 16);
+        fill(ctx, '3', x, h - 16, 8, 3);
+      }
+      poleSign(ctx, glow, 104, 4, 24, 40, '3', 'P', '7', h);
+      drawText(ctx, 'PETRONASI', 50, h - 44, '7', { align: 'center', scale: 0.5 });
+    },
+  },
+
+  /** "Kerang": a yellow-and-red petrol station with a clam-shell sign (a look-alike, no real logo). */
+  kerang: {
+    w: 130,
+    h: 70,
+    draw: (ctx, glow, _w, h) => {
+      fill(ctx, '0', 0, h - 46, 100, 9);
+      fill(ctx, 'a', 1, h - 45, 98, 7);
+      fill(ctx, '8', 1, h - 40, 98, 2);
+      fill(glow, '7', 4, h - 38, 92, 1);
+      for (const x of [14, 50, 84]) fill(ctx, '6', x, h - 37, 3, 37);
+      for (const x of [26, 64]) {
+        fill(ctx, '0', x - 1, h - 17, 10, 17);
+        fill(ctx, '7', x, h - 16, 8, 16);
+        fill(ctx, '8', x, h - 16, 8, 3);
+      }
+      // clam-shell sign on a pole
+      fill(ctx, '6', 115, 24, 3, h - 24);
+      for (let y = 0; y < 18; y++) {
+        const half = Math.round(Math.sqrt(Math.max(0, 18 * 18 - (18 - y) ** 2)) * 0.7);
+        fill(ctx, y > 14 ? '8' : 'a', 116 - half, 6 + y, half * 2 + 1, 1);
+        fill(glow, 'a', 116 - half, 6 + y, half * 2 + 1, 1);
+      }
+      for (const dx of [-8, -3, 2, 7]) fill(ctx, '8', 116 + dx, 10, 1, 10);
+      drawText(ctx, 'KERANG', 50, h - 44, '8', { align: 'center', scale: 0.5 });
     },
   },
 };
