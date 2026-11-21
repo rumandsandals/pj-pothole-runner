@@ -105,6 +105,12 @@ export const SOUNDS = {
     { wave: 'sawtooth', from: 'E3', ms: 160, volume: 0.3 },
     { wave: 'sawtooth', from: 'D#3', ms: 360, at: 170, volume: 0.3 },
   ],
+  siren: [
+    { wave: 'square', from: 'A5', to: 'E5', ms: 320, volume: 0.18 },
+    { wave: 'square', from: 'E5', to: 'A5', ms: 320, at: 340, volume: 0.18 },
+    { wave: 'square', from: 'A5', to: 'E5', ms: 320, at: 680, volume: 0.18 },
+    { wave: 'square', from: 'E5', to: 'A5', ms: 320, at: 1020, volume: 0.16 },
+  ],
   horn: [
     { wave: 'square', from: 'G4', ms: 180, volume: 0.25 },
     { wave: 'square', from: 'B4', ms: 180, volume: 0.2 },

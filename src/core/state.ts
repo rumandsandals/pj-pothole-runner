@@ -4,6 +4,7 @@ import type { PotholeId } from '../config/potholes';
 import type { ColourKey } from '../config/theme';
 import type { TowOption } from '../config/towTrucks';
 import type { VehicleKind } from '../config/traffic';
+import type { Offence } from '../config/police';
 import { laneY, type Lane } from '../world/lanes';
 import type { Swaps } from '../world/pixels';
 import { generateRoad, type RoadPoint } from '../world/road';
@@ -13,6 +14,7 @@ export type Mode =
   | 'menu'
   | 'levelCard' // paused on the "LEVEL X" pop-up, waiting for GO
   | 'playing'
+  | 'pullover' // a police car is pulling you over
   | 'event'
   | 'towChoice'
   | 'towArriving'
@@ -116,6 +118,11 @@ export interface GameState {
   roadOffset: number;
   car: Car;
   tow: TowTruck;
+  heat: number; // police attention, 0–100 (see police.ts)
+  lastOffence: Offence | null; // what you'll be stopped for
+  police: { x: number; waited: number } | null; // the police car pulling you over
+  policeCooldown: number; // ticks before another stop can happen
+  jumpedOver: boolean; // already counted a vehicle jumped over during this jump
   workshop: { bill: number; step: number; log: WorkshopLogEntry[] };
 }
 
@@ -175,6 +182,11 @@ export function createState(mode: Mode = 'menu'): GameState {
     roadOffset: 0,
     car: createCar(),
     tow: createTow(),
+    heat: 0,
+    lastOffence: null,
+    police: null,
+    policeCooldown: 0,
+    jumpedOver: false,
     workshop: { bill: WORKSHOP.startingBill, step: 0, log: [] },
   };
 }

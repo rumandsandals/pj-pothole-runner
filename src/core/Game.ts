@@ -2,6 +2,7 @@ import { sound } from '../audio/sound';
 import { ACCIDENT_EVENTS, CRASH_TOW_OPTIONS } from '../config/accidents';
 import { ANIMATION, CAR, DRIVING, ECONOMY, EFFECTS, TICKS_PER_SECOND, TOW, WORKSHOP } from '../config/game';
 import { LEVELS } from '../config/levels';
+import { HEAT, POLICE, POLICE_CHOICES, POLICE_STOPS, type Offence } from '../config/police';
 import { POTHOLES } from '../config/potholes';
 import { ROAD_EVENTS, type EventChoice, type RoadEvent, type RoadEventId } from '../config/roadEvents';
 import { TEXT } from '../config/text';
@@ -27,7 +28,7 @@ import {
   updateSinking,
 } from '../world/car';
 import { burst, puff, shakeOffset, startShake, updateBits, updateShake } from '../world/effects';
-import { laneY, setLaneCount } from '../world/lanes';
+import { laneY, sameLane, setLaneCount } from '../world/lanes';
 import { addFloatingText, updateParticles } from '../world/particles';
 import { ART_HEIGHT, ART_WIDTH, makeCanvas } from '../world/pixels';
 import { findCollision, maybeSpawnPothole, movePotholes } from '../world/potholes';
@@ -100,6 +101,10 @@ export class Game {
       else if (wasIncoming && s.tow.phase === 'towing') sound.play('horn');
       return;
     }
+    if (s.mode === 'pullover') {
+      this.updatePullover();
+      return;
+    }
     if (s.mode !== 'playing') return;
 
     const level = currentLevel(s);
@@ -108,6 +113,7 @@ export class Game {
       sound.play('land');
       burst(s.bits, car.x, rearWheelWorld(car).y, ANIMATION.landingDust, [THEME.smoke, 'f'], 0.5);
     }
+    this.checkJumpOver();
 
     // Stuck in an ABYSS pothole: sink, then call the tow trucks.
     if (car.sinkY > 0) {
@@ -177,6 +183,97 @@ export class Game {
       this.checkVehicleHit();
       if (s.mode === 'playing' && !car.trapped && car.crashTimer === 0) this.checkPotholeHit();
     }
+    if (s.mode === 'playing') this.updateHeat();
+  }
+
+  // ── Police & heat ───────────────────────────────────────────
+  private addHeat(amount: number, offence: Offence): void {
+    const s = this.state;
+    s.heat = Math.min(HEAT.max, Math.max(0, s.heat + amount));
+    // Remember what you'd be stopped for: one-off offences win over ongoing speeding
+    if (offence !== 'speeding' || s.lastOffence === null || s.lastOffence === 'speeding') s.lastOffence = offence;
+  }
+
+  /** Speeding builds heat, normal driving cools it, and high heat can get you pulled over. */
+  private updateHeat(): void {
+    const s = this.state;
+    const car = s.car;
+    if (s.pace > 1.05) this.addHeat(HEAT.speedingPerSecond / TICKS_PER_SECOND, 'speeding');
+    else s.heat = Math.max(0, s.heat - HEAT.coolPerSecond / TICKS_PER_SECOND);
+    if (s.heat === 0) s.lastOffence = null;
+
+    if (s.policeCooldown > 0) {
+      s.policeCooldown--;
+      return;
+    }
+    const canStop = car.onGround && !car.trapped && car.crashTimer === 0 && car.sinkY === 0;
+    if (!canStop || s.level < POLICE.fromLevel || s.heat < POLICE.stopsFromHeat) return;
+    const share = s.heat / HEAT.max;
+    if (Math.random() < (share * share * POLICE.stopChancePerSecondAtMax) / TICKS_PER_SECOND) this.startPullover();
+  }
+
+  /** Jumping clean over another vehicle is stunt driving. */
+  private checkJumpOver(): void {
+    const s = this.state;
+    const car = s.car;
+    if (car.onGround) {
+      s.jumpedOver = false;
+      return;
+    }
+    if (s.jumpedOver) return;
+    const over = s.vehicles.some(
+      (v) => sameLane(car.lanePos, v.lanePos) && car.hop >= VEHICLES[v.kind].height && Math.abs(v.x - car.x) < VEHICLES[v.kind].halfWidth + car.width / 2 - 8,
+    );
+    if (!over) return;
+    s.jumpedOver = true;
+    this.addHeat(HEAT.jumpOverVehicle, 'jump');
+    addFloatingText(s.particles, car.x, car.y - 46, 'ILLEGAL JUMP!', THEME.particles.damage, 45);
+  }
+
+  private startPullover(): void {
+    const s = this.state;
+    s.mode = 'pullover';
+    s.throttle = 0;
+    s.police = { x: -90, waited: 0 };
+    s.vehicles = clearAround(s.vehicles, s.car.x - 120, 200); // make room behind you
+    sound.play('siren');
+    showBanner(TEXT.policeStopTitle, TEXT.policeStopText);
+  }
+
+  private updatePullover(): void {
+    const s = this.state;
+    const p = s.police;
+    if (!p) return;
+    const target = s.car.x - POLICE.stopBehind;
+    if (p.x < target) p.x = Math.min(target, p.x + POLICE.arriveSpeed);
+    else if (++p.waited === POLICE.waitTicks) this.openPoliceStop();
+  }
+
+  /** The stop itself: pay the saman, or try a bribe (most officers are honest). */
+  private openPoliceStop(): void {
+    const s = this.state;
+    hideBanner();
+    const stop = POLICE_STOPS[s.lastOffence ?? 'speeding'];
+    const { pay, bribe } = POLICE_CHOICES;
+    const honest = Math.random() < POLICE.honestChance;
+    const penalty = stop.fine * bribe.honestPenaltyTimes;
+    const event: RoadEvent = {
+      title: stop.title,
+      description: `${stop.description} Fine: RM ${stop.fine}.`,
+      choices: [
+        { label: pay.label.replace('{fine}', String(stop.fine)), effect: { money: -stop.fine, heat: -HEAT.max }, message: pay.message, tone: 'good' },
+        honest
+          ? { label: bribe.label, effect: { money: -penalty, heat: 20 }, message: bribe.honestMessage.replace('{penalty}', String(penalty)), tone: 'bad' }
+          : { label: bribe.label, effect: { money: -bribe.bribe }, message: bribe.corruptMessage, tone: 'bad' },
+      ],
+    };
+    s.mode = 'event';
+    sound.play('eventPop');
+    showRoadEvent(event, (choice) => {
+      s.police = null;
+      s.policeCooldown = POLICE.cooldownSeconds * TICKS_PER_SECOND;
+      this.applyEventChoice(choice);
+    });
   }
 
   private checkPotholeHit(): void {
@@ -232,6 +329,8 @@ export class Game {
       ((s.level >= sev.seriousFromLevel && Math.random() < sev.seriousChance) ||
         s.health - sev.fenderDamage < sev.seriousIfHealthBelow);
     const damage = serious ? sev.seriousDamage : isCar ? sev.fenderDamage : sev.minorDamage;
+    // Causing a crash puts you on the police radar (not when a Mat Rempit hits you)
+    if (vehicle.kind !== 'rempit') this.addHeat(serious ? HEAT.accident.serious : isCar ? HEAT.accident.fender : HEAT.accident.minor, 'accident');
 
     s.health = clampHealth(s.health - damage);
     car.invulnerable = TRAFFIC_RULES.invulnerableAfterAccident;
@@ -335,7 +434,14 @@ export class Game {
   /** ↑ / ↓ / swipe / lane buttons: +1 = one lane up (further), -1 = one lane down (nearer). */
   moveLane(step: 1 | -1): void {
     const s = this.state;
-    if (s.mode === 'playing' && changeLane(s.car, step)) sound.play('lane');
+    if (s.mode !== 'playing' || !changeLane(s.car, step)) return;
+    sound.play('lane');
+    // Cutting in right beside another vehicle is a dangerous lane change
+    const tooClose = s.vehicles.some((v) => sameLane(v.lanePos, s.car.lane) && Math.abs(v.x - s.car.x) < HEAT.nearMissDistance);
+    if (tooClose) {
+      this.addHeat(HEAT.dangerousLaneChange, 'laneChange');
+      addFloatingText(s.particles, s.car.x, s.car.y - 40, 'CUT IN!', THEME.particles.stuck, 35);
+    }
   }
 
   /** ← / → / BRAKE / GAS: -1 = brake, 1 = gas, 0 = let go. */
@@ -358,6 +464,10 @@ export class Game {
     const s = this.state;
     s.money = Math.max(0, s.money + (choice.effect.money ?? 0));
     s.health = clampHealth(s.health + (choice.effect.hp ?? 0));
+    const heat = choice.effect.heat ?? 0;
+    if (heat > 0) this.addHeat(heat, 'record'); // illegal choice: it's on record
+    else if (heat < 0) s.heat = Math.max(0, s.heat + heat);
+    if (s.heat === 0) s.lastOffence = null;
     updateHud(s);
     sound.play(choice.tone === 'bad' ? 'bad' : choice.tone === 'good' ? 'good' : 'click');
     showToast(choice.message);

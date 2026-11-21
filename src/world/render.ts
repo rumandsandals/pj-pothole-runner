@@ -6,6 +6,7 @@ import { drawCar } from './car';
 import { drawBits } from './effects';
 import { drawParticles } from './particles';
 import { ART_WIDTH, drawText, fill, textWidth } from './pixels';
+import { drawHeatMeter, drawPoliceCar } from './police';
 import { drawPotholes } from './potholes';
 import { drawRoad } from './road';
 import { drawTowTruck } from './towTruck';
@@ -30,6 +31,7 @@ export function render(ctx: CanvasRenderingContext2D, state: GameState): void {
     drawPotholes(ctx, state.potholes, lane, state.time);
     drawVehicles(ctx, state.vehicles, lane, state.time, state.roadOffset);
     if (carLane === lane) {
+      drawPoliceCar(ctx, state);
       drawTowTruck(ctx, state.tow, state.car, state.time);
       drawCar(ctx, state.car, state.time, state.roadOffset, roughness, state.mode === 'playing' ? state.pace : 1);
     }
@@ -40,6 +42,7 @@ export function render(ctx: CanvasRenderingContext2D, state: GameState): void {
   drawParticles(ctx, state.particles);
   drawLevelBadge(ctx, state);
   drawProgressBar(ctx, state);
+  drawHeatMeter(ctx, state);
 }
 
 /**

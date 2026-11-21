@@ -50,6 +50,7 @@ Everything you're likely to change lives in **`src/config/`**. Edit a file, save
 | Number of lanes (1, 2 or 3) and highway look per level | `lanes` and `highway` in `src/config/levels.ts` |
 | Lane width (the road grows with more lanes) and where vehicles sit | `ROAD` in `src/config/game.ts` |
 | Mat Rempit lane-splitting and weaving       | `REMPIT` in `src/config/traffic.ts` |
+| Police heat, stops, fines and the bribe gamble | `src/config/police.ts` (and `heat` on choices in `accidents.ts` / `roadEvents.ts`) |
 | Highway colours (lane lines, barrier, walls, signs) | `highway` in `src/config/theme.ts` |
 | Which vehicles may use the highway         | `onHighway` in `src/config/traffic.ts` |
 | Brake / gas speeds and how far the car slides | `DRIVING` in `src/config/game.ts` |
@@ -89,5 +90,7 @@ The accident scenes (`src/config/accidents.ts`) were drafted for the game. Check
 8. Many motor policies include **free towing** to a panel workshop, up to a limit. This varies by insurer.
 9. **"Ulat" tow touts** at crash scenes: the advice "never let a tow truck you didn't call take your car".
 10. The RM amounts and outcomes are game numbers, not real figures.
+11. **Police stops** (`src/config/police.ts`): speeding saman of about **RM 300**, and that offering a police officer a bribe ("duit kopi") is a crime under the **MACC Act 2009**.
+12. Which choices count as illegal (`heat` in `accidents.ts` and `roadEvents.ts`): not reporting an accident, leaving the scene, bribing, chasing another road user.
 
 The hotlines in `src/config/text.ts` (MBPJ, MACC, Tribunal, JPJ, BNM) came from the original game and should be re-checked too.

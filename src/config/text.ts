@@ -27,6 +27,10 @@ export const TEXT = {
     Sedans, slow SUVs and fast sports cars share the road<br>
     💥 Serious crash = tow truck choice · ❗ = Mat Rempit coming from behind<br>
     Mat Rempit split lanes — riding the line, they can hit you in either lane. Jump!<br><br>
+    <b>🚨 POLICE HEAT (lights top-left):</b><br>
+    Speeding, jumping OVER vehicles, cutting in, causing crashes and<br>
+    illegal choices raise your heat. High heat = pulled over!<br>
+    Drive at normal speed to cool off. Pay the saman — never bribe.<br><br>
     <b>TOW TRUCK ENCOUNTER (ABYSS):</b><br>
     🟢 Licensed tow = safe recovery · back on road<br>
     🔴 Cheap tow = dragged to a dodgy workshop!<br><br>
@@ -89,5 +93,7 @@ export const TEXT = {
   fullScreenEnter: '⛶ FULL',
   fullScreenExit: '⛶ EXIT',
   fullScreenIphoneTip: 'iPhone: tap Share ⬆ then “Add to Home Screen” — the game then opens full screen like an app.',
+  policeStopTitle: '🚨 POLICE! PULL OVER',
+  policeStopText: 'A patrol car is pulling you over…',
   rotateHint: '↻ Tip: turn your phone sideways for a bigger road',
 };

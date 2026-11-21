@@ -23,7 +23,7 @@ export const ACCIDENT_EVENTS: Record<'minor' | 'rempit' | 'cyclist' | 'fender' |
         "You clip a rider's mirror. He demands RM300 cash to 'settle here lah'. Accidents should be reported to the police within 24 hours.",
       choices: [
         { label: '📸 Photos, IC & plate + police report', effect: {}, message: '✅ Proof protects you if he tries to claim later.', tone: 'good' },
-        { label: '💸 Pay RM300 cash', effect: { money: -300 }, message: '❌ No record, no proof — and he can still claim later!', tone: 'bad' },
+        { label: '💸 Pay RM300 cash', effect: { money: -300, heat: 15 }, message: '❌ No record, no proof — and he can still claim later!', tone: 'bad' },
       ],
     },
     {
@@ -32,7 +32,7 @@ export const ACCIDENT_EVENTS: Record<'minor' | 'rempit' | 'cyclist' | 'fender' |
         "A motorcyclist wobbles and falls beside you. Drivers involved in an accident must stop and help — driving off is an offence.",
       choices: [
         { label: '🛑 Stop, help & call 999', effect: { hp: 5 }, message: "✅ He's shaken but OK. You did the right thing.", tone: 'good' },
-        { label: '🏃 Drive off', effect: { money: -500, hp: -10 }, message: '❌ Hit-and-run caught on camera. -RM500!', tone: 'bad' },
+        { label: '🏃 Drive off', effect: { money: -500, hp: -10, heat: 40 }, message: '❌ Hit-and-run caught on camera. -RM500!', tone: 'bad' },
       ],
     },
   ],
@@ -44,7 +44,7 @@ export const ACCIDENT_EVENTS: Record<'minor' | 'rempit' | 'cyclist' | 'fender' |
         'A reckless rider weaving through traffic slams into you and speeds off. Your dashcam caught his plate number.',
       choices: [
         { label: '📹 Police report with dashcam video', effect: { money: 150 }, message: '✅ Report filed — your insurer covers the damage.', tone: 'good' },
-        { label: '😤 Chase him down', effect: { hp: -15 }, message: '❌ Dangerous and pointless. You nearly crashed again!', tone: 'bad' },
+        { label: '😤 Chase him down', effect: { hp: -15, heat: 20 }, message: '❌ Dangerous and pointless. You nearly crashed again!', tone: 'bad' },
       ],
     },
   ],
@@ -56,7 +56,7 @@ export const ACCIDENT_EVENTS: Record<'minor' | 'rempit' | 'cyclist' | 'fender' |
         'You pass too close and clip a cyclist, who falls onto the road. Give cyclists plenty of room when overtaking — and if there is an accident, stop and help.',
       choices: [
         { label: '🛑 Stop, help & call 999', effect: { hp: 5 }, message: "✅ Scraped knees, but OK. You did the right thing.", tone: 'good' },
-        { label: '🏃 Keep driving', effect: { money: -500, hp: -10 }, message: '❌ A witness noted your plate. -RM500!', tone: 'bad' },
+        { label: '🏃 Keep driving', effect: { money: -500, hp: -10, heat: 40 }, message: '❌ A witness noted your plate. -RM500!', tone: 'bad' },
       ],
     },
   ],
@@ -68,7 +68,7 @@ export const ACCIDENT_EVENTS: Record<'minor' | 'rempit' | 'cyclist' | 'fender' |
         'You bumped the car ahead. Lodge a police report within 24 hours, or your insurance claim may be rejected.',
       choices: [
         { label: '👮 Report at the balai polis', effect: { money: 100 }, message: '✅ Reported on time — claim accepted.', tone: 'good' },
-        { label: '🤝 Settle privately, no report', effect: { money: -400 }, message: '❌ No report = no claim. You paid RM400 yourself.', tone: 'bad' },
+        { label: '🤝 Settle privately, no report', effect: { money: -400, heat: 15 }, message: '❌ No report = no claim. You paid RM400 yourself.', tone: 'bad' },
       ],
     },
     {

@@ -2,12 +2,13 @@
  * ROAD EVENTS
  * Pop-up encounters that happen once per level (set which one in levels.ts).
  * effect.money = RM gained (negative = lost). effect.hp = health gained/lost.
+ * effect.heat = police heat added (for illegal choices — see police.ts).
  * tone 'good' / 'bad' only changes the button colour.
  */
 
 export interface EventChoice {
   label: string;
-  effect: { money?: number; hp?: number };
+  effect: { money?: number; hp?: number; heat?: number };
   message: string;
   tone?: 'good' | 'bad';
 }
@@ -33,7 +34,7 @@ export const ROAD_EVENTS = {
     description:
       "Officer Zulkifli wants 'kopi duit' to file your report! Bribery is illegal — MACC Act 2009. Call 1-800-88-6000!",
     choices: [
-      { label: '💸 Pay Bribe', effect: { money: -150, hp: 5 }, message: '❌ -RM150 bribe! Report to MACC: 1-800-88-6000', tone: 'bad' },
+      { label: '💸 Pay Bribe', effect: { money: -150, hp: 5, heat: 30 }, message: '❌ -RM150 bribe! Report to MACC: 1-800-88-6000', tone: 'bad' },
       { label: '✊ Refuse & Call MACC', effect: { money: 100 }, message: '✅ +RM100! MACC case filed!', tone: 'good' },
     ],
   },
