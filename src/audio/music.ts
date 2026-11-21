@@ -55,7 +55,6 @@ export class MusicPlayer {
   private song: ReturnType<typeof compile>;
   private stepSeconds: number;
   private stepsPerBeat: number;
-  private tempoScale = 1; // e.g. 0.8 for the moody version
   private bpmOverride: number | null = null;
 
   constructor(
@@ -71,13 +70,7 @@ export class MusicPlayer {
   /** Plays at this tempo instead of the tune's own (changes smoothly, mid-song). */
   setTempo(bpm: number): void {
     this.bpmOverride = bpm;
-    this.stepSeconds = 60 / (bpm * this.tempoScale) / this.stepsPerBeat;
-  }
-
-  /** The tune's own tempo vs. its original: lets the moody version stay slower than normal. */
-  setTempoScale(scale: number): void {
-    this.tempoScale = scale;
-    if (this.bpmOverride !== null) this.setTempo(this.bpmOverride);
+    this.stepSeconds = 60 / bpm / this.stepsPerBeat;
   }
 
   /** Switches to another tune (starts it from the beginning if music is playing). */

@@ -482,6 +482,3 @@ body[data-layout='sideways'] .tow-desc { font-size: 16px; }
 /* One-lane road (level 1): nothing to switch to, so the lane buttons are dimmed */
 body[data-lanes='1'] #laneUpBtn,
 body[data-lanes='1'] #laneDownBtn { opacity: 0.3 !important; pointer-events: none; }
-
-/* Weather warning on the level card */
-.weather-tip { flex-basis: 100%; color: var(--warn); }

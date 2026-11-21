@@ -1,4 +1,4 @@
-import { MOODY, moody, TRACKS, type TrackId } from '../config/music';
+import { TRACKS, type TrackId } from '../config/music';
 import { SOUND_DEFAULTS, SOUNDS, VOLUME, type SoundName } from '../config/sounds';
 import { MusicPlayer } from './music';
 import { playTone } from './synth';
@@ -34,19 +34,13 @@ class SoundSystem {
   private effectsOut: GainNode | null = null;
   private music: MusicPlayer | null = null;
   private listeners: Array<() => void> = [];
-  private track: { id: TrackId; moody: boolean } = { id: 'town', moody: false };
+  private track: TrackId = 'town';
 
-  private trackData() {
-    const t = TRACKS[this.track.id];
-    return this.track.moody ? moody(t) : t;
-  }
-
-  /** Changes the background tune (e.g. a new tune every few levels; moody when it rains). */
-  setTrack(id: TrackId, isMoody = false): void {
-    if (this.track.id === id && this.track.moody === isMoody) return;
-    this.track = { id, moody: isMoody };
-    this.music?.setTrack(this.trackData());
-    this.music?.setTempoScale(isMoody ? MOODY.tempo : 1);
+  /** Changes the background tune (a new tune every few levels). */
+  setTrack(id: TrackId): void {
+    if (this.track === id) return;
+    this.track = id;
+    this.music?.setTrack(TRACKS[id]);
   }
 
   private bpm: number | null = null;
@@ -72,8 +66,7 @@ class SoundSystem {
       const musicOut = ctx.createGain();
       musicOut.gain.value = VOLUME.music;
       musicOut.connect(master);
-      this.music = new MusicPlayer(ctx, musicOut, this.trackData());
-      this.music.setTempoScale(this.track.moody ? MOODY.tempo : 1);
+      this.music = new MusicPlayer(ctx, musicOut, TRACKS[this.track]);
       if (this.bpm !== null) this.music.setTempo(this.bpm);
       this.ctx = ctx;
       document.addEventListener('visibilitychange', () => this.onVisibility());

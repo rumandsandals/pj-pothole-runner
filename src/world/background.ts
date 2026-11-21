@@ -2,7 +2,7 @@ import { ANIMATION } from '../config/game';
 import type { Scenery } from '../config/scenery';
 import { CLOUD } from '../config/sprites';
 import { THEME } from '../config/theme';
-import { SKIES, type TimeId } from '../config/weather';
+import { SKIES, type TimeId } from '../config/timeOfDay';
 import { groundPx } from './lanes';
 import { ART_HEIGHT, ART_WIDTH, drawSprite, fill, makeCanvas, seededRandom, toPx } from './pixels';
 import { buildingsStrip, roadsideStrip, type Strip } from './scenery';
@@ -25,7 +25,7 @@ const BAYER = [
 const skies = new Map<TimeId, HTMLCanvasElement>();
 let far: Strip | null = null;
 
-/** Sky for a time of day: three colours dithered top to horizon (plus stars at night). */
+/** Sky for a time of day: three colours dithered top to horizon (plus a low sun at sunset, first stars at dusk). */
 function buildSky(time: TimeId): HTMLCanvasElement {
   const { top, middle, horizon } = SKIES[time];
   const { fadeStart, fadeEnd } = THEME.sky;
@@ -39,9 +39,9 @@ function buildSky(time: TimeId): HTMLCanvasElement {
   };
   if (middle !== top) band(fadeStart - 60, fadeStart, middle);
   band(fadeStart, fadeEnd, horizon);
-  if (time === 'night') {
+  if (time === 'dusk') {
     const random = seededRandom(5);
-    for (let i = 0; i < 90; i++) fill(ctx, random() < 0.8 ? '7' : 'a', Math.floor(random() * ART_WIDTH), Math.floor(random() * 120), 1, 1);
+    for (let i = 0; i < 25; i++) fill(ctx, random() < 0.8 ? '7' : 'a', Math.floor(random() * ART_WIDTH), Math.floor(random() * 120), 1, 1);
     // moon
     for (let y = -9; y <= 9; y++) {
       const half = Math.round(Math.sqrt(81 - y * y));
@@ -59,7 +59,7 @@ function buildSky(time: TimeId): HTMLCanvasElement {
   return canvas;
 }
 
-/** Distant towers: flat colour with windows (lit at night). */
+/** Distant towers: flat colour with windows (lit at dusk). */
 function buildFarSkyline(): Strip {
   const { body, windows } = THEME.farBuildings;
   const [image, ctx] = makeCanvas(ART_WIDTH, FAR_HEIGHT);
@@ -93,7 +93,7 @@ function drawLooping(ctx: CanvasRenderingContext2D, strip: HTMLCanvasElement, sc
   for (let x = offset; x < ART_WIDTH; x += strip.width) ctx.drawImage(strip, x, y);
 }
 
-// Where each layer was drawn this frame, so the night lights line up with it.
+// Where each layer was drawn this frame, so the dusk lights line up with it.
 let layers: Array<{ strip: Strip; scroll: number; y: number }> = [];
 
 export function drawBackground(ctx: CanvasRenderingContext2D, roadOffset: number, time: number, scenery: Scenery, timeOfDay: TimeId): void {
@@ -103,8 +103,8 @@ export function drawBackground(ctx: CanvasRenderingContext2D, roadOffset: number
   ctx.drawImage(sky, 0, 0);
   const ground = groundPx(); // moves up when the road has more lanes
 
-  // Clouds (not at night)
-  if (timeOfDay !== 'night') {
+  // Clouds
+  {
     const cloudScroll = toPx(roadOffset) * PARALLAX.clouds + time * ANIMATION.cloudDrift;
     const cloudLoop = ART_WIDTH + 80;
     for (const [cx, cy] of [
@@ -128,7 +128,7 @@ export function drawBackground(ctx: CanvasRenderingContext2D, roadOffset: number
   for (const l of layers) drawLooping(ctx, l.strip.image, l.scroll, l.y);
 }
 
-/** At night: windows, signs and lamps, drawn on top of the darkened scene. */
+/** At dusk: windows, signs and lamps, drawn on top of the tinted scene. */
 export function drawBackgroundLights(ctx: CanvasRenderingContext2D): void {
   for (const l of layers) drawLooping(ctx, l.strip.lights, l.scroll, l.y);
 }

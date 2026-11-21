@@ -6,7 +6,7 @@ import { drawSprite, drawText, fill, makeCanvas, seededRandom } from './pixels';
 /**
  * The scenery strips you drive past. Each strip is two pictures:
  *   image  — what you see in daylight
- *   lights — only the things that glow at night (windows, signs, lamps),
+ *   lights — only the things that glow at dusk (windows, signs, lamps),
  *            drawn on top after the scene is darkened
  * Strips repeat side by side as the road scrolls.
  */
@@ -21,7 +21,7 @@ type Draw = (ctx: CanvasRenderingContext2D, glow: CanvasRenderingContext2D, w: n
 const WIDTH = 720;
 const pickFrom = <T,>(list: T[], random: () => number): T => list[Math.floor(random() * list.length)] as T;
 
-/** A lit window: drawn normally by day, and into the lights layer if it's lit at night. */
+/** A lit window: drawn normally by day, and into the lights layer if it's lit at dusk. */
 function windowAt(ctx: CanvasRenderingContext2D, glow: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, random: () => number, lit = 0.6): void {
   fill(ctx, '1', x, y, w, h);
   if (random() < lit) fill(glow, random() < 0.8 ? 'a' : 'f', x, y, w, h);

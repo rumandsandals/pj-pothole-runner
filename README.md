@@ -50,7 +50,7 @@ Everything you're likely to change lives in **`src/config/`**. Edit a file, save
 | Number of lanes (1, 2 or 3) and highway look per level | `lanes` and `highway` in `src/config/levels.ts` |
 | Lane width (the road grows with more lanes) and where vehicles sit | `ROAD` in `src/config/game.ts` |
 | Mat Rempit lane-splitting and weaving       | `REMPIT` in `src/config/traffic.ts` |
-| Weather, time of day, how often each appears, rain grip, haze distance | `src/config/weather.ts` |
+| Time of day (morning, afternoon, sunset, dusk), sky colours and how often each appears | `src/config/timeOfDay.ts` |
 | Scenery for each level (buildings, roadside) | `scenery` in `levels.ts`; sets in `src/config/scenery.ts`; drawings in `src/world/scenery.ts` |
 | Which tune each level plays, the tunes, and the tempo per level | `music` in `levels.ts`; tunes and `MUSIC_TEMPO` in `src/config/music.ts` |
 | Police heat, stops, fines and the bribe gamble | `src/config/police.ts` (and `heat` on choices in `accidents.ts` / `roadEvents.ts`) |

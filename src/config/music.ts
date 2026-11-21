@@ -5,8 +5,7 @@ import type { Tone, Wave } from './sounds';
  *   TOWN    — levels 1–3 (the first tune)
  *   CITY    — levels 4–6, faster, in D minor
  *   HIGHWAY — levels 7–9, fastest, in E minor
- * Which tune each level uses is set by `music` in levels.ts. On rainy and
- * stormy levels a slower, softer "moody" version plays (see moody() below).
+ * Which tune each level uses is set by `music` in levels.ts.
  *
  * Each channel is a row of steps separated by spaces. One step = one
  * eighth-note at the tempo below.
@@ -178,18 +177,6 @@ export const MUSIC_TEMPO = {
 export function tempoForLevel(level: number, levelCount: number): number {
   const share = levelCount > 1 ? (level - 1) / (levelCount - 1) : 0;
   return Math.round(MUSIC_TEMPO.firstLevel + share * (MUSIC_TEMPO.lastLevel - MUSIC_TEMPO.firstLevel));
-}
-
-/** The rainy-day version of a tune: slower, softer lead, no hi-hats. */
-export const MOODY = { tempo: 0.8, leadWave: 'triangle' as Wave, leadVolume: 1.4 };
-
-export function moody(track: Track): Track {
-  return {
-    ...track,
-    bpm: Math.round(track.bpm * MOODY.tempo),
-    channels: track.channels.map((c, i) => (i === 0 ? { ...c, wave: MOODY.leadWave, volume: c.volume * MOODY.leadVolume } : c)),
-    drums: track.drums.replace(/\bh\b/g, '-'),
-  };
 }
 
 export const DRUM_SOUNDS: Record<string, Tone> = {

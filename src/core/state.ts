@@ -5,7 +5,7 @@ import type { ColourKey } from '../config/theme';
 import type { TowOption } from '../config/towTrucks';
 import type { VehicleKind } from '../config/traffic';
 import type { Offence } from '../config/police';
-import { FIRST_LEVEL, TIMES, WEATHER, WEATHER_EFFECTS, type Conditions } from '../config/weather';
+import { FIRST_LEVEL_TIME, TIMES, type TimeId } from '../config/timeOfDay';
 import { laneY, type Lane } from '../world/lanes';
 import type { Swaps } from '../world/pixels';
 import { generateRoad, type RoadPoint } from '../world/road';
@@ -124,8 +124,7 @@ export interface GameState {
   police: { x: number; waited: number } | null; // the police car pulling you over
   policeCooldown: number; // ticks before another stop can happen
   jumpedOver: boolean; // already counted a vehicle jumped over during this jump
-  conditions: Conditions[]; // weather and time of day for each level (shuffled every game)
-  lightning: number; // ticks of lightning flash left
+  times: TimeId[]; // time of day for each level (shuffled every game)
   workshop: { bill: number; step: number; log: WorkshopLogEntry[] };
 }
 
@@ -190,8 +189,7 @@ export function createState(mode: Mode = 'menu'): GameState {
     police: null,
     policeCooldown: 0,
     jumpedOver: false,
-    conditions: shuffleConditions(),
-    lightning: 0,
+    times: shuffleTimes(),
     workshop: { bill: WORKSHOP.startingBill, step: 0, log: [] },
   };
 }
@@ -207,19 +205,13 @@ function weighted<K extends string>(table: Record<K, { chance: number }>): K {
   return keys[0] as K;
 }
 
-/** Fresh weather and time of day for every level; level 1 is always a clear day. */
-export function shuffleConditions(): Conditions[] {
-  return LEVELS.map((_, i) => (i === 0 ? { ...FIRST_LEVEL } : { weather: weighted(WEATHER), time: weighted(TIMES) }));
+/** A fresh time of day for every level; level 1 is always morning. */
+export function shuffleTimes(): TimeId[] {
+  return LEVELS.map((_, i) => (i === 0 ? FIRST_LEVEL_TIME : weighted(TIMES)));
 }
 
-export function currentConditions(state: GameState): Conditions {
-  return state.conditions[state.level - 1] ?? FIRST_LEVEL;
-}
-
-/** Rain and storms make the road slippery: lane changes, braking and gas respond slower. */
-export function grip(state: GameState): number {
-  const w = currentConditions(state).weather;
-  return w === 'rain' || w === 'storm' ? WEATHER_EFFECTS.rainGrip : 1;
+export function currentTime(state: GameState): TimeId {
+  return state.times[state.level - 1] ?? FIRST_LEVEL_TIME;
 }
 
 export function currentLevel(state: GameState): Level {
