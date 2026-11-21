@@ -296,6 +296,7 @@ export class Game {
 
   private openLevelCard(cleared: LevelCardInfo['cleared']): void {
     const s = this.state;
+    document.body.dataset.lanes = String(currentLevel(s).lanes); // dims the lane buttons on one-lane roads
     s.mode = 'levelCard';
     this.cardShownAt = performance.now();
     hideToast();

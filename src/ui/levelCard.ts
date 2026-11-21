@@ -68,7 +68,7 @@ export function showLevelCard(info: LevelCardInfo, onGo: () => void): void {
   facts.append(holes);
 
   // Road: lanes and highway
-  const road = make('div', '', `${level.highway ? 'Highway' : 'Road'}: ${level.lanes} lanes`);
+  const road = make('div', '', `${level.highway ? 'Highway' : 'Road'}: ${level.lanes} lane${level.lanes === 1 ? '' : 's'}`);
   if (previous && (previous.lanes !== level.lanes || previous.highway !== level.highway)) road.append(make('span', 'new-tag', 'NEW'));
   facts.append(road);
 

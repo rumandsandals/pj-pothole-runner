@@ -12,7 +12,7 @@ import type { RoadEventId } from './roadEvents';
  * - event: which road event (from roadEvents.ts), or null for none
  * - eventAt: when the event pops up, as a share of the level (0.5 = halfway, 0.8 = 80% through)
  * - roughness: how bumpy the road looks
- * - lanes: 2 or 3
+ * - lanes: 1, 2 or 3
  * - highway: true = highway look (concrete barrier, white lane lines, sound walls)
  * - traffic: other vehicles, or null for an empty road
  *     spawnChance     how often a vehicle appears (bigger = busier)
@@ -49,14 +49,14 @@ export interface Level {
 export const LEVELS: Level[] = [
   {
     name: 'Smooth Start', seconds: 30,
-    intro: 'Empty roads to learn on. ↑ ↓ switch lanes, SPACE jumps potholes.',
+    intro: 'A single-lane road and nothing but potholes. SPACE (or tap) to jump them!',
     potholes: ['shallow'], speed: 3.2, spawnChance: 0.003, event: null, eventAt: 0.8, roughness: 0.25,
-    lanes: 2, highway: false,
+    lanes: 1, highway: false,
     traffic: null,
   },
   {
     name: 'PJ Streets', seconds: 34,
-    intro: 'Traffic arrives! Slower cars and motorcycles — switch lanes to pass them.',
+    intro: 'The road opens to TWO lanes, and traffic arrives! ↑ ↓ switch lanes to pass slower cars and bikes.',
     potholes: ['shallow', 'medium'], speed: 3.8, spawnChance: 0.0035, event: null, eventAt: 0.8, roughness: 0.55,
     lanes: 2, highway: false,
     traffic: { spawnChance: 0.007, maxOnScreen: 2, motorcycleShare: 0.5, rempitChance: 0, laneChangeChance: 0 },

@@ -478,3 +478,7 @@ body[data-layout='sideways'] .btn { padding: 9px 16px; margin: 3px; }
 body[data-layout='sideways'] .btn.go { padding: 10px 36px; }
 body[data-layout='sideways'] .tow-card { padding: 10px; }
 body[data-layout='sideways'] .tow-desc { font-size: 16px; }
+
+/* One-lane road (level 1): nothing to switch to, so the lane buttons are dimmed */
+body[data-lanes='1'] #laneUpBtn,
+body[data-lanes='1'] #laneDownBtn { opacity: 0.3 !important; pointer-events: none; }
