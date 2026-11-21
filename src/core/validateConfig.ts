@@ -21,6 +21,7 @@ export function validateConfig(): string[] {
     if (level.potholes.length === 0) problems.push(`${where}: "potholes" list is empty.`);
     if (level.speed <= 0) problems.push(`${where}: speed must be above 0.`);
     if (level.seconds <= 0) problems.push(`${where}: seconds must be above 0.`);
+    if (level.lanes < 2 || level.lanes > 3) problems.push(`${where}: lanes must be 2 or 3.`);
     const t = level.traffic;
     if (t) {
       for (const key of ['motorcycleShare', 'rempitChance', 'laneChangeChance'] as const) {

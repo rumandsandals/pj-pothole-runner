@@ -1,14 +1,15 @@
-import { ANIMATION, CAR, LANES, PHYSICS } from '../config/game';
+import { ANIMATION, CAR, PHYSICS, ROAD } from '../config/game';
 import { VEHICLE_ART, type VehicleArt } from '../config/sprites';
 import { THEME } from '../config/theme';
 import type { Car } from '../core/state';
-import { laneY, slideLane, type Lane } from './lanes';
+import { clampLane, laneY, slideLane, type Lane } from './lanes';
 import { ART_WIDTH, drawSprite, fill, toPx, type Swaps } from './pixels';
 
 /** Moves the car (lane slide + jump). Returns true on the tick it lands. */
 export function updateCar(car: Car): boolean {
   let landed = false;
-  car.lanePos = slideLane(car.lanePos, car.lane, LANES.changeTicks);
+  car.lane = clampLane(car.lane); // in case the road just got narrower
+  car.lanePos = slideLane(car.lanePos, car.lane, ROAD.changeTicks);
   if (!car.onGround) {
     car.vy += PHYSICS.gravity;
     car.hop -= car.vy;
@@ -44,8 +45,9 @@ export function jump(car: Car): void {
   car.onGround = false;
 }
 
-/** Switches lane. Returns true if the car actually moved. */
-export function changeLane(car: Car, lane: Lane): boolean {
+/** Moves one lane up (+1, further away) or down (-1, nearer). Returns true if the car moved. */
+export function changeLane(car: Car, step: 1 | -1): boolean {
+  const lane = clampLane(car.lane + step);
   if (!canDrive(car) || car.lane === lane) return false;
   car.lane = lane;
   return true;

@@ -1,10 +1,11 @@
 import { ANIMATION } from '../config/game';
 import { CLOUD, PALM } from '../config/sprites';
 import { THEME, type ColourKey } from '../config/theme';
-import { ART_GROUND, ART_WIDTH, drawSprite, fill, makeCanvas, seededRandom, toPx } from './pixels';
+import { ART_GROUND, ART_WIDTH, drawSprite, drawText, fill, makeCanvas, seededRandom, toPx } from './pixels';
 
 /**
- * Sky, clouds, city skyline, a row of PJ shophouses and roadside palms.
+ * Sky, clouds, city skyline, then either a row of PJ shophouses and palms
+ * (town levels) or sound walls, lamp posts and road signs (highway levels).
  * Layers further away scroll slower than the road (parallax), which gives
  * a sense of depth.
  */
@@ -26,6 +27,13 @@ let sky: HTMLCanvasElement | null = null;
 let far: HTMLCanvasElement | null = null;
 let shops: HTMLCanvasElement | null = null;
 let near: HTMLCanvasElement | null = null;
+let walls: HTMLCanvasElement | null = null;
+let highwaySide: HTMLCanvasElement | null = null;
+
+const WALL_HEIGHT = 40;
+const WALL_WIDTH = 640;
+const SIDE_HEIGHT = 70;
+const SIDE_WIDTH = 900;
 
 function buildSky(): HTMLCanvasElement {
   const { top, horizon, fadeStart, fadeEnd } = THEME.sky;
@@ -122,13 +130,56 @@ function buildNearRow(): HTMLCanvasElement {
   return canvas;
 }
 
+/** Highway sound-barrier walls: grey panels with a green cap. */
+function buildWalls(): HTMLCanvasElement {
+  const { panel, line, top } = THEME.highway.wall;
+  const [canvas, ctx] = makeCanvas(WALL_WIDTH, WALL_HEIGHT);
+  fill(ctx, top, 0, 0, WALL_WIDTH, 3);
+  fill(ctx, panel, 0, 3, WALL_WIDTH, WALL_HEIGHT - 3);
+  for (let x = 0; x < WALL_WIDTH; x += 32) {
+    fill(ctx, '5', x, 3, 2, WALL_HEIGHT - 3); // posts
+    for (let y = 9; y < WALL_HEIGHT; y += 8) fill(ctx, line, x + 3, y, 28, 1); // panel ribs
+  }
+  return canvas;
+}
+
+/** Highway roadside: lamp posts, green direction signs and a few palms. */
+function buildHighwaySide(): HTMLCanvasElement {
+  const { pole, light } = THEME.highway.lamp;
+  const sign = THEME.highway.sign;
+  const [canvas, ctx] = makeCanvas(SIDE_WIDTH, SIDE_HEIGHT);
+  const ground = SIDE_HEIGHT;
+  // Lamp posts with an arm reaching over the road
+  for (let x = 40; x < SIDE_WIDTH; x += 150) {
+    fill(ctx, pole, x, 8, 3, ground - 8);
+    fill(ctx, pole, x, 8, 18, 2);
+    fill(ctx, light, x + 14, 10, 6, 2);
+    fill(ctx, '5', x - 2, ground - 3, 7, 3);
+  }
+  // Green direction signs
+  const places = ['PJ 3 KM', 'KL 12 KM', 'SUBANG 8', 'SHAH ALAM'];
+  places.forEach((text, i) => {
+    const x = 100 + i * 220;
+    fill(ctx, sign.post, x + 8, 30, 3, ground - 30);
+    fill(ctx, sign.post, x + 66, 30, 3, ground - 30);
+    fill(ctx, '0', x - 1, 7, 80, 26);
+    fill(ctx, sign.board, x, 8, 78, 24);
+    fill(ctx, sign.text, x + 2, 10, 74, 1);
+    fill(ctx, sign.text, x + 2, 29, 74, 1);
+    drawText(ctx, text, x + 39, 15, sign.text, { align: 'center' });
+  });
+  // A few palms in the verge
+  for (const x of [10, 330, 610, 820]) drawSprite(ctx, PALM, x, ground - PALM.length);
+  return canvas;
+}
+
 /** Draws a strip twice side by side so it scrolls forever without a gap. */
 function drawLooping(ctx: CanvasRenderingContext2D, strip: HTMLCanvasElement, scroll: number, y: number): void {
   const offset = -(Math.floor(scroll) % strip.width);
   for (let x = offset; x < ART_WIDTH; x += strip.width) ctx.drawImage(strip, x, y);
 }
 
-export function drawBackground(ctx: CanvasRenderingContext2D, roadOffset: number, time: number): void {
+export function drawBackground(ctx: CanvasRenderingContext2D, roadOffset: number, time: number, highway = false): void {
   sky ??= buildSky();
   far ??= buildFarSkyline();
   shops ??= buildShophouses();
@@ -150,6 +201,13 @@ export function drawBackground(ctx: CanvasRenderingContext2D, roadOffset: number
   }
 
   drawLooping(ctx, far, toPx(roadOffset) * PARALLAX.far, ART_GROUND - FAR_HEIGHT - 20);
+  if (highway) {
+    walls ??= buildWalls();
+    highwaySide ??= buildHighwaySide();
+    drawLooping(ctx, walls, toPx(roadOffset) * PARALLAX.shops, ART_GROUND - WALL_HEIGHT - 10);
+    drawLooping(ctx, highwaySide, toPx(roadOffset) * PARALLAX.near, ART_GROUND - SIDE_HEIGHT);
+    return;
+  }
   drawLooping(ctx, shops, toPx(roadOffset) * PARALLAX.shops, ART_GROUND - SHOP_HEIGHT - 8);
   drawLooping(ctx, near, toPx(roadOffset) * PARALLAX.near, ART_GROUND - NEAR_HEIGHT);
 }

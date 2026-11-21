@@ -67,6 +67,11 @@ export function showLevelCard(info: LevelCardInfo, onGo: () => void): void {
   });
   facts.append(holes);
 
+  // Road: lanes and highway
+  const road = make('div', '', `${level.highway ? 'Highway' : 'Road'}: ${level.lanes} lanes`);
+  if (previous && (previous.lanes !== level.lanes || previous.highway !== level.highway)) road.append(make('span', 'new-tag', 'NEW'));
+  facts.append(road);
+
   // Traffic: how busy, plus new dangers this level
   const traffic = level.traffic;
   const before = previous?.traffic ?? null;

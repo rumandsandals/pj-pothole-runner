@@ -5,12 +5,12 @@ import { drawBackground } from './background';
 import { drawCar } from './car';
 import { drawBits } from './effects';
 import { drawParticles } from './particles';
-import { ART_HEIGHT, ART_WIDTH, drawText, fill, textWidth } from './pixels';
+import { ART_WIDTH, drawText, fill, textWidth } from './pixels';
 import { drawPotholes } from './potholes';
 import { drawRoad } from './road';
 import { drawTowTruck } from './towTruck';
 import { drawRempitWarnings, drawVehicles } from './traffic';
-import { drawLane } from './lanes';
+import { drawLane, laneCount, setLaneCount } from './lanes';
 
 /**
  * Draws one full frame onto the low-res pixel canvas, back to front:
@@ -18,12 +18,15 @@ import { drawLane } from './lanes';
  * overlap far ones), then effects and the HUD on top.
  */
 export function render(ctx: CanvasRenderingContext2D, state: GameState): void {
-  const roughness = currentLevel(state).roughness;
+  const level = currentLevel(state);
+  const roughness = level.roughness;
+  setLaneCount(level.lanes);
   const carLane = drawLane(state.car.lanePos);
-  drawBackground(ctx, state.roadOffset, state.time);
-  drawRoad(ctx, state.road, state.roadOffset, roughness);
+  drawBackground(ctx, state.roadOffset, state.time, level.highway);
+  drawRoad(ctx, state.road, state.roadOffset, roughness, level.highway);
 
-  for (const lane of [1, 0] as const) {
+  // Furthest lane first, so nearer things overlap further ones
+  for (let lane = laneCount() - 1; lane >= 0; lane--) {
     drawPotholes(ctx, state.potholes, lane, state.time);
     drawVehicles(ctx, state.vehicles, lane, state.time, state.roadOffset);
     if (carLane === lane) {
@@ -66,15 +69,16 @@ function drawLevelBadge(ctx: CanvasRenderingContext2D, state: GameState): void {
 
 function drawProgressBar(ctx: CanvasRenderingContext2D, state: GameState): void {
   const t = THEME.progress;
-  const left = 16;
-  const width = ART_WIDTH - 32;
-  const y = ART_HEIGHT - 8;
+  // Top-left corner (the level badge is top-right), clear of the road
+  const left = 12;
+  const width = 220;
+  const y = 14;
   const progress = Math.min(state.levelDistance / levelLength(currentLevel(state)), 1);
 
   fill(ctx, t.track, left - 2, y - 2, width + 4, 7);
   fill(ctx, t.fill, left, y, Math.round(width * progress), 3);
   for (let i = 1; i < LEVELS.length; i++) fill(ctx, t.tick, left + Math.round(width * (i / LEVELS.length)), y, 2, 3);
 
-  drawText(ctx, `${Math.floor(state.distance)}m`, left, y - 16, t.text, { shadow: t.textShadow });
-  drawText(ctx, `RM ${state.money}`, left + width, y - 16, t.text, { align: 'right', shadow: t.textShadow });
+  drawText(ctx, `${Math.floor(state.distance)}m`, left, y + 9, t.text, { shadow: t.textShadow });
+  drawText(ctx, `RM ${state.money}`, left + width, y + 9, t.text, { align: 'right', shadow: t.textShadow });
 }

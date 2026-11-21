@@ -52,6 +52,15 @@ export const THEME = {
   roadSpeckles: ['0', '6'] as C[],
   laneLine: 'a' as C,
 
+  /** Highway levels (see `highway` in levels.ts). */
+  highway: {
+    laneLine: '7' as C,
+    barrier: { face: '6' as C, top: '7' as C, shadow: 'h' as C, joint: 'h' as C },
+    wall: { panel: 'h' as C, line: '6' as C, top: '3' as C },
+    lamp: { pole: '6' as C, light: 'a' as C },
+    sign: { board: '3' as C, text: '7' as C, post: 'h' as C },
+  },
+
   pothole: { hole: '0' as C, rim: '6' as C, label: '8' as C, labelShadow: '0' as C, damageDot: 'a' as C },
 
   /** Your Mazda's paint: X = body, Y = shadow. */

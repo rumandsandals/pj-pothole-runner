@@ -21,15 +21,16 @@ export interface VehicleType {
   halfWidth: number; // for collisions (world units)
   height: number; // jump higher than this to clear it (world units)
   accident: 'minor' | 'fender' | 'cyclist'; // which accident scenes (accidents.ts)
+  onHighway: boolean; // false = never appears on highway levels
 }
 
 export const VEHICLES: Record<VehicleKind, VehicleType> = {
-  sedan: { art: 'sedan', group: 'car', mix: 5, speed: [0.48, 0.66], halfWidth: 29, height: 22, accident: 'fender' },
-  suv: { art: 'suv', group: 'car', mix: 3, speed: [0.42, 0.56], halfWidth: 29, height: 28, accident: 'fender' },
-  sports: { art: 'sports', group: 'car', mix: 2, speed: [0.74, 0.9], halfWidth: 29, height: 18, accident: 'fender' },
-  motorcycle: { art: 'motorcycle', group: 'twoWheeler', mix: 7, speed: [0.55, 0.8], halfWidth: 15, height: 28, accident: 'minor' },
-  bicycle: { art: 'bicycle', group: 'twoWheeler', mix: 3, speed: [0.2, 0.3], halfWidth: 14, height: 28, accident: 'cyclist' },
-  rempit: { art: 'motorcycle', group: 'rempit', mix: 1, speed: [1.35, 1.6], halfWidth: 15, height: 28, accident: 'minor' },
+  sedan: { onHighway: true, art: 'sedan', group: 'car', mix: 5, speed: [0.48, 0.66], halfWidth: 29, height: 22, accident: 'fender' },
+  suv: { onHighway: true, art: 'suv', group: 'car', mix: 3, speed: [0.42, 0.56], halfWidth: 29, height: 28, accident: 'fender' },
+  sports: { onHighway: true, art: 'sports', group: 'car', mix: 2, speed: [0.74, 0.9], halfWidth: 29, height: 18, accident: 'fender' },
+  motorcycle: { onHighway: true, art: 'motorcycle', group: 'twoWheeler', mix: 7, speed: [0.55, 0.8], halfWidth: 15, height: 28, accident: 'minor' },
+  bicycle: { onHighway: false, art: 'bicycle', group: 'twoWheeler', mix: 3, speed: [0.2, 0.3], halfWidth: 14, height: 28, accident: 'cyclist' },
+  rempit: { onHighway: true, art: 'motorcycle', group: 'rempit', mix: 1, speed: [1.35, 1.6], halfWidth: 15, height: 28, accident: 'minor' },
 };
 
 type Paint = { X: ColourKey; Y: ColourKey; Z?: ColourKey };

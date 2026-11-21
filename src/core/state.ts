@@ -1,10 +1,10 @@
-import { CAR, LANES, MAX_HEALTH, TICKS_PER_SECOND, TOW, WORKSHOP } from '../config/game';
+import { CAR, MAX_HEALTH, TICKS_PER_SECOND, TOW, WORKSHOP } from '../config/game';
 import { LEVELS, type Level } from '../config/levels';
 import type { PotholeId } from '../config/potholes';
 import type { ColourKey } from '../config/theme';
 import type { TowOption } from '../config/towTrucks';
 import type { VehicleKind } from '../config/traffic';
-import type { Lane } from '../world/lanes';
+import { laneY, type Lane } from '../world/lanes';
 import type { Swaps } from '../world/pixels';
 import { generateRoad, type RoadPoint } from '../world/road';
 
@@ -24,7 +24,7 @@ export interface Car {
   x: number;
   y: number; // where the wheels touch down (worked out from lane and hop)
   lane: Lane; // the lane the car is in or heading to
-  lanePos: number; // 0 = near lane, 1 = far lane, in between while changing
+  lanePos: number; // 0 = nearest lane, 1, 2… going up; in between while changing
   hop: number; // height above the road while jumping
   crashTimer: number; // ticks left on the wreck after a serious crash
   vy: number;
@@ -122,7 +122,7 @@ export interface GameState {
 export function createCar(): Car {
   return {
     x: CAR.x,
-    y: LANES.near,
+    y: laneY(0),
     lane: 0,
     lanePos: 0,
     hop: 0,

@@ -1,8 +1,6 @@
-import type { Lane } from '../world/lanes';
-
 export interface Controls {
   jump: () => void;
-  lane: (lane: Lane) => void;
+  lane: (step: 1 | -1) => void; // +1 = one lane up (further), -1 = one lane down (nearer)
   throttle: (value: -1 | 0 | 1) => void;
 }
 
@@ -15,7 +13,7 @@ const SWIPE_PX = 24; // finger movement that counts as a swipe rather than a tap
 
 /**
  * Keyboard, mouse and touch controls.
- *   Space = jump · ↑/W = far lane · ↓/S = near lane · hold ←/A = brake · hold →/D = gas
+ *   Space = jump · ↑/W = lane up · ↓/S = lane down · hold ←/A = brake · hold →/D = gas
  *   Tap the road = jump · swipe up/down on the road = change lane
  *   On-screen buttons: ▲ LANE · ▼ LANE · JUMP · hold ◀ BRAKE / GAS ▶
  */
@@ -32,7 +30,7 @@ export function bindInput(
   document.addEventListener('keydown', (e) => {
     if (JUMP_KEYS.has(e.key)) controls.jump();
     else if (UP_KEYS.has(e.key)) controls.lane(1);
-    else if (DOWN_KEYS.has(e.key)) controls.lane(0);
+    else if (DOWN_KEYS.has(e.key)) controls.lane(-1);
     else if (BRAKE_KEYS.has(e.key)) (brakeHeld = true), updateThrottle();
     else if (GAS_KEYS.has(e.key)) (gasHeld = true), updateThrottle();
     else return;
@@ -59,7 +57,7 @@ export function bindInput(
     const moved = e.clientY - startY;
     startY = null;
     if (moved < -SWIPE_PX) controls.lane(1);
-    else if (moved > SWIPE_PX) controls.lane(0);
+    else if (moved > SWIPE_PX) controls.lane(-1);
     else controls.jump();
   });
   canvas.addEventListener('pointercancel', () => (startY = null));
@@ -71,7 +69,7 @@ export function bindInput(
     });
   press(buttons.jump, controls.jump);
   press(buttons.up, () => controls.lane(1));
-  press(buttons.down, () => controls.lane(0));
+  press(buttons.down, () => controls.lane(-1));
 
   const hold = (el: HTMLElement, set: (held: boolean) => void): void => {
     el.addEventListener('pointerdown', (e) => {

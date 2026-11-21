@@ -1,10 +1,10 @@
-import { LANES } from '../config/game';
+import { ROAD } from '../config/game';
 import type { LevelTraffic } from '../config/levels';
 import { VEHICLE_ART } from '../config/sprites';
 import { CAR_PAINT, CYCLIST_PAINT, REMPIT_PAINT, RIDER_PAINT, TRAFFIC_RULES, VEHICLES, type VehicleKind } from '../config/traffic';
 import type { Car, Vehicle } from '../core/state';
 import { drawVehicleArt, vehicleBox, wheelFrame } from './car';
-import { drawLane, laneY, randomLane, sameLane, slideLane, type Lane } from './lanes';
+import { drawLane, laneCount, laneY, neighbourLane, randomLane, sameLane, slideLane, type Lane } from './lanes';
 import { drawText, fill, toPx } from './pixels';
 
 const pick = <T,>(list: T[]): T => list[Math.floor(Math.random() * list.length)] as T;
@@ -12,8 +12,8 @@ const between = ([a, b]: [number, number]): number => a + Math.random() * (b - a
 const KINDS = Object.keys(VEHICLES) as VehicleKind[];
 
 /** Picks a vehicle from one group (cars or two-wheelers), weighted by `mix`. */
-function pickKind(group: 'car' | 'twoWheeler'): VehicleKind {
-  const options = KINDS.filter((k) => VEHICLES[k].group === group);
+function pickKind(group: 'car' | 'twoWheeler', highway: boolean): VehicleKind {
+  const options = KINDS.filter((k) => VEHICLES[k].group === group && !(highway && !VEHICLES[k].onHighway));
   let roll = Math.random() * options.reduce((sum, k) => sum + VEHICLES[k].mix, 0);
   for (const k of options) {
     roll -= VEHICLES[k].mix;
@@ -30,22 +30,20 @@ function paintFor(kind: VehicleKind): Vehicle['paint'] {
 }
 
 /** Maybe adds a vehicle this tick. Returns it (so the game can play a sound), or null. */
-export function maybeSpawnVehicle(vehicles: Vehicle[], traffic: LevelTraffic | null): Vehicle | null {
+export function maybeSpawnVehicle(vehicles: Vehicle[], traffic: LevelTraffic | null, highway = false): Vehicle | null {
   if (!traffic || vehicles.length >= traffic.maxOnScreen) return null;
   if (Math.random() >= traffic.spawnChance) return null;
 
   const rempit = Math.random() < traffic.rempitChance;
-  const kind: VehicleKind = rempit ? 'rempit' : pickKind(Math.random() < traffic.motorcycleShare ? 'twoWheeler' : 'car');
+  const kind: VehicleKind = rempit ? 'rempit' : pickKind(Math.random() < traffic.motorcycleShare ? 'twoWheeler' : 'car', highway);
   const x = rempit ? TRAFFIC_RULES.rempitStartX : TRAFFIC_RULES.spawnAheadX;
   const lane = randomLane();
 
-  // Keep space between vehicles, and never block both lanes at once
-  const tooClose = vehicles.some((v) =>
-    sameLane(v.lanePos, lane)
-      ? Math.abs(v.x - x) < TRAFFIC_RULES.minGapSameLane
-      : Math.abs(v.x - x) < TRAFFIC_RULES.minGapOtherLane,
-  );
-  if (tooClose) return null;
+  // Keep space between vehicles in a lane, and never block every lane at once
+  const sameLaneClash = vehicles.some((v) => sameLane(v.lanePos, lane) && Math.abs(v.x - x) < TRAFFIC_RULES.minGapSameLane);
+  const busyLanes = new Set(vehicles.filter((v) => Math.abs(v.x - x) < TRAFFIC_RULES.minGapOtherLane).map((v) => drawLane(v.lanePos)));
+  busyLanes.add(lane);
+  if (sameLaneClash || busyLanes.size >= laneCount()) return null;
 
   const vehicle: Vehicle = {
     kind,
@@ -82,24 +80,24 @@ export function updateVehicles(vehicles: Vehicle[], playerSpeed: number, roadSpe
       v.signal = TRAFFIC_RULES.laneChangeSignalTicks;
     }
     if (v.signal > 0 && --v.signal === 0) {
-      const target: Lane = v.lane === 0 ? 1 : 0;
+      const target = neighbourLane(v.lane);
       if (laneIsClear(vehicles, v, target)) v.lane = target;
       v.changed = true;
       v.signal = -1;
     }
 
     // Mat Rempit weave once while still behind you — but only into a lane
-    // that's clear around you, so both lanes are never blocked at once
+    // that's clear around you, so you always have somewhere to go
     if (v.kind === 'rempit' && !v.changed && v.x > player.x - 170) {
       v.changed = true;
-      const target: Lane = v.lane === 0 ? 1 : 0;
-      const clearNearPlayer = !vehicles.some(
-        (o) => o !== v && sameLane(o.lanePos, target) && o.x > player.x - 60 && o.x < player.x + 200,
-      );
+      const target = neighbourLane(v.lane);
+      const nearPlayer = vehicles.filter((o) => o !== v && o.x > player.x - 60 && o.x < player.x + 200);
+      const busy = new Set(nearPlayer.map((o) => drawLane(o.lanePos)));
+      const clearNearPlayer = !busy.has(target) && busy.size + 1 < laneCount();
       if (Math.random() < 0.5 && clearNearPlayer) v.lane = target;
     }
 
-    v.lanePos = slideLane(v.lanePos, v.lane, v.kind === 'rempit' ? LANES.changeTicks : LANES.changeTicks * 2);
+    v.lanePos = slideLane(v.lanePos, v.lane, v.kind === 'rempit' ? ROAD.changeTicks : ROAD.changeTicks * 2);
   }
   return vehicles.filter((v) => v.x > -340 && v.x < 820);
 }

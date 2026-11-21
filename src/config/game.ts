@@ -13,13 +13,16 @@ export const WORLD = {
 };
 
 /**
- * The two lanes. Numbers are how far down the screen each lane's road
- * surface sits (world units). Lane 0 = near (bottom), lane 1 = far (top).
+ * THE ROAD
+ * The road runs from `top` (just under the kerb) to `bottom` (the bottom of
+ * the screen), and is split into equal lanes — 2 or 3, set per level in
+ * levels.ts. Lane lines sit exactly between lanes (½ for two lanes; ⅓ and
+ * ⅔ for three). Lane 0 is the nearest (bottom) lane.
  */
-export const LANES = {
-  near: 332,
-  far: 292,
-  dividerY: 311, // the dashed yellow line between them
+export const ROAD = {
+  top: 256,
+  bottom: 360,
+  wheelLine: 0.2, // where wheels sit inside a lane: 0 = its bottom edge, 1 = its top edge
   changeTicks: 9, // how quickly the car slides between lanes
 };
 

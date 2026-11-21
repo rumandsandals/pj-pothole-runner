@@ -27,7 +27,7 @@ import {
   updateSinking,
 } from '../world/car';
 import { burst, puff, shakeOffset, startShake, updateBits, updateShake } from '../world/effects';
-import { laneY, type Lane } from '../world/lanes';
+import { laneY, setLaneCount } from '../world/lanes';
 import { addFloatingText, updateParticles } from '../world/particles';
 import { ART_HEIGHT, ART_WIDTH, makeCanvas } from '../world/pixels';
 import { findCollision, maybeSpawnPothole, movePotholes } from '../world/potholes';
@@ -85,6 +85,7 @@ export class Game {
 
   private update(): void {
     const s = this.state;
+    setLaneCount(currentLevel(s).lanes);
     s.time++;
     s.particles = updateParticles(s.particles);
     s.bits = updateBits(s.bits);
@@ -141,7 +142,7 @@ export class Game {
     s.roadOffset += s.speed;
     maybeSpawnPothole(s.potholes, level, s.speed);
     s.potholes = movePotholes(s.potholes, s.speed);
-    const newVehicle = maybeSpawnVehicle(s.vehicles, level.traffic);
+    const newVehicle = maybeSpawnVehicle(s.vehicles, level.traffic, level.highway);
     if (newVehicle?.kind === 'rempit') sound.play('rev');
     s.vehicles = updateVehicles(s.vehicles, s.speed, level.speed, car);
     s.distance += s.speed;
@@ -330,10 +331,10 @@ export class Game {
     }
   }
 
-  /** ↑ / ↓ / swipe / lane buttons. */
-  moveLane(lane: Lane): void {
+  /** ↑ / ↓ / swipe / lane buttons: +1 = one lane up (further), -1 = one lane down (nearer). */
+  moveLane(step: 1 | -1): void {
     const s = this.state;
-    if (s.mode === 'playing' && changeLane(s.car, lane)) sound.play('lane');
+    if (s.mode === 'playing' && changeLane(s.car, step)) sound.play('lane');
   }
 
   /** ← / → / BRAKE / GAS: -1 = brake, 1 = gas, 0 = let go. */

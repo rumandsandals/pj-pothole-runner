@@ -47,6 +47,10 @@ Everything you're likely to change lives in **`src/config/`**. Edit a file, save
 | Menu and panel colours and fonts           | top of `src/style.css`      |
 | When phones switch to sideways / upright layout | `LAYOUT` in `src/config/game.ts` |
 | Where the car sits on screen               | `CAR.x` in `src/config/game.ts` |
+| Number of lanes (2 or 3) and highway look per level | `lanes` and `highway` in `src/config/levels.ts` |
+| Road edges and where vehicles sit in a lane | `ROAD` in `src/config/game.ts` |
+| Highway colours (lane lines, barrier, walls, signs) | `highway` in `src/config/theme.ts` |
+| Which vehicles may use the highway         | `onHighway` in `src/config/traffic.ts` |
 | Brake / gas speeds and how far the car slides | `DRIVING` in `src/config/game.ts` |
 | Auto full screen on phones (on/off)        | `FULL_SCREEN` in `src/config/game.ts` |
 | Home Screen app name, icon and colours     | `public/manifest.webmanifest`, `public/icon-*.png` |

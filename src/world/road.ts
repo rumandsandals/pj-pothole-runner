@@ -1,5 +1,6 @@
-import { LANES, WORLD } from '../config/game';
+import { WORLD } from '../config/game';
 import { THEME } from '../config/theme';
+import { laneLineYs } from './lanes';
 import { ART_GROUND, ART_HEIGHT, ART_WIDTH, fill, seededRandom, toPx } from './pixels';
 
 export interface RoadPoint {
@@ -40,7 +41,12 @@ const SPECKLES = (() => {
 
 const wrap = (value: number, length: number): number => ((value % length) + length) % length;
 
-export function drawRoad(ctx: CanvasRenderingContext2D, road: RoadPoint[], offset: number, roughness: number): void {
+/**
+ * Draws the road: asphalt, speckles, lane lines and the kerb.
+ * Town roads have yellow lane dashes and a red/white kerb; the highway has
+ * long white dashes and a concrete barrier.
+ */
+export function drawRoad(ctx: CanvasRenderingContext2D, road: RoadPoint[], offset: number, roughness: number, highway = false): void {
   const scroll = toPx(offset);
 
   // Asphalt
@@ -54,10 +60,17 @@ export function drawRoad(ctx: CanvasRenderingContext2D, road: RoadPoint[], offse
     if (x < ART_WIDTH) fill(ctx, THEME.roadSpeckles[s.shade] ?? THEME.road, x, ART_GROUND + s.y, s.size, s.size);
   }
 
-  // Dashed yellow line between the two lanes
-  const dividerY = toPx(LANES.dividerY);
-  for (let x = -wrap(scroll, LANE_DASH * 2); x < ART_WIDTH; x += LANE_DASH * 2) {
-    fill(ctx, THEME.laneLine, x, dividerY, LANE_DASH, 2);
+  // Dashed lines exactly between lanes (½ for two lanes; ⅓ and ⅔ for three)
+  const dash = highway ? LANE_DASH * 1.6 : LANE_DASH;
+  const colour = highway ? THEME.highway.laneLine : THEME.laneLine;
+  for (const lineY of laneLineYs()) {
+    const y = Math.round(toPx(lineY)) - 1; // 2 px line centred on the boundary
+    for (let x = -wrap(scroll, dash * 2); x < ART_WIDTH; x += dash * 2) fill(ctx, colour, x, y, dash, 2);
+  }
+
+  if (highway) {
+    drawBarrier(ctx, scroll);
+    return;
   }
 
   // Red/white kerb, nudged up and down by the road's bumps
@@ -71,4 +84,15 @@ export function drawRoad(ctx: CanvasRenderingContext2D, road: RoadPoint[], offse
     fill(ctx, colour, x, ART_GROUND + bump, 1, KERB_HEIGHT - Math.min(bump, 0));
     fill(ctx, '0', x, ART_GROUND + bump + KERB_HEIGHT - Math.min(bump, 0), 1, 1); // kerb shadow
   }
+}
+
+/** Highway concrete barrier along the top of the road. */
+function drawBarrier(ctx: CanvasRenderingContext2D, scroll: number): void {
+  const { face, top, shadow, joint } = THEME.highway.barrier;
+  const y = ART_GROUND - 4;
+  fill(ctx, top, 0, y, ART_WIDTH, 2);
+  fill(ctx, face, 0, y + 2, ART_WIDTH, 6);
+  fill(ctx, shadow, 0, y + 8, ART_WIDTH, 2);
+  fill(ctx, '0', 0, y + 10, ART_WIDTH, 1);
+  for (let x = -wrap(scroll, 40); x < ART_WIDTH; x += 40) fill(ctx, joint, x, y + 2, 1, 8); // panel joints
 }
