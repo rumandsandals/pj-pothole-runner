@@ -1,22 +1,49 @@
 import { LAYOUT } from '../config/game';
 import { ART_HEIGHT, ART_WIDTH } from '../world/pixels';
 
+/** Which screen layout is in use. The page styles follow `<body data-layout="...">`. */
+export type Layout = 'desktop' | 'sideways' | 'upright';
+
+export function pickLayout(width: number, height: number): Layout {
+  if (width > height && height <= LAYOUT.sideways.maxHeight) return 'sideways';
+  if (height > width && width <= LAYOUT.upright.maxWidth) return 'upright';
+  return 'desktop';
+}
+
+const px = (value: string): number => parseFloat(value) || 0;
+
 /**
  * Fits the game to any screen: keeps the road's shape, fills the space
  * available, and scales the pixel art by whole numbers where possible so
  * every pixel is the same size (crisp on Retina / high-DPI displays too).
  */
 export class Viewport {
+  private readonly app: HTMLElement;
+  private readonly frame: HTMLElement;
+
   constructor(private readonly canvas: HTMLCanvasElement) {
+    this.app = canvas.closest('main') ?? document.body;
+    this.frame = canvas.parentElement ?? canvas;
     window.addEventListener('resize', () => this.fit());
     window.addEventListener('orientationchange', () => this.fit());
+    window.visualViewport?.addEventListener('resize', () => this.fit());
     this.fit();
   }
 
   fit(): void {
+    const layout = pickLayout(window.innerWidth, window.innerHeight);
+    document.body.dataset.layout = layout;
+
+    // Room inside the page's padding (which includes the iPhone notch / safe areas)
+    const page = getComputedStyle(this.app);
+    const border = getComputedStyle(this.frame);
+    const frameWidth = px(border.borderLeftWidth) + px(border.borderRightWidth);
+    const roomWidth = this.app.clientWidth - px(page.paddingLeft) - px(page.paddingRight) - frameWidth;
+    const reserved = layout === 'sideways' ? LAYOUT.sideways.reservedHeight : LAYOUT.reservedHeight;
+
     const aspect = ART_WIDTH / ART_HEIGHT;
-    const availableWidth = Math.min(window.innerWidth - LAYOUT.sideGutter * 2, LAYOUT.maxWidth);
-    const availableHeight = Math.max(window.innerHeight - LAYOUT.reservedHeight, 100);
+    const availableWidth = Math.min(roomWidth, LAYOUT.maxWidth);
+    const availableHeight = layout === 'upright' ? Infinity : Math.max(window.innerHeight - reserved, 100);
 
     let cssWidth = Math.min(availableWidth, availableHeight * aspect);
     cssWidth = Math.max(cssWidth, Math.min(availableWidth, LAYOUT.minWidth));

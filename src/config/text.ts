@@ -81,5 +81,5 @@ export const TEXT = {
   controlsHint: '↑ ↓ LANES · SPACE / TAP JUMP',
   laneUpButton: '▲ LANE',
   laneDownButton: '▼ LANE',
-  rotateHint: '↻ Turn your phone sideways for a bigger road',
+  rotateHint: '↻ Tip: turn your phone sideways for a bigger road',
 };

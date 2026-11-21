@@ -37,7 +37,7 @@ export const VOLUME = {
 /** What a new player hears before they change anything. */
 export const SOUND_DEFAULTS = {
   effectsOn: true,
-  musicOn: false,
+  musicOn: true,
 };
 
 export const SOUNDS = {

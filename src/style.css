@@ -183,9 +183,6 @@ canvas { display: block; image-rendering: pixelated; }
 #jumpBtn:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--plum); }
 #hint { font: 7px var(--font-arcade); color: var(--grey); margin-top: 12px; }
 #rotateHint { display: none; font-size: 18px; color: var(--text-soft); margin-top: 8px; text-align: center; }
-@media (orientation: portrait) and (max-width: 600px) {
-  #rotateHint { display: block; }
-}
 
 @keyframes blink { 50% { visibility: hidden; } }
 /* Chunky, stepped motion (no smooth easing) to feel like an old arcade machine */
@@ -378,3 +375,96 @@ canvas { display: block; image-rendering: pixelated; }
 #wsEndLog { font-size: 17px; line-height: 1.3; margin-bottom: 14px; border-top: 2px solid var(--grey); padding-top: 10px; }
 .protection { font-size: 17px; color: var(--text-soft); line-height: 1.3; margin-bottom: 14px; padding: 10px 12px; background: var(--black); border: 2px solid var(--grey); }
 .protection b { color: var(--yellow); font-weight: normal; }
+
+/* ── Phone layouts ───────────────────────────────────────────
+   The game picks one automatically (see LAYOUT in config/game.ts):
+   body[data-layout='sideways'] — phone held sideways: road fills the screen
+   body[data-layout='upright']  — phone held upright: handheld-console look   */
+
+/* Sideways: full-screen road, thumb buttons floating over the sky */
+body[data-layout='sideways'] #app {
+  padding: 4px max(4px, env(safe-area-inset-right)) 4px max(4px, env(safe-area-inset-left));
+  justify-content: center;
+}
+body[data-layout='sideways'] #title,
+body[data-layout='sideways'] #hint,
+body[data-layout='sideways'] #rotateHint { display: none; }
+body[data-layout='sideways'] #hud { margin-bottom: 4px; padding-right: 128px; } /* clear of the sound buttons */
+body[data-layout='sideways'] #wrapper { border: 0; box-shadow: none; }
+body[data-layout='sideways'] #soundControls { top: 3px; right: max(4px, env(safe-area-inset-right)); }
+body[data-layout='sideways'] .snd { min-height: 24px; padding: 5px 6px; }
+body[data-layout='sideways'] #controls {
+  position: fixed;
+  inset: 0;
+  margin: 0;
+  z-index: 5;
+  pointer-events: none; /* taps between the buttons still reach the road */
+}
+body[data-layout='sideways'] #controls button {
+  position: absolute;
+  pointer-events: auto;
+  opacity: 0.82;
+}
+body[data-layout='sideways'] .lane-btn {
+  left: max(10px, env(safe-area-inset-left));
+  width: 76px;
+  padding: 14px 0;
+}
+body[data-layout='sideways'] #laneUpBtn { top: 24%; }
+body[data-layout='sideways'] #laneDownBtn { top: calc(24% + 62px); }
+body[data-layout='sideways'] #jumpBtn {
+  right: max(10px, env(safe-area-inset-right));
+  top: 36%;
+  padding: 30px 18px;
+}
+
+/* Upright: road on top, big thumb buttons filling the bottom */
+body[data-layout='upright'] #app {
+  padding: 46px 6px calc(14px + env(safe-area-inset-bottom));
+}
+body[data-layout='upright'] #title { font-size: 11px; margin-bottom: 10px; }
+body[data-layout='upright'] #hud { font-size: 8px; }
+body[data-layout='upright'] #hpBar { width: 56px; }
+body[data-layout='upright'] #hint { display: none; }
+body[data-layout='upright'] #rotateHint { display: block; font-size: 16px; margin-top: 10px; order: 1; }
+body[data-layout='upright'] #controls {
+  order: 2;
+  margin-top: auto; /* push the buttons down to where thumbs are */
+  padding-top: 14px;
+  width: 100%;
+  height: min(34vh, 250px);
+  display: grid;
+  grid-template-columns: 1fr 1.25fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 14px 12px;
+  align-items: stretch;
+}
+body[data-layout='upright'] #laneUpBtn { grid-area: 1 / 1; }
+body[data-layout='upright'] #laneDownBtn { grid-area: 2 / 1; }
+body[data-layout='upright'] #jumpBtn { grid-area: 1 / 2 / 3 / 3; padding: 0; font-size: 18px; }
+body[data-layout='upright'] .lane-btn { padding: 0; font-size: 12px; }
+
+/* Phones: hide the driving buttons while the Workshop Hell panels are open */
+body[data-layout='sideways']:has(.panel.show) #controls,
+body[data-layout='upright']:has(.panel.show) #controls { display: none; }
+
+/* Sideways phones are short: squeeze the pop-ups so GO fits without scrolling */
+body[data-layout='sideways'] .ov { padding: 6px; }
+body[data-layout='sideways'] .ov-card { padding: 10px 16px; }
+body[data-layout='sideways'] .tit { margin-bottom: 6px; }
+body[data-layout='sideways'] .sub,
+body[data-layout='sideways'] .press-start { margin-bottom: 8px; }
+body[data-layout='sideways'] .intro,
+body[data-layout='sideways'] .desc,
+body[data-layout='sideways'] .howto { font-size: 17px; margin-bottom: 8px; }
+body[data-layout='sideways'] #lvlResult:not(:empty) { padding-bottom: 6px; margin-bottom: 6px; }
+body[data-layout='sideways'] .lvl-stats { font-size: 17px; }
+body[data-layout='sideways'] .lvl-kicker { display: none; }
+body[data-layout='sideways'] .lvl-number { font-size: 18px; text-shadow: 3px 3px 0 var(--heading-shadow); margin-bottom: 4px; }
+body[data-layout='sideways'] .lvl-title { margin-bottom: 4px; }
+body[data-layout='sideways'] .lvl-facts { font-size: 17px; margin-bottom: 8px; gap: 2px 14px; }
+body[data-layout='sideways'] .lvl-hint { display: none; }
+body[data-layout='sideways'] .btn { padding: 9px 16px; margin: 3px; }
+body[data-layout='sideways'] .btn.go { padding: 10px 36px; }
+body[data-layout='sideways'] .tow-card { padding: 10px; }
+body[data-layout='sideways'] .tow-desc { font-size: 16px; }

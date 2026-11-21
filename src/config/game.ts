@@ -107,6 +107,13 @@ export const ANIMATION = {
 export const LAYOUT = {
   maxWidth: 1600, // the game never grows wider than this (px)
   minWidth: 280,
-  sideGutter: 16, // space kept on each side of the screen
-  reservedHeight: 200, // room for the title, HUD and jump button
+  reservedHeight: 200, // room for the title, HUD and jump button (computer / tablet)
+
+  // Phone held sideways: the road fills the screen, buttons sit on top of it.
+  // Used when the screen is wider than tall and no taller than this.
+  sideways: { maxHeight: 500, reservedHeight: 30 },
+
+  // Phone held upright: "handheld console" look — road on top, big buttons below.
+  // Used when the screen is taller than wide and no wider than this.
+  upright: { maxWidth: 600 },
 };

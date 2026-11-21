@@ -38,6 +38,8 @@ Everything you're likely to change lives in **`src/config/`**. Edit a file, save
 | Sound effects (pitch, length, volume) and default on/off | `src/config/sounds.ts` |
 | Background music: notes, tempo, drums      | `src/config/music.ts`       |
 | Menu and panel colours and fonts           | top of `src/style.css`      |
+| When phones switch to sideways / upright layout | `LAYOUT` in `src/config/game.ts` |
+| Phone button positions and sizes           | "Phone layouts" at the bottom of `src/style.css` |
 | Jump height, gravity, money, tow timing    | `src/config/game.ts`        |
 
 Before you share a change, run `npm run check`. It catches typos, such as a pothole name in `levels.ts` that doesn't exist, and tells you the file and line.
