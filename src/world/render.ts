@@ -9,15 +9,30 @@ import { ART_HEIGHT, ART_WIDTH, drawText, fill, textWidth } from './pixels';
 import { drawPotholes } from './potholes';
 import { drawRoad } from './road';
 import { drawTowTruck } from './towTruck';
+import { drawRempitWarnings, drawVehicles } from './traffic';
+import { drawLane } from './lanes';
 
-/** Draws one full frame onto the low-res pixel canvas, back to front. */
+/**
+ * Draws one full frame onto the low-res pixel canvas, back to front:
+ * sky and road, then the far lane, then the near lane (so near things
+ * overlap far ones), then effects and the HUD on top.
+ */
 export function render(ctx: CanvasRenderingContext2D, state: GameState): void {
   const roughness = currentLevel(state).roughness;
+  const carLane = drawLane(state.car.lanePos);
   drawBackground(ctx, state.roadOffset, state.time);
   drawRoad(ctx, state.road, state.roadOffset, roughness);
-  drawPotholes(ctx, state.potholes, state.time);
-  drawTowTruck(ctx, state.tow, state.car, state.time);
-  drawCar(ctx, state.car, state.time, state.roadOffset, roughness);
+
+  for (const lane of [1, 0] as const) {
+    drawPotholes(ctx, state.potholes, lane, state.time);
+    drawVehicles(ctx, state.vehicles, lane, state.time, state.roadOffset);
+    if (carLane === lane) {
+      drawTowTruck(ctx, state.tow, state.car, state.time);
+      drawCar(ctx, state.car, state.time, state.roadOffset, roughness);
+    }
+  }
+
+  drawRempitWarnings(ctx, state.vehicles, state.time);
   drawBits(ctx, state.bits);
   drawParticles(ctx, state.particles);
   drawLevelBadge(ctx, state);

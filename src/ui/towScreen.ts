@@ -2,7 +2,9 @@ import type { TowOption } from '../config/towTrucks';
 import { byId, make } from './dom';
 import { showScreen } from './overlays';
 
-export function showTowChoices(options: TowOption[], onPick: (option: TowOption) => void): void {
+export function showTowChoices(options: TowOption[], title: string, intro: string, onPick: (option: TowOption) => void): void {
+  byId('towTitle').innerHTML = title;
+  byId('towIntro').innerHTML = intro;
   const box = byId('towCards');
   box.replaceChildren();
   for (const option of options) {

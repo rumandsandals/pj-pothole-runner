@@ -61,6 +61,21 @@ export const SOUNDS = {
     { wave: 'square', from: 'B2', ms: 120, at: 900, volume: 0.3 },
     { wave: 'square', from: 'A#2', ms: 320, at: 1050, volume: 0.3 },
   ],
+  lane: [{ wave: 'triangle', from: 'A4', to: 'D5', ms: 70, volume: 0.25 }],
+  rev: [
+    { wave: 'sawtooth', from: 70, to: 260, ms: 450, volume: 0.22 },
+    { wave: 'sawtooth', from: 260, to: 180, ms: 250, at: 450, volume: 0.18 },
+  ],
+  bikeCrash: [
+    { wave: 'noise', from: 3500, to: 200, ms: 350, volume: 0.65 },
+    { wave: 'square', from: 400, to: 90, ms: 300, volume: 0.3 },
+  ],
+  carCrash: [
+    { wave: 'noise', from: 4000, to: 80, ms: 600, volume: 0.8 },
+    { wave: 'sawtooth', from: 180, to: 40, ms: 600, volume: 0.45 },
+    { wave: 'square', from: 'E5', ms: 60, at: 650, volume: 0.15 },
+    { wave: 'square', from: 'E5', ms: 60, at: 760, volume: 0.15 },
+  ],
   coin: [
     { wave: 'square', from: 'B5', ms: 60, volume: 0.25 },
     { wave: 'square', from: 'E6', ms: 140, at: 60, volume: 0.25 },

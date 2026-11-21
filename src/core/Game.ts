@@ -1,33 +1,48 @@
-import { ANIMATION, CAR, ECONOMY, EFFECTS, TICKS_PER_SECOND, TOW, WORKSHOP, WORLD } from '../config/game';
+import { sound } from '../audio/sound';
+import { ACCIDENT_EVENTS, CRASH_TOW_OPTIONS } from '../config/accidents';
+import { ANIMATION, CAR, ECONOMY, EFFECTS, TICKS_PER_SECOND, TOW, WORKSHOP } from '../config/game';
 import { LEVELS } from '../config/levels';
 import { POTHOLES } from '../config/potholes';
-import { ROAD_EVENTS, type EventChoice, type RoadEventId } from '../config/roadEvents';
-import { sound } from '../audio/sound';
+import { ROAD_EVENTS, type EventChoice, type RoadEvent, type RoadEventId } from '../config/roadEvents';
 import { TEXT } from '../config/text';
 import { THEME } from '../config/theme';
 import { TOW_OPTIONS, type TowOption } from '../config/towTrucks';
+import { ACCIDENT_SEVERITY, TRAFFIC_RULES, VEHICLES } from '../config/traffic';
 import { WORKSHOP_STEPS, type WorkshopChoice } from '../config/workshop';
 import { showDead, showWin } from '../ui/endScreens';
-import { showLevelCard, type LevelCardInfo } from '../ui/levelCard';
 import { updateHud } from '../ui/hud';
+import { showLevelCard, type LevelCardInfo } from '../ui/levelCard';
 import { flash, hideBanner, hidePanels, hideScreens, hideToast, showBanner, showScreen, showToast } from '../ui/overlays';
 import { showRoadEvent } from '../ui/roadEventScreen';
 import { showTowChoices } from '../ui/towScreen';
 import { showWorkshopEnd, showWorkshopStep } from '../ui/workshopPanel';
-import { canJump, jump, rearWheelWorld, resetAfterRecovery, updateCar, updateSinking } from '../world/car';
+import {
+  canJump,
+  changeLane,
+  jump,
+  rearWheelWorld,
+  resetAfterRecovery,
+  snapToLane,
+  updateCar,
+  updateSinking,
+} from '../world/car';
 import { burst, puff, shakeOffset, startShake, updateBits, updateShake } from '../world/effects';
+import { laneY, type Lane } from '../world/lanes';
 import { addFloatingText, updateParticles } from '../world/particles';
-import { findCollision, maybeSpawnPothole, movePotholes } from '../world/potholes';
 import { ART_HEIGHT, ART_WIDTH, makeCanvas } from '../world/pixels';
+import { findCollision, maybeSpawnPothole, movePotholes } from '../world/potholes';
 import { render } from '../world/render';
 import { generateRoad } from '../world/road';
 import { updateTowTruck } from '../world/towTruck';
+import { clearAround, findVehicleHit, maybeSpawnVehicle, updateVehicles } from '../world/traffic';
 import { clampHealth, createState, createTow, currentLevel, levelLength, type GameState } from './state';
 import type { Viewport } from './Viewport';
 
 const TICK_MS = 1000 / TICKS_PER_SECOND;
 const MAX_FRAME_MS = 250; // after a pause (e.g. switching tabs), don't fast-forward
 const CARD_KEY_DELAY_MS = 700; // so a player mashing Space doesn't skip the level card by accident
+
+const pickOne = <T,>(list: T[]): T | undefined => list[Math.floor(Math.random() * list.length)];
 
 /**
  * Runs the game. Logic updates at a fixed 60 ticks per second no matter
@@ -77,7 +92,7 @@ export class Game {
 
     if (s.mode === 'towArriving') {
       if (s.tow.phase === 'incoming' && s.time % 6 === 0) {
-        puff(s.bits, s.tow.x + 36, WORLD.groundY - 4, THEME.smoke, -TOW.speed); // truck exhaust
+        puff(s.bits, s.tow.x + 36, laneY(s.car.lanePos) - 4, THEME.smoke, -TOW.speed); // truck exhaust
       }
       const wasIncoming = s.tow.phase === 'incoming';
       if (updateTowTruck(s.tow)) this.finishTow();
@@ -90,14 +105,20 @@ export class Game {
     const car = s.car;
     if (updateCar(car)) {
       sound.play('land');
-      const wheel = rearWheelWorld(car);
-      burst(s.bits, car.x, wheel.y, ANIMATION.landingDust, [THEME.smoke, 'f'], 0.5);
+      burst(s.bits, car.x, rearWheelWorld(car).y, ANIMATION.landingDust, [THEME.smoke, 'f'], 0.5);
     }
 
     // Stuck in an ABYSS pothole: sink, then call the tow trucks.
     if (car.sinkY > 0) {
-      if (s.time % 4 === 0) puff(s.bits, rearWheelWorld(car).x, WORLD.groundY - 2, '5', 1.5); // wheel spinning in the hole
-      if (updateSinking(car)) this.openTowChoice();
+      if (s.time % 4 === 0) puff(s.bits, rearWheelWorld(car).x, laneY(car.lanePos) - 2, '5', 1.5);
+      if (updateSinking(car)) this.openTowChoice('abyss');
+      return;
+    }
+
+    // Wrecked after a serious crash: smoke for a moment, then the tow trucks.
+    if (car.crashTimer > 0) {
+      if (s.time % 3 === 0) puff(s.bits, car.x + 10, car.y - 20, '5', 0.5);
+      if (--car.crashTimer === 0) this.openTowChoice('crash');
       return;
     }
 
@@ -113,6 +134,9 @@ export class Game {
     s.roadOffset += s.speed;
     maybeSpawnPothole(s.potholes, level, s.speed);
     s.potholes = movePotholes(s.potholes, s.speed);
+    const newVehicle = maybeSpawnVehicle(s.vehicles, level.traffic);
+    if (newVehicle?.kind === 'rempit') sound.play('rev');
+    s.vehicles = updateVehicles(s.vehicles, s.speed, car);
     s.distance += s.speed;
     s.levelDistance += s.speed;
     s.tick++;
@@ -139,7 +163,10 @@ export class Game {
       }
     }
 
-    if (car.invulnerable <= 0 && !car.trapped) this.checkPotholeHit();
+    if (car.invulnerable <= 0 && !car.trapped) {
+      this.checkVehicleHit();
+      if (s.mode === 'playing' && !car.trapped && car.crashTimer === 0) this.checkPotholeHit();
+    }
   }
 
   private checkPotholeHit(): void {
@@ -154,11 +181,12 @@ export class Game {
     if (type.trapsCar) {
       // Keep the hole on screen, centred under the car, until it's rescued.
       hole.x = car.x;
+      snapToLane(car, hole.lane);
       car.trapped = true;
       car.sinkTarget = CAR.sinkDepth;
       car.sinkY = 1;
       addFloatingText(s.particles, car.x, car.y - 50, 'STUCK!', THEME.particles.stuck, 60, 2);
-      burst(s.bits, car.x, WORLD.groundY, ANIMATION.debrisOnStuck, ['5', '0', '6', '8'], 1.2);
+      burst(s.bits, car.x, laneY(hole.lane), ANIMATION.debrisOnStuck, ['5', '0', '6', '8'], 1.2);
       startShake(s, ANIMATION.shakeOnStuck);
       sound.play('stuck');
       flash(EFFECTS.stuckFlashMs);
@@ -169,7 +197,7 @@ export class Game {
     s.health = clampHealth(s.health - type.damage);
     car.invulnerable = CAR.invulnerableAfterHit;
     addFloatingText(s.particles, car.x, car.y - 40, `-${type.damage}HP`, THEME.particles.damage);
-    burst(s.bits, hole.x, WORLD.groundY, ANIMATION.debrisOnHit, ['5', '0', '6'], type.damage >= 30 ? 1.2 : 0.8);
+    burst(s.bits, hole.x, laneY(hole.lane), ANIMATION.debrisOnHit, ['5', '0', '6'], type.damage >= 30 ? 1.2 : 0.8);
     startShake(s, ANIMATION.shakeOnHit);
     sound.play(type.damage >= 30 ? 'hitBig' : 'hit');
     flash(EFFECTS.hitFlashMs);
@@ -177,6 +205,61 @@ export class Game {
     if (s.health <= 0) this.die();
   }
 
+  // ── Traffic accidents ───────────────────────────────────────
+  private checkVehicleHit(): void {
+    const s = this.state;
+    const car = s.car;
+    const index = findVehicleHit(car, s.vehicles, CAR.hitboxInset);
+    if (index < 0) return;
+    const vehicle = s.vehicles[index];
+    if (!vehicle) return;
+    s.vehicles.splice(index, 1);
+
+    const sev = ACCIDENT_SEVERITY;
+    const isCar = VEHICLES[vehicle.kind].accident === 'fender';
+    const serious =
+      isCar &&
+      ((s.level >= sev.seriousFromLevel && Math.random() < sev.seriousChance) ||
+        s.health - sev.fenderDamage < sev.seriousIfHealthBelow);
+    const damage = serious ? sev.seriousDamage : isCar ? sev.fenderDamage : sev.minorDamage;
+
+    s.health = clampHealth(s.health - damage);
+    car.invulnerable = TRAFFIC_RULES.invulnerableAfterAccident;
+    s.vehicles = clearAround(s.vehicles, car.x, TRAFFIC_RULES.clearAroundAfterAccident);
+    addFloatingText(s.particles, car.x, car.y - 40, `-${damage}HP`, THEME.particles.damage);
+    burst(s.bits, (car.x + vehicle.x) / 2, car.y - 10, serious ? 24 : 12, ['5', '6', '8', 'c', '0'], serious ? 1.4 : 1);
+    startShake(s, serious ? ANIMATION.shakeOnStuck : ANIMATION.shakeOnHit);
+    sound.play(isCar ? 'carCrash' : 'bikeCrash');
+    flash(serious ? EFFECTS.stuckFlashMs : EFFECTS.hitFlashMs);
+    updateHud(s);
+
+    if (s.health <= 0) {
+      this.die();
+      return;
+    }
+    if (serious) {
+      // The car is wrecked: it stops, smokes, then the tow trucks arrive.
+      car.trapped = true;
+      car.crashTimer = sev.wreckTicks;
+      car.hop = 0;
+      car.vy = 0;
+      car.onGround = true;
+      addFloatingText(s.particles, car.x, car.y - 52, 'CRASH!', THEME.particles.damage, 60, 2);
+      return;
+    }
+    this.openAccidentEvent(isCar ? 'fender' : vehicle.kind === 'rempit' && ACCIDENT_EVENTS.rempit.length > 0 ? 'rempit' : 'minor');
+  }
+
+  private openAccidentEvent(kind: keyof typeof ACCIDENT_EVENTS): void {
+    const event = pickOne(ACCIDENT_EVENTS[kind]);
+    if (!event) {
+      this.state.mode = 'playing';
+      return;
+    }
+    this.openEvent(event);
+  }
+
+  // ── Levels ──────────────────────────────────────────────────
   /** Finished a level: set up the next one and pause on the level card. */
   private completeLevel(): void {
     const s = this.state;
@@ -186,6 +269,7 @@ export class Game {
     s.levelStartMoney = s.money;
     s.eventFired = false;
     s.potholes = [];
+    s.vehicles = [];
     const level = currentLevel(s);
     s.speed = level.speed;
     s.road = generateRoad(level.roughness);
@@ -231,11 +315,21 @@ export class Game {
     }
   }
 
-  // ── Road events ─────────────────────────────────────────────
+  /** ↑ / ↓ / swipe / lane buttons. */
+  moveLane(lane: Lane): void {
+    const s = this.state;
+    if (s.mode === 'playing' && changeLane(s.car, lane)) sound.play('lane');
+  }
+
+  // ── Pop-up events (road events and accident scenes) ────────
   private openRoadEvent(id: RoadEventId): void {
+    this.openEvent(ROAD_EVENTS[id]);
+  }
+
+  private openEvent(event: RoadEvent): void {
     this.state.mode = 'event';
     sound.play('eventPop');
-    showRoadEvent(ROAD_EVENTS[id], (choice) => this.applyEventChoice(choice));
+    showRoadEvent(event, (choice) => this.applyEventChoice(choice));
   }
 
   private applyEventChoice(choice: EventChoice): void {
@@ -251,22 +345,29 @@ export class Game {
   }
 
   // ── Tow trucks ──────────────────────────────────────────────
-  private openTowChoice(): void {
+  private openTowChoice(reason: 'abyss' | 'crash'): void {
     this.state.mode = 'towChoice';
-    showTowChoices(TOW_OPTIONS, (option) => this.pickTow(option));
+    const crash = reason === 'crash';
+    showTowChoices(
+      crash ? CRASH_TOW_OPTIONS : TOW_OPTIONS,
+      crash ? TEXT.crashTowTitle : TEXT.towChoiceTitle,
+      crash ? TEXT.crashTowIntro : TEXT.towChoiceIntro,
+      (option) => this.pickTow(option, reason),
+    );
   }
 
-  private pickTow(option: TowOption): void {
+  private pickTow(option: TowOption, reason: 'abyss' | 'crash'): void {
     const s = this.state;
-    s.tow = { ...createTow(), active: true, option };
+    s.tow = { ...createTow(), active: true, option, reason };
     s.mode = 'towArriving';
+    sound.play('click');
     hideScreens();
     showBanner(TEXT.towArrivingTitle, option.arrivingText);
   }
 
   private finishTow(): void {
     const s = this.state;
-    const option = s.tow.option;
+    const { option, reason } = s.tow;
     s.tow = createTow();
     hideBanner();
     if (!option) return;
@@ -275,11 +376,14 @@ export class Game {
       sound.play('good');
       resetAfterRecovery(s.car);
       s.potholes = s.potholes.filter((p) => Math.abs(p.x - s.car.x) > s.car.width);
+      s.vehicles = clearAround(s.vehicles, s.car.x, TRAFFIC_RULES.clearAroundAfterAccident);
       s.money = Math.max(0, s.money - option.cost);
       s.health = clampHealth(s.health + TOW.licensedHeal);
       updateHud(s);
       showToast(`🚛 ${option.outcome}`);
-      s.mode = 'playing';
+      // After a serious crash, the paperwork: police report or adjuster
+      if (reason === 'crash') this.openAccidentEvent('serious');
+      else s.mode = 'playing';
       return;
     }
 
@@ -318,6 +422,7 @@ export class Game {
     resetAfterRecovery(s.car);
     s.health = Math.max(WORKSHOP.minHealthAfter, s.health);
     s.potholes = [];
+    s.vehicles = [];
     updateHud(s);
     hidePanels();
     hideScreens();

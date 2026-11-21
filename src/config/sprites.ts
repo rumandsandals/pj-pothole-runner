@@ -60,6 +60,23 @@ export const WHEEL_POSITIONS = {
   truck: [3, 22],
 };
 
+/** Motorcycle and rider, facing right. X = shirt, Y = helmet, c = visor, 8 = tail light, a = headlight. */
+export const MOTORCYCLE_SPRITE = [
+  '........YYY.....',
+  '.......YYYYc....',
+  '........YY......',
+  '........XX......',
+  '.......XXXX66...',
+  '......XXXX...6..',
+  '...555XXX5555.6.',
+  '..85555555555.6a',
+  '.000..5..5..000.',
+  '0.6.0......0.6.0',
+  '06660......06660',
+  '0.6.0......0.6.0',
+  '.000........000.',
+];
+
 export const PALM_SPRITE = [
   '...bb.bb...',
   '.bb33b33bb.',

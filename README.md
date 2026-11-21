@@ -19,6 +19,8 @@ Everything you're likely to change lives in **`src/config/`**. Edit a file, save
 | Levels (names, length in seconds, intro text, speed, potholes) | `src/config/levels.ts` |
 | Pothole sizes, damage, labels              | `src/config/potholes.ts`    |
 | Police / insurance / workshop pop-ups      | `src/config/roadEvents.ts`  |
+| Traffic behaviour, accident damage and severity | `src/config/traffic.ts` |
+| Accident scenes and the crash tow trucks   | `src/config/accidents.ts`   |
 | The two tow truck choices                  | `src/config/towTrucks.ts`   |
 | Workshop Hell rounds                       | `src/config/workshop.ts`    |
 | Menu text, help text, hotlines             | `src/config/text.ts`        |
@@ -47,3 +49,20 @@ In `sprites.ts`, each line of text is one row of pixels, and each character is o
 ## Build for the web
 
 `npm run build` creates a `dist/` folder: the finished game, ready to host (for example on GitHub Pages).
+
+## Facts to verify before sharing
+
+The accident scenes (`src/config/accidents.ts`) were drafted for the game. Check each point against an official source before you share the game publicly:
+
+1. Road accidents in Malaysia must be reported to the police within **24 hours** (Road Transport Act 1987, section 52).
+2. Drivers involved in an accident must **stop and help**. Driving off (hit-and-run) is an offence.
+3. **999** is the emergency number to call.
+4. Without a police report, an insurance claim **may be rejected**.
+5. **Knock-for-Knock**: if you weren't at fault, you can claim from your **own** insurer, and your **NCD is not affected**.
+6. The **Ombudsman for Financial Services (OFS)** handles insurance disputes **free of charge** for consumers.
+7. Insurers need a copy of the **police report and the accident sketch plan** for a serious claim.
+8. Many motor policies include **free towing** to a panel workshop, up to a limit. This varies by insurer.
+9. **"Ulat" tow touts** at crash scenes: the advice "never let a tow truck you didn't call take your car".
+10. The RM amounts and outcomes are game numbers, not real figures.
+
+The hotlines in `src/config/text.ts` (MBPJ, MACC, Tribunal, JPJ, BNM) came from the original game and should be re-checked too.

@@ -8,13 +8,24 @@
 /** The game world is drawn at this size, then scaled to fit any screen. */
 export const WORLD = {
   width: 640,
-  height: 200,
-  groundY: 148, // where the road surface sits
+  height: 240,
+  groundY: 148, // where the road begins (the kerb); the sky is above this
 };
 
 /**
- * Size of one art pixel in world units. 2 = the screen is 320×100 chunky
- * pixels. 4 = even chunkier (160×50). 1 = fine detail (no retro feel).
+ * The two lanes. Numbers are how far down the screen each lane's road
+ * surface sits (world units). Lane 0 = near (bottom), lane 1 = far (top).
+ */
+export const LANES = {
+  near: 204,
+  far: 170,
+  dividerY: 188, // the dashed yellow line between them
+  changeTicks: 9, // how quickly the car slides between lanes
+};
+
+/**
+ * Size of one art pixel in world units. 2 = the screen is 320×120 chunky
+ * pixels. 4 = even chunkier (160×60). 1 = fine detail (no retro feel).
  */
 export const PIXEL_SIZE = 2;
 

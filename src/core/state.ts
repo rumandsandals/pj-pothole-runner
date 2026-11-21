@@ -1,8 +1,11 @@
-import { CAR, MAX_HEALTH, TICKS_PER_SECOND, TOW, WORKSHOP, WORLD } from '../config/game';
+import { CAR, LANES, MAX_HEALTH, TICKS_PER_SECOND, TOW, WORKSHOP } from '../config/game';
 import { LEVELS, type Level } from '../config/levels';
 import type { PotholeId } from '../config/potholes';
 import type { ColourKey } from '../config/theme';
 import type { TowOption } from '../config/towTrucks';
+import type { VehicleKind } from '../config/traffic';
+import type { Lane } from '../world/lanes';
+import type { Swaps } from '../world/pixels';
 import { generateRoad, type RoadPoint } from '../world/road';
 
 /** Which screen / phase the game is in. */
@@ -19,7 +22,11 @@ export type Mode =
 
 export interface Car {
   x: number;
-  y: number;
+  y: number; // where the wheels touch down (worked out from lane and hop)
+  lane: Lane; // the lane the car is in or heading to
+  lanePos: number; // 0 = near lane, 1 = far lane, in between while changing
+  hop: number; // height above the road while jumping
+  crashTimer: number; // ticks left on the wreck after a serious crash
   vy: number;
   onGround: boolean;
   width: number;
@@ -46,6 +53,19 @@ export interface Bit {
 export interface Pothole {
   x: number;
   type: PotholeId;
+  lane: Lane;
+}
+
+export interface Vehicle {
+  kind: VehicleKind;
+  x: number;
+  lane: Lane;
+  lanePos: number;
+  speedShare: number; // share of the player's speed
+  paint: Swaps;
+  willChangeLane: boolean;
+  signal: number; // ticks of blinking left before changing lane (-1 = not signalling)
+  changed: boolean;
 }
 
 export interface Particle {
@@ -64,6 +84,7 @@ export interface TowTruck {
   phase: 'incoming' | 'towing';
   waited: number;
   option: TowOption | null;
+  reason: 'abyss' | 'crash'; // stuck in a pothole, or a serious crash
 }
 
 export interface WorkshopLogEntry {
@@ -85,6 +106,7 @@ export interface GameState {
   speed: number;
   eventFired: boolean;
   potholes: Pothole[];
+  vehicles: Vehicle[];
   particles: Particle[];
   bits: Bit[];
   shake: { ticks: number; strength: number };
@@ -98,7 +120,11 @@ export interface GameState {
 export function createCar(): Car {
   return {
     x: CAR.x,
-    y: WORLD.groundY,
+    y: LANES.near,
+    lane: 0,
+    lanePos: 0,
+    hop: 0,
+    crashTimer: 0,
     vy: 0,
     onGround: true,
     width: CAR.width,
@@ -112,7 +138,7 @@ export function createCar(): Car {
 }
 
 export function createTow(): TowTruck {
-  return { active: false, x: TOW.arriveFromX, phase: 'incoming', waited: 0, option: null };
+  return { active: false, x: TOW.arriveFromX, phase: 'incoming', waited: 0, option: null, reason: 'abyss' };
 }
 
 export function firstLevel(): Level {
@@ -137,6 +163,7 @@ export function createState(mode: Mode = 'menu'): GameState {
     speed: level.speed,
     eventFired: false,
     potholes: [],
+    vehicles: [],
     particles: [],
     bits: [],
     shake: { ticks: 0, strength: 0 },

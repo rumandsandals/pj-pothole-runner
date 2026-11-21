@@ -3,7 +3,8 @@ import { TOW_TRUCK_BODY_SPRITE, WHEEL_FRAME_1, WHEEL_POSITIONS } from '../config
 import { THEME } from '../config/theme';
 import type { Car, TowTruck } from '../core/state';
 import { carSpriteBox, wheelFrame } from './car';
-import { ART_GROUND, drawSprite, drawText, fill, toPx } from './pixels';
+import { laneY } from './lanes';
+import { drawSprite, drawText, fill, toPx } from './pixels';
 
 /** Moves the truck in, then waits while it hooks the car. Returns true when done. */
 export function updateTowTruck(tow: TowTruck): boolean {
@@ -29,7 +30,7 @@ export function drawTowTruck(ctx: CanvasRenderingContext2D, tow: TowTruck, car: 
   if (!tow.active || !tow.option) return;
   const colours = tow.option.licensed ? THEME.tow.licensed : THEME.tow.cheap;
   const left = toPx(tow.x) - Math.floor(BODY_W / 2);
-  const top = ART_GROUND - HEIGHT + 1;
+  const top = toPx(laneY(car.lanePos)) - HEIGHT + 1; // parks in the car's lane
 
   // Body rocks while driving, then bounces once as it brakes
   let bob = 0;

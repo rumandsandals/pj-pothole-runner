@@ -21,6 +21,13 @@ export function validateConfig(): string[] {
     if (level.potholes.length === 0) problems.push(`${where}: "potholes" list is empty.`);
     if (level.speed <= 0) problems.push(`${where}: speed must be above 0.`);
     if (level.seconds <= 0) problems.push(`${where}: seconds must be above 0.`);
+    const t = level.traffic;
+    if (t) {
+      for (const key of ['motorcycleShare', 'rempitChance', 'laneChangeChance'] as const) {
+        if (t[key] < 0 || t[key] > 1) problems.push(`${where}: traffic.${key} must be between 0 and 1.`);
+      }
+      if (t.maxOnScreen < 1) problems.push(`${where}: traffic.maxOnScreen must be at least 1 (or set traffic: null).`);
+    }
     if (level.event && (level.eventAt <= 0 || level.eventAt >= 1))
       problems.push(`${where}: eventAt (${level.eventAt}) must be between 0 and 1 (e.g. 0.8 = 80% through the level).`);
   });

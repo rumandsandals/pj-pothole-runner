@@ -24,7 +24,11 @@ const game = new Game(canvas, viewport);
 // While developing, `game` is reachable from the browser console for testing.
 if (import.meta.env.DEV) Object.assign(window, { game, sound });
 
-bindInput(canvas, byId('jumpBtn'), () => game.jump());
+bindInput(
+  canvas,
+  { jump: byId('jumpBtn'), up: byId('laneUpBtn'), down: byId('laneDownBtn') },
+  { jump: () => game.jump(), lane: (lane) => game.moveLane(lane) },
+);
 
 // Browsers allow sound only after the player clicks or presses a key.
 for (const type of ['pointerdown', 'keydown'] as const) {

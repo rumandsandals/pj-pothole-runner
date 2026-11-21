@@ -10,16 +10,20 @@ export const TEXT = {
   pressStart: '- PRESS START -',
 
   menuIntro: `
-    SPACE / TAP to jump over potholes<br>
-    Deeper pits = more damage to your car<br>
+    ↑ ↓ switch lanes · SPACE / TAP to jump potholes<br>
+    Dodge cars & motorcycles — crashes mean claims!<br>
     <b>ABYSS potholes = tow truck encounter!</b><br>
     Choose the right tow — or enter Workshop Hell 🔧`,
 
   howTo: `
-    <b>CONTROLS:</b> SPACE / CLICK / TAP to jump · M = music on/off<br>
+    <b>CONTROLS:</b> ↑ ↓ (or W S, swipe, LANE buttons) switch lanes<br>
+    SPACE / CLICK / TAP to jump · M = music on/off<br>
     <b>POTHOLES:</b><br>
     &nbsp;· · · · = Shallow (−5 HP)&nbsp;&nbsp;──── = Medium (−15 HP)<br>
     &nbsp;━━━━━ = Deep (−30 HP)&nbsp;&nbsp;<b>[ABYSS]</b> = Car gets stuck!<br><br>
+    <b>TRAFFIC (from level 2):</b><br>
+    🏍️ Clip a motorcycle = minor accident · 🚗 Bump a car = insurance claim<br>
+    💥 Serious crash = tow truck choice · ❗ = Mat Rempit coming from behind<br><br>
     <b>TOW TRUCK ENCOUNTER (ABYSS):</b><br>
     🟢 Licensed tow = safe recovery · back on road<br>
     🔴 Cheap tow = dragged to a dodgy workshop!<br><br>
@@ -43,6 +47,11 @@ export const TEXT = {
     Your car has sunk into a pothole so deep it can't escape.<br>
     Two tow trucks are approaching. <b>Choose wisely!</b>`,
   towArrivingTitle: '🚛 TOW TRUCK ARRIVING...',
+
+  crashTowTitle: '💥 SERIOUS CRASH!',
+  crashTowIntro: `
+    Your car can't be driven. Two tow trucks are here —<br>
+    one you called, and one you didn't. <b>Choose wisely!</b>`,
 
   deadTitle: '💥 VEHICLE TOTALLED',
   deadHotlines: `
@@ -68,7 +77,9 @@ export const TEXT = {
   musicOn: '🎵 MUSIC',
   musicOff: '🎵 MUSIC',
 
-  jumpButton: '▲ JUMP',
-  controlsHint: 'SPACE · CLICK · TAP TO JUMP',
+  jumpButton: 'JUMP',
+  controlsHint: '↑ ↓ LANES · SPACE / TAP JUMP',
+  laneUpButton: '▲ LANE',
+  laneDownButton: '▼ LANE',
   rotateHint: '↻ Turn your phone sideways for a bigger road',
 };

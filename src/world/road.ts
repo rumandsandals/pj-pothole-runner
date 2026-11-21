@@ -1,4 +1,4 @@
-import { WORLD } from '../config/game';
+import { LANES, WORLD } from '../config/game';
 import { THEME } from '../config/theme';
 import { ART_GROUND, ART_HEIGHT, ART_WIDTH, fill, seededRandom, toPx } from './pixels';
 
@@ -9,7 +9,6 @@ export interface RoadPoint {
 
 const STEP = 3;
 const KERB_BLOCK = 4; // width of each red/white kerb block (art pixels)
-const LANE_Y = 9; // lane line, art pixels below the kerb
 const LANE_DASH = 10;
 
 /** Builds the road's bumps. Higher roughness = bumpier kerb and more cracks. */
@@ -53,10 +52,13 @@ export function drawRoad(ctx: CanvasRenderingContext2D, road: RoadPoint[], offse
     if (x < ART_WIDTH) fill(ctx, THEME.roadSpeckles[s.shade] ?? THEME.road, x, ART_GROUND + s.y, 1, 1);
   }
 
-  // Dashed yellow lane line
+  // Dashed yellow line between the two lanes
+  const dividerY = toPx(LANES.dividerY);
   for (let x = -wrap(scroll, LANE_DASH * 2); x < ART_WIDTH; x += LANE_DASH * 2) {
-    fill(ctx, THEME.laneLine, x, ART_GROUND + LANE_Y, LANE_DASH, 1);
+    fill(ctx, THEME.laneLine, x, dividerY, LANE_DASH, 1);
   }
+  // Solid white edge line below the near lane
+  fill(ctx, THEME.edgeLine, 0, toPx(LANES.near) + 4, ART_WIDTH, 1);
 
   // Red/white kerb, nudged up and down by the road's bumps
   const roadLength = road.length;

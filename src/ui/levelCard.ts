@@ -18,11 +18,14 @@ const MAX_SPEED = Math.max(...LEVELS.map((l) => l.speed));
 const potholeName = (id: PotholeId): string =>
   POTHOLES[id].label || id.charAt(0).toUpperCase() + id.slice(1);
 
-/** Speed shown as 5 chunky bars. */
-function speedBars(speed: number): string {
-  const filled = Math.max(1, Math.round((speed / MAX_SPEED) * 5));
+const MAX_TRAFFIC = Math.max(0.0001, ...LEVELS.map((l) => l.traffic?.spawnChance ?? 0));
+
+/** A value shown as 5 chunky bars, relative to the biggest value in the game. */
+function bars(value: number, max: number): string {
+  const filled = Math.min(5, Math.max(1, Math.round((value / max) * 5)));
   return '▮'.repeat(filled) + '▯'.repeat(5 - filled);
 }
+const speedBars = (speed: number): string => bars(speed, MAX_SPEED);
 
 export function showLevelCard(info: LevelCardInfo, onGo: () => void): void {
   const level = LEVELS[info.nextNumber - 1];
@@ -63,6 +66,28 @@ export function showLevelCard(info: LevelCardInfo, onGo: () => void): void {
     if (previous && !seen.has(id)) holes.append(make('span', 'new-tag', 'NEW'));
   });
   facts.append(holes);
+
+  // Traffic: how busy, plus new dangers this level
+  const traffic = level.traffic;
+  const before = previous?.traffic ?? null;
+  const busy = make('div', '', 'Traffic ');
+  if (!traffic) {
+    busy.append('none');
+  } else {
+    busy.append(bars(traffic.spawnChance, MAX_TRAFFIC));
+    if (!before) busy.append(make('span', 'new-tag', 'NEW'));
+  }
+  facts.append(busy);
+  if (traffic && traffic.rempitChance > 0) {
+    const rempit = make('div', '', 'Mat Rempit ❗');
+    if (!before || before.rempitChance === 0) rempit.append(make('span', 'new-tag', 'NEW'));
+    facts.append(rempit);
+  }
+  if (traffic && traffic.laneChangeChance > 0) {
+    const swerve = make('div', '', 'Lane-changers 🔶');
+    if (!before || before.laneChangeChance === 0) swerve.append(make('span', 'new-tag', 'NEW'));
+    facts.append(swerve);
+  }
 
   const go = byId('lvlGo');
   go.onclick = () => onGo();
