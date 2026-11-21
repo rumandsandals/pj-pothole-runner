@@ -2,6 +2,7 @@ import { sound } from '../audio/sound';
 import { ACCIDENT_EVENTS, CRASH_TOW_OPTIONS } from '../config/accidents';
 import { ANIMATION, CAR, DRIVING, ECONOMY, EFFECTS, TICKS_PER_SECOND, TOW, WORKSHOP } from '../config/game';
 import { LEVELS } from '../config/levels';
+import { WEATHER_EFFECTS } from '../config/weather';
 import { HEAT, POLICE, POLICE_CHOICES, POLICE_STOPS, type Offence } from '../config/police';
 import { POTHOLES } from '../config/potholes';
 import { ROAD_EVENTS, type EventChoice, type RoadEvent, type RoadEventId } from '../config/roadEvents';
@@ -36,7 +37,7 @@ import { render } from '../world/render';
 import { generateRoad } from '../world/road';
 import { updateTowTruck } from '../world/towTruck';
 import { clearAround, findVehicleHit, maybeSpawnVehicle, updateVehicles } from '../world/traffic';
-import { clampHealth, createState, createTow, currentLevel, levelLength, type GameState } from './state';
+import { clampHealth, createState, createTow, currentConditions, currentLevel, grip, levelLength, type GameState } from './state';
 import type { Viewport } from './Viewport';
 
 const TICK_MS = 1000 / TICKS_PER_SECOND;
@@ -101,6 +102,13 @@ export class Game {
       else if (wasIncoming && s.tow.phase === 'towing') sound.play('horn');
       return;
     }
+    // Thunderstorms: lightning flashes now and then
+    if (s.lightning > 0) s.lightning--;
+    else if (currentConditions(s).weather === 'storm' && Math.random() < WEATHER_EFFECTS.lightningChancePerSecond / TICKS_PER_SECOND) {
+      s.lightning = 9;
+      sound.play('thunder');
+    }
+
     if (s.mode === 'pullover') {
       this.updatePullover();
       return;
@@ -109,7 +117,7 @@ export class Game {
 
     const level = currentLevel(s);
     const car = s.car;
-    if (updateCar(car)) {
+    if (updateCar(car, grip(s))) {
       sound.play('land');
       burst(s.bits, car.x, rearWheelWorld(car).y, ANIMATION.landingDust, [THEME.smoke, 'f'], 0.5);
     }
@@ -131,7 +139,7 @@ export class Game {
 
     // Brake / gas: ease towards the target speed, and slide the car back or forward
     const target = s.throttle < 0 ? DRIVING.brakeSpeed : s.throttle > 0 ? DRIVING.gasSpeed : 1;
-    s.pace += Math.sign(target - s.pace) * Math.min(Math.abs(target - s.pace), DRIVING.change);
+    s.pace += Math.sign(target - s.pace) * Math.min(Math.abs(target - s.pace), DRIVING.change * grip(s)); // slower on a wet road
     s.speed = level.speed * s.pace;
     const lean = s.pace >= 1 ? (s.pace - 1) / (DRIVING.gasSpeed - 1) : (s.pace - 1) / (1 - DRIVING.brakeSpeed);
     car.x = CAR.x + lean * DRIVING.carMoves;
@@ -399,7 +407,7 @@ export class Game {
     s.mode = 'levelCard';
     this.cardShownAt = performance.now();
     hideToast();
-    showLevelCard({ cleared, nextNumber: s.level, health: s.health, money: s.money }, () => this.go(true));
+    showLevelCard({ cleared, nextNumber: s.level, health: s.health, money: s.money, conditions: currentConditions(s) }, () => this.go(true));
   }
 
   /** Leaves the level card and starts driving. Keys are ignored for a moment so Space-mashing doesn't skip it. */
@@ -409,6 +417,13 @@ export class Game {
     hideScreens();
     this.state.mode = 'playing';
     sound.play('go');
+    this.playLevelMusic();
+  }
+
+  /** Each level's tune; a slower, moodier version when it's raining. */
+  private playLevelMusic(): void {
+    const w = currentConditions(this.state).weather;
+    sound.setTrack(currentLevel(this.state).music, w === 'rain' || w === 'storm');
   }
 
   // ── Player actions ─────────────────────────────────────────

@@ -1,6 +1,6 @@
 import { LEVELS } from '../config/levels';
 import { noteToHz, toHz } from '../audio/synth';
-import { DRIVING_THEME } from '../config/music';
+import { TRACKS } from '../config/music';
 import { ROAD_EVENTS } from '../config/roadEvents';
 import { SOUNDS, type Tone } from '../config/sounds';
 import * as SPRITES from '../config/sprites';
@@ -66,17 +66,19 @@ export function validateConfig(): string[] {
   }
 
   // Music: notes, '.', '-' only; channels should be the same length
-  const lengths = DRIVING_THEME.channels.map((channel, c) => {
-    const tokens = channel.notes.trim().split(/\s+/);
-    tokens.forEach((token, step) => {
-      if (token !== '.' && token !== '-' && !(noteToHz(token) > 0))
-        problems.push(`music.ts, channel ${c + 1}, step ${step + 1}: "${token}" isn't a note (use e.g. C4, F#5, '.' or '-').`);
+  for (const [name, track] of Object.entries(TRACKS)) {
+    const lengths = track.channels.map((channel, c) => {
+      const tokens = channel.notes.trim().split(/\s+/);
+      tokens.forEach((token, step) => {
+        if (token !== '.' && token !== '-' && !(noteToHz(token) > 0))
+          problems.push(`music.ts, ${name} channel ${c + 1}, step ${step + 1}: "${token}" isn't a note (use e.g. C4, F#5, '.' or '-').`);
+      });
+      return tokens.length;
     });
-    return tokens.length;
-  });
-  lengths.push(DRIVING_THEME.drums.trim().split(/\s+/).length);
-  if (new Set(lengths).size > 1)
-    problems.push(`music.ts: channels have different numbers of steps (${lengths.join(', ')}), so they'll drift out of time.`);
+    lengths.push(track.drums.trim().split(/\s+/).length);
+    if (new Set(lengths).size > 1)
+      problems.push(`music.ts, ${name}: channels have different numbers of steps (${lengths.join(', ')}), so they'll drift out of time.`);
+  }
 
   return problems;
 }

@@ -41,8 +41,12 @@ export function findCollision(car: Car, potholes: Pothole[], carInset: number): 
 /** How tall a hole looks on the road surface (art pixels): deeper = bigger. */
 const holeHeight = (depth: number): number => Math.max(3, Math.round(toPx(depth) / 4.5));
 
-/** Draws the potholes in one lane (call far lane first, then near). */
-export function drawPotholes(ctx: CanvasRenderingContext2D, potholes: Pothole[], lane: Lane, time: number): void {
+/**
+ * Draws the potholes in one lane (call far lane first, then near).
+ * Potholes beyond `puddlesBeyond` (world x) are drawn as innocent-looking
+ * rain puddles — they only show their true colours when you get close.
+ */
+export function drawPotholes(ctx: CanvasRenderingContext2D, potholes: Pothole[], lane: Lane, time: number, puddlesBeyond = Infinity): void {
   const t = THEME.pothole;
   const blinkEvery = ANIMATION.labelBlinkEvery;
   const blinkOff = blinkEvery > 0 && Math.floor(time / blinkEvery) % 2 === 1;
@@ -55,6 +59,17 @@ export function drawPotholes(ctx: CanvasRenderingContext2D, potholes: Pothole[],
     const hw = Math.max(toPx(cfg.halfWidth), 2);
     const h = holeHeight(cfg.depth);
     const top = surface - Math.floor(h / 2);
+
+    if (p.x > puddlesBeyond) {
+      // A rain puddle: flat, shiny, no warning label
+      const ph = Math.max(3, Math.round(h / 2));
+      for (let row = 0; row < ph; row++) {
+        const half = Math.round((hw + 4) * Math.sqrt(Math.max(0, 1 - ((row + 0.5 - ph / 2) / (ph / 2)) ** 2)));
+        fill(ctx, row === 0 ? '6' : 'j', cx - half, surface - Math.floor(ph / 2) + row, half * 2 + 1, 1);
+      }
+      fill(ctx, '7', cx - Math.floor(hw / 2), surface - Math.floor(ph / 2) + 1, Math.max(2, Math.floor(hw / 2)), 1);
+      continue;
+    }
 
     // Oval hole, one pixel row at a time
     for (let row = 0; row < h; row++) {

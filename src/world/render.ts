@@ -1,7 +1,10 @@
 import { LEVELS } from '../config/levels';
 import { THEME } from '../config/theme';
-import { currentLevel, levelLength, secondsLeft, type GameState } from '../core/state';
-import { drawBackground } from './background';
+import { SCENERY } from '../config/scenery';
+import { WEATHER_EFFECTS } from '../config/weather';
+import { currentConditions, currentLevel, levelLength, secondsLeft, type GameState } from '../core/state';
+import { drawBackground, drawBackgroundLights } from './background';
+import { drawHaze, drawHeadlights, drawLightning, drawRain, drawTimeTint } from './weather';
 import { drawCar } from './car';
 import { drawBits } from './effects';
 import { drawParticles } from './particles';
@@ -23,12 +26,15 @@ export function render(ctx: CanvasRenderingContext2D, state: GameState): void {
   const roughness = level.roughness;
   setLaneCount(level.lanes);
   const carLane = drawLane(state.car.lanePos);
-  drawBackground(ctx, state.roadOffset, state.time, level.highway);
+  const conditions = currentConditions(state);
+  const wet = conditions.weather === 'rain' || conditions.weather === 'storm';
+  drawBackground(ctx, state.roadOffset, state.time, SCENERY[level.scenery], conditions.time);
   drawRoad(ctx, state.road, state.roadOffset, roughness, level.highway);
 
   // Furthest lane first, so nearer things overlap further ones
   for (let lane = laneCount() - 1; lane >= 0; lane--) {
-    drawPotholes(ctx, state.potholes, lane, state.time);
+    // In the rain, potholes far ahead look like harmless puddles
+    drawPotholes(ctx, state.potholes, lane, state.time, wet ? state.car.x + WEATHER_EFFECTS.puddleRevealDistance : Infinity);
     drawVehicles(ctx, state.vehicles, lane, state.time, state.roadOffset);
     if (carLane === lane) {
       drawPoliceCar(ctx, state);
@@ -36,6 +42,17 @@ export function render(ctx: CanvasRenderingContext2D, state: GameState): void {
       drawCar(ctx, state.car, state.time, state.roadOffset, roughness, state.mode === 'playing' ? state.pace : 1);
     }
   }
+
+  // Time of day and weather on top of the scene
+  drawTimeTint(ctx, conditions);
+  if (conditions.time === 'night') {
+    drawBackgroundLights(ctx);
+    drawHeadlights(ctx, state);
+    drawPoliceCar(ctx, state); // flashing lights stay bright at night
+  }
+  if (wet) drawRain(ctx, state.time, conditions.weather === 'storm', state.roadOffset);
+  if (conditions.weather === 'haze') drawHaze(ctx, state);
+  drawLightning(ctx, state.lightning);
 
   drawRempitWarnings(ctx, state.vehicles, state.time);
   drawBits(ctx, state.bits);

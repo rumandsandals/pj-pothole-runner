@@ -1,4 +1,4 @@
-import { DRIVING_THEME } from '../config/music';
+import { moody, TRACKS, type TrackId } from '../config/music';
 import { SOUND_DEFAULTS, SOUNDS, VOLUME, type SoundName } from '../config/sounds';
 import { MusicPlayer } from './music';
 import { playTone } from './synth';
@@ -34,6 +34,19 @@ class SoundSystem {
   private effectsOut: GainNode | null = null;
   private music: MusicPlayer | null = null;
   private listeners: Array<() => void> = [];
+  private track: { id: TrackId; moody: boolean } = { id: 'town', moody: false };
+
+  private trackData() {
+    const t = TRACKS[this.track.id];
+    return this.track.moody ? moody(t) : t;
+  }
+
+  /** Changes the background tune (e.g. a new tune every few levels; moody when it rains). */
+  setTrack(id: TrackId, isMoody = false): void {
+    if (this.track.id === id && this.track.moody === isMoody) return;
+    this.track = { id, moody: isMoody };
+    this.music?.setTrack(this.trackData());
+  }
 
   /** Call from any click / key press. Safe to call many times. */
   unlock(): void {
@@ -50,7 +63,7 @@ class SoundSystem {
       const musicOut = ctx.createGain();
       musicOut.gain.value = VOLUME.music;
       musicOut.connect(master);
-      this.music = new MusicPlayer(ctx, musicOut, DRIVING_THEME);
+      this.music = new MusicPlayer(ctx, musicOut, this.trackData());
       this.ctx = ctx;
       document.addEventListener('visibilitychange', () => this.onVisibility());
     }

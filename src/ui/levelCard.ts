@@ -2,6 +2,7 @@ import { MAX_HEALTH } from '../config/game';
 import { LEVELS } from '../config/levels';
 import { POTHOLES, type PotholeId } from '../config/potholes';
 import { TEXT } from '../config/text';
+import { TIMES, WEATHER, type Conditions } from '../config/weather';
 import { byId, formatRM, make } from './dom';
 import { showScreen } from './overlays';
 
@@ -11,6 +12,7 @@ export interface LevelCardInfo {
   nextNumber: number;
   health: number;
   money: number;
+  conditions: Conditions;
 }
 
 const MAX_SPEED = Math.max(...LEVELS.map((l) => l.speed));
@@ -66,6 +68,12 @@ export function showLevelCard(info: LevelCardInfo, onGo: () => void): void {
     if (previous && !seen.has(id)) holes.append(make('span', 'new-tag', 'NEW'));
   });
   facts.append(holes);
+
+  // Weather and time of day (shuffled every game)
+  const { weather, time } = info.conditions;
+  const sky = make('div', '', `${WEATHER[weather].label}${time === 'day' ? '' : ` · ${TIMES[time].label}`}`);
+  facts.append(sky);
+  if (WEATHER[weather].tip) facts.append(make('div', 'weather-tip', `⚠ ${WEATHER[weather].tip}`));
 
   // Road: lanes and highway
   const road = make('div', '', `${level.highway ? 'Highway' : 'Road'}: ${level.lanes} lane${level.lanes === 1 ? '' : 's'}`);

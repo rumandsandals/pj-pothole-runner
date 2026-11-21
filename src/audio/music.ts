@@ -52,8 +52,8 @@ export class MusicPlayer {
   private out: GainNode | null = null;
   private step = 0;
   private nextTime = 0;
-  private readonly song: ReturnType<typeof compile>;
-  private readonly stepSeconds: number;
+  private song: ReturnType<typeof compile>;
+  private stepSeconds: number;
 
   constructor(
     private readonly ctx: AudioContext,
@@ -62,6 +62,16 @@ export class MusicPlayer {
   ) {
     this.song = compile(track);
     this.stepSeconds = 60 / track.bpm / track.stepsPerBeat;
+  }
+
+  /** Switches to another tune (starts it from the beginning if music is playing). */
+  setTrack(track: Track): void {
+    this.song = compile(track);
+    this.stepSeconds = 60 / track.bpm / track.stepsPerBeat;
+    if (this.playing) {
+      this.stop();
+      this.start();
+    }
   }
 
   get playing(): boolean {

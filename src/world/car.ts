@@ -6,10 +6,10 @@ import { clampLane, laneY, slideLane, type Lane } from './lanes';
 import { ART_WIDTH, drawSprite, fill, toPx, type Swaps } from './pixels';
 
 /** Moves the car (lane slide + jump). Returns true on the tick it lands. */
-export function updateCar(car: Car): boolean {
+export function updateCar(car: Car, grip = 1): boolean {
   let landed = false;
   car.lane = clampLane(car.lane); // in case the road just got narrower
-  car.lanePos = slideLane(car.lanePos, car.lane, ROAD.changeTicks);
+  car.lanePos = slideLane(car.lanePos, car.lane, ROAD.changeTicks / grip); // slower on a wet road
   if (!car.onGround) {
     car.vy += PHYSICS.gravity;
     car.hop -= car.vy;
