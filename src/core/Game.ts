@@ -141,6 +141,7 @@ export class Game {
     const target = s.throttle < 0 ? DRIVING.brakeSpeed : s.throttle > 0 ? DRIVING.gasSpeed : 1;
     s.pace += Math.sign(target - s.pace) * Math.min(Math.abs(target - s.pace), DRIVING.change * grip(s)); // slower on a wet road
     s.speed = level.speed * s.pace;
+    sound.followSpeed(s.speed); // music tempo matches how fast you're going
     const lean = s.pace >= 1 ? (s.pace - 1) / (DRIVING.gasSpeed - 1) : (s.pace - 1) / (1 - DRIVING.brakeSpeed);
     car.x = CAR.x + lean * DRIVING.carMoves;
 
@@ -424,6 +425,7 @@ export class Game {
   private playLevelMusic(): void {
     const w = currentConditions(this.state).weather;
     sound.setTrack(currentLevel(this.state).music, w === 'rain' || w === 'storm');
+    sound.followSpeed(currentLevel(this.state).speed);
   }
 
   // ── Player actions ─────────────────────────────────────────

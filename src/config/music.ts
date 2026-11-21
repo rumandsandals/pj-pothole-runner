@@ -162,6 +162,27 @@ export const HIGHWAY_THEME: Track = {
 };
 
 export const TRACKS = { town: TOWN_THEME, city: CITY_THEME, highway: HIGHWAY_THEME };
+
+/**
+ * TEMPO FOLLOWS YOUR SPEED
+ * The music plays faster the faster you drive: slow on level 1, fast on
+ * level 9, and it speeds up / slows down live as you hold GAS or BRAKE.
+ * (Each tune's own `bpm` above is only used if this is switched off.)
+ */
+export const MUSIC_TEMPO = {
+  followSpeed: true,
+  slowest: { speed: 3.2, bpm: 110 }, // level 1's road speed → this tempo
+  fastest: { speed: 8.6, bpm: 185 }, // level 9's road speed → this tempo
+  min: 85, // never slower than this…
+  max: 230, // …or faster than this, however hard you brake or accelerate
+};
+
+/** Tempo (beats per minute) for a driving speed. */
+export function tempoForSpeed(speed: number): number {
+  const { slowest, fastest, min, max } = MUSIC_TEMPO;
+  const share = (speed - slowest.speed) / (fastest.speed - slowest.speed);
+  return Math.min(max, Math.max(min, slowest.bpm + share * (fastest.bpm - slowest.bpm)));
+}
 export type TrackId = keyof typeof TRACKS;
 
 /** The rainy-day version of a tune: slower, softer lead, no hi-hats. */

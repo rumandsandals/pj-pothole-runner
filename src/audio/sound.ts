@@ -1,4 +1,4 @@
-import { moody, TRACKS, type TrackId } from '../config/music';
+import { MOODY, MUSIC_TEMPO, moody, tempoForSpeed, TRACKS, type TrackId } from '../config/music';
 import { SOUND_DEFAULTS, SOUNDS, VOLUME, type SoundName } from '../config/sounds';
 import { MusicPlayer } from './music';
 import { playTone } from './synth';
@@ -46,6 +46,18 @@ class SoundSystem {
     if (this.track.id === id && this.track.moody === isMoody) return;
     this.track = { id, moody: isMoody };
     this.music?.setTrack(this.trackData());
+    this.music?.setTempoScale(isMoody ? MOODY.tempo : 1);
+  }
+
+  private lastBpm = 0;
+
+  /** Makes the music follow the car's speed (see MUSIC_TEMPO in music.ts). */
+  followSpeed(speed: number): void {
+    if (!MUSIC_TEMPO.followSpeed || !this.music) return;
+    const bpm = Math.round(tempoForSpeed(speed));
+    if (bpm === this.lastBpm) return;
+    this.lastBpm = bpm;
+    this.music.setTempo(bpm);
   }
 
   /** Call from any click / key press. Safe to call many times. */
@@ -64,6 +76,7 @@ class SoundSystem {
       musicOut.gain.value = VOLUME.music;
       musicOut.connect(master);
       this.music = new MusicPlayer(ctx, musicOut, this.trackData());
+      this.music.setTempoScale(this.track.moody ? MOODY.tempo : 1);
       this.ctx = ctx;
       document.addEventListener('visibilitychange', () => this.onVisibility());
     }

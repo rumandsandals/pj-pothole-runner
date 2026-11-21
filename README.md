@@ -52,7 +52,7 @@ Everything you're likely to change lives in **`src/config/`**. Edit a file, save
 | Mat Rempit lane-splitting and weaving       | `REMPIT` in `src/config/traffic.ts` |
 | Weather, time of day, how often each appears, rain grip, haze distance | `src/config/weather.ts` |
 | Scenery for each level (buildings, roadside) | `scenery` in `levels.ts`; sets in `src/config/scenery.ts`; drawings in `src/world/scenery.ts` |
-| Which tune each level plays, and the tunes   | `music` in `levels.ts`; tunes in `src/config/music.ts` |
+| Which tune each level plays, the tunes, and how tempo follows your speed | `music` in `levels.ts`; tunes and `MUSIC_TEMPO` in `src/config/music.ts` |
 | Police heat, stops, fines and the bribe gamble | `src/config/police.ts` (and `heat` on choices in `accidents.ts` / `roadEvents.ts`) |
 | Highway colours (lane lines, barrier, walls, signs) | `highway` in `src/config/theme.ts` |
 | Which vehicles may use the highway         | `onHighway` in `src/config/traffic.ts` |
