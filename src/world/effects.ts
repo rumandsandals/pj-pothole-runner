@@ -25,7 +25,7 @@ export function puff(bits: Bit[], x: number, y: number, colour: ColourKey, speed
     gravity: 0,
     life: Math.round(between(14, 24)),
     colour,
-    size: Math.random() < 0.3 ? 2 : 1,
+    size: Math.random() < 0.3 ? 3 : 2,
   });
 }
 
@@ -40,7 +40,7 @@ export function burst(bits: Bit[], x: number, y: number, count: number, colours:
       gravity: 0.35,
       life: Math.round(between(18, 34)),
       colour: colours[i % colours.length] ?? '6',
-      size: Math.random() < 0.35 ? 2 : 1,
+      size: Math.random() < 0.35 ? 3 : 2,
     });
   }
 }

@@ -46,35 +46,35 @@ export function render(ctx: CanvasRenderingContext2D, state: GameState): void {
 function drawLevelBadge(ctx: CanvasRenderingContext2D, state: GameState): void {
   if (state.mode === 'menu') return;
   const t = THEME.levelBadge;
-  const right = ART_WIDTH - 4;
+  const right = ART_WIDTH - 8;
 
   const secs = secondsLeft(state);
   const clock = `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}`;
   const warn = secs <= 5 && Math.floor(state.tick / 15) % 2 === 0;
-  const clockW = textWidth(clock, 2) + 6;
-  fill(ctx, t.box, right - clockW, 4, clockW, 14);
-  drawText(ctx, clock, right - 3, 6, warn ? t.timerWarn : t.timer, { align: 'right', scale: 2, shadow: t.shadow });
+  const clockW = textWidth(clock, 2) + 12;
+  fill(ctx, t.box, right - clockW, 8, clockW, 28);
+  drawText(ctx, clock, right - 6, 12, warn ? t.timerWarn : t.timer, { align: 'right', scale: 2, shadow: t.shadow });
 
   const label = `LEVEL ${state.level}/${LEVELS.length}`;
-  const labelW = textWidth(label, 2) + 6;
-  const labelRight = right - clockW - 3;
-  fill(ctx, t.box, labelRight - labelW, 4, labelW, 14);
-  drawText(ctx, label, labelRight - 3, 6, t.number, { align: 'right', scale: 2, shadow: t.shadow });
+  const labelW = textWidth(label, 2) + 12;
+  const labelRight = right - clockW - 6;
+  fill(ctx, t.box, labelRight - labelW, 8, labelW, 28);
+  drawText(ctx, label, labelRight - 6, 12, t.number, { align: 'right', scale: 2, shadow: t.shadow });
 
-  drawText(ctx, currentLevel(state).name, right, 21, t.name, { align: 'right', shadow: t.shadow });
+  drawText(ctx, currentLevel(state).name, right, 42, t.name, { align: 'right', shadow: t.shadow });
 }
 
 function drawProgressBar(ctx: CanvasRenderingContext2D, state: GameState): void {
   const t = THEME.progress;
-  const left = 8;
-  const width = ART_WIDTH - 16;
-  const y = ART_HEIGHT - 5;
+  const left = 16;
+  const width = ART_WIDTH - 32;
+  const y = ART_HEIGHT - 8;
   const progress = Math.min(state.levelDistance / levelLength(currentLevel(state)), 1);
 
-  fill(ctx, t.track, left - 1, y - 1, width + 2, 4);
-  fill(ctx, t.fill, left, y, Math.round(width * progress), 2);
-  for (let i = 1; i < LEVELS.length; i++) fill(ctx, t.tick, left + Math.round(width * (i / LEVELS.length)), y, 1, 2);
+  fill(ctx, t.track, left - 2, y - 2, width + 4, 7);
+  fill(ctx, t.fill, left, y, Math.round(width * progress), 3);
+  for (let i = 1; i < LEVELS.length; i++) fill(ctx, t.tick, left + Math.round(width * (i / LEVELS.length)), y, 2, 3);
 
-  drawText(ctx, `${Math.floor(state.distance)}m`, left, y - 8, t.text, { shadow: t.textShadow });
-  drawText(ctx, `RM ${state.money}`, left + width, y - 8, t.text, { align: 'right', shadow: t.textShadow });
+  drawText(ctx, `${Math.floor(state.distance)}m`, left, y - 16, t.text, { shadow: t.textShadow });
+  drawText(ctx, `RM ${state.money}`, left + width, y - 16, t.text, { align: 'right', shadow: t.textShadow });
 }

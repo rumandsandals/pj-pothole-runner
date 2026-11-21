@@ -11,7 +11,7 @@ export const TEXT = {
 
   menuIntro: `
     ↑ ↓ switch lanes · ← → brake / speed up · SPACE / TAP to jump<br>
-    Dodge cars & motorcycles — crashes mean claims!<br>
+    Dodge cars, motorcycles & bicycles — crashes mean claims!<br>
     <b>ABYSS potholes = tow truck encounter!</b><br>
     Choose the right tow — or enter Workshop Hell 🔧`,
 
@@ -23,7 +23,8 @@ export const TEXT = {
     &nbsp;· · · · = Shallow (−5 HP)&nbsp;&nbsp;──── = Medium (−15 HP)<br>
     &nbsp;━━━━━ = Deep (−30 HP)&nbsp;&nbsp;<b>[ABYSS]</b> = Car gets stuck!<br><br>
     <b>TRAFFIC (from level 2):</b><br>
-    🏍️ Clip a motorcycle = minor accident · 🚗 Bump a car = insurance claim<br>
+    🏍️ 🚲 Clip a motorcycle or bicycle = minor accident · 🚗 Bump a car = insurance claim<br>
+    Sedans, slow SUVs and fast sports cars share the road<br>
     💥 Serious crash = tow truck choice · ❗ = Mat Rempit coming from behind<br><br>
     <b>TOW TRUCK ENCOUNTER (ABYSS):</b><br>
     🟢 Licensed tow = safe recovery · back on road<br>
@@ -79,7 +80,7 @@ export const TEXT = {
   musicOff: '🎵 MUSIC',
 
   jumpButton: 'JUMP',
-  controlsHint: '↑ ↓ LANES · ← → BRAKE / GAS · SPACE JUMP · F FULL SCREEN',
+  controlsHint: '↑ ↓ LANES · HOLD A / D BRAKE · GAS · SPACE JUMP · F FULL SCREEN',
   laneUpButton: '▲ LANE',
   laneDownButton: '▼ LANE',
   brakeButton: '◀ BRAKE',

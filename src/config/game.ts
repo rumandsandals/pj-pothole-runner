@@ -8,8 +8,8 @@
 /** The game world is drawn at this size, then scaled to fit any screen. */
 export const WORLD = {
   width: 640,
-  height: 240,
-  groundY: 148, // where the road begins (the kerb); the sky is above this
+  height: 360, // 16:9 widescreen
+  groundY: 250, // where the road begins (the kerb); the sky and skyline are above this
 };
 
 /**
@@ -17,17 +17,18 @@ export const WORLD = {
  * surface sits (world units). Lane 0 = near (bottom), lane 1 = far (top).
  */
 export const LANES = {
-  near: 204,
-  far: 170,
-  dividerY: 188, // the dashed yellow line between them
+  near: 332,
+  far: 292,
+  dividerY: 311, // the dashed yellow line between them
   changeTicks: 9, // how quickly the car slides between lanes
 };
 
 /**
- * Size of one art pixel in world units. 2 = the screen is 320×120 chunky
- * pixels. 4 = even chunkier (160×60). 1 = fine detail (no retro feel).
+ * Size of one art pixel in world units. 1 = the screen is 640×360 pixels
+ * (detailed pixel art). 2 = chunkier, 320×180 — but the sprites are drawn
+ * for 1, so they'd look twice as big.
  */
-export const PIXEL_SIZE = 2;
+export const PIXEL_SIZE = 1;
 
 export const TICKS_PER_SECOND = 60;
 
@@ -40,7 +41,7 @@ export const MAX_HEALTH = 100;
 
 export const CAR = {
   x: 150, // where the car sits on screen (0 = left edge, 640 = right). Further right = more room to see traffic behind you
-  width: 44,
+  width: 56, // collision size (the Mazda sprite is 60 wide)
   height: 22,
   hitboxInset: 9, // makes collisions a little forgiving
   invulnerableAfterHit: 60, // ticks of blinking after hitting a pothole
@@ -112,8 +113,8 @@ export const ANIMATION = {
   roughRoadJiggle: 0.8, // roads at least this rough make the car jiggle
   debrisOnHit: 10, // asphalt chips thrown up by a pothole hit
   debrisOnStuck: 18,
-  shakeOnHit: { ticks: 8, strength: 1 }, // screen shake (strength in art pixels)
-  shakeOnStuck: { ticks: 18, strength: 2 },
+  shakeOnHit: { ticks: 8, strength: 2 }, // screen shake (strength in art pixels)
+  shakeOnStuck: { ticks: 18, strength: 4 },
   cloudDrift: 0.03, // clouds drift even when the car stops
   labelBlinkEvery: 16, // ticks between ABYSS label blinks (0 = no blink)
   showIncomePop: true, // "+5" pop-up when passive income is earned

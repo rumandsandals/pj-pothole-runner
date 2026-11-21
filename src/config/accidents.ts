@@ -6,6 +6,7 @@ import type { TowOption } from './towTrucks';
  * One is picked at random from the matching list after a collision.
  *   minor   — you clipped a motorcycle
  *   rempit  — a Mat Rempit hit you (falls back to `minor` if empty)
+ *   cyclist — you clipped a bicycle (falls back to `minor` if empty)
  *   fender  — you bumped a car
  *   serious — after a serious crash, once the proper tow has taken your car
  * Same format as roadEvents.ts. Add as many as you like to each list.
@@ -14,7 +15,7 @@ import type { TowOption } from './towTrucks';
  * game. See "Facts to verify" in README.md.
  */
 
-export const ACCIDENT_EVENTS: Record<'minor' | 'rempit' | 'fender' | 'serious', RoadEvent[]> = {
+export const ACCIDENT_EVENTS: Record<'minor' | 'rempit' | 'cyclist' | 'fender' | 'serious', RoadEvent[]> = {
   minor: [
     {
       title: '🏍️ MIRROR CLIPPED!',
@@ -44,6 +45,18 @@ export const ACCIDENT_EVENTS: Record<'minor' | 'rempit' | 'fender' | 'serious', 
       choices: [
         { label: '📹 Police report with dashcam video', effect: { money: 150 }, message: '✅ Report filed — your insurer covers the damage.', tone: 'good' },
         { label: '😤 Chase him down', effect: { hp: -15 }, message: '❌ Dangerous and pointless. You nearly crashed again!', tone: 'bad' },
+      ],
+    },
+  ],
+
+  cyclist: [
+    {
+      title: '🚲 CYCLIST CLIPPED!',
+      description:
+        'You pass too close and clip a cyclist, who falls onto the road. Give cyclists plenty of room when overtaking — and if there is an accident, stop and help.',
+      choices: [
+        { label: '🛑 Stop, help & call 999', effect: { hp: 5 }, message: "✅ Scraped knees, but OK. You did the right thing.", tone: 'good' },
+        { label: '🏃 Keep driving', effect: { money: -500, hp: -10 }, message: '❌ A witness noted your plate. -RM500!', tone: 'bad' },
       ],
     },
   ],

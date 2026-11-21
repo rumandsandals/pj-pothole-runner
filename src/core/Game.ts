@@ -256,7 +256,12 @@ export class Game {
       addFloatingText(s.particles, car.x, car.y - 52, 'CRASH!', THEME.particles.damage, 60, 2);
       return;
     }
-    this.openAccidentEvent(isCar ? 'fender' : vehicle.kind === 'rempit' && ACCIDENT_EVENTS.rempit.length > 0 ? 'rempit' : 'minor');
+    const scene =
+      isCar ? 'fender'
+      : vehicle.kind === 'rempit' && ACCIDENT_EVENTS.rempit.length > 0 ? 'rempit'
+      : VEHICLES[vehicle.kind].accident === 'cyclist' && ACCIDENT_EVENTS.cyclist.length > 0 ? 'cyclist'
+      : 'minor';
+    this.openAccidentEvent(scene);
   }
 
   private openAccidentEvent(kind: keyof typeof ACCIDENT_EVENTS): void {

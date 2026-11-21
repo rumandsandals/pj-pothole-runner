@@ -1,14 +1,33 @@
 import { LANES } from '../config/game';
 import type { LevelTraffic } from '../config/levels';
-import { MOTORCYCLE_SPRITE } from '../config/sprites';
-import { CAR_PAINT, REMPIT_PAINT, RIDER_PAINT, TRAFFIC_RULES, VEHICLES, type VehicleKind } from '../config/traffic';
+import { VEHICLE_ART } from '../config/sprites';
+import { CAR_PAINT, CYCLIST_PAINT, REMPIT_PAINT, RIDER_PAINT, TRAFFIC_RULES, VEHICLES, type VehicleKind } from '../config/traffic';
 import type { Car, Vehicle } from '../core/state';
-import { carBoxAt, drawCarSprite, wheelFrame } from './car';
+import { drawVehicleArt, vehicleBox, wheelFrame } from './car';
 import { drawLane, laneY, randomLane, sameLane, slideLane, type Lane } from './lanes';
-import { drawSprite, drawText, fill, toPx } from './pixels';
+import { drawText, fill, toPx } from './pixels';
 
 const pick = <T,>(list: T[]): T => list[Math.floor(Math.random() * list.length)] as T;
 const between = ([a, b]: [number, number]): number => a + Math.random() * (b - a);
+const KINDS = Object.keys(VEHICLES) as VehicleKind[];
+
+/** Picks a vehicle from one group (cars or two-wheelers), weighted by `mix`. */
+function pickKind(group: 'car' | 'twoWheeler'): VehicleKind {
+  const options = KINDS.filter((k) => VEHICLES[k].group === group);
+  let roll = Math.random() * options.reduce((sum, k) => sum + VEHICLES[k].mix, 0);
+  for (const k of options) {
+    roll -= VEHICLES[k].mix;
+    if (roll < 0) return k;
+  }
+  return options[0] ?? 'sedan';
+}
+
+function paintFor(kind: VehicleKind): Vehicle['paint'] {
+  if (kind === 'rempit') return { ...REMPIT_PAINT };
+  if (kind === 'motorcycle') return { ...pick(RIDER_PAINT) };
+  if (kind === 'bicycle') return { ...pick(CYCLIST_PAINT) };
+  return { ...pick(CAR_PAINT) };
+}
 
 /** Maybe adds a vehicle this tick. Returns it (so the game can play a sound), or null. */
 export function maybeSpawnVehicle(vehicles: Vehicle[], traffic: LevelTraffic | null): Vehicle | null {
@@ -16,7 +35,7 @@ export function maybeSpawnVehicle(vehicles: Vehicle[], traffic: LevelTraffic | n
   if (Math.random() >= traffic.spawnChance) return null;
 
   const rempit = Math.random() < traffic.rempitChance;
-  const kind: VehicleKind = rempit ? 'rempit' : Math.random() < traffic.motorcycleShare ? 'motorcycle' : 'car';
+  const kind: VehicleKind = rempit ? 'rempit' : pickKind(Math.random() < traffic.motorcycleShare ? 'twoWheeler' : 'car');
   const x = rempit ? TRAFFIC_RULES.rempitStartX : TRAFFIC_RULES.spawnAheadX;
   const lane = randomLane();
 
@@ -34,8 +53,8 @@ export function maybeSpawnVehicle(vehicles: Vehicle[], traffic: LevelTraffic | n
     lane,
     lanePos: lane,
     speedShare: between(VEHICLES[kind].speed),
-    paint: kind === 'car' ? pick(CAR_PAINT) : kind === 'rempit' ? { ...REMPIT_PAINT } : pick(RIDER_PAINT),
-    willChangeLane: kind === 'car' && Math.random() < traffic.laneChangeChance,
+    paint: paintFor(kind),
+    willChangeLane: VEHICLES[kind].group === 'car' && Math.random() < traffic.laneChangeChance,
     signal: -1,
     changed: false,
   };
@@ -49,7 +68,13 @@ const laneIsClear = (vehicles: Vehicle[], me: Vehicle, lane: Lane): boolean =>
 /** Moves traffic relative to the player and handles lane changes. */
 export function updateVehicles(vehicles: Vehicle[], playerSpeed: number, roadSpeed: number, player: Car): Vehicle[] {
   for (const v of vehicles) {
-    v.x += roadSpeed * v.speedShare - playerSpeed; // brake and slow traffic pulls away; speed up and you catch it
+    // Don't drive through a slower vehicle ahead in the same lane: follow it instead
+    let share = v.speedShare;
+    for (const o of vehicles) {
+      const gap = o.x - v.x;
+      if (o !== v && gap > 0 && gap < TRAFFIC_RULES.followGap && sameLane(o.lanePos, v.lanePos)) share = Math.min(share, o.speedShare);
+    }
+    v.x += roadSpeed * share - playerSpeed; // brake and slow traffic pulls away; speed up and you catch it
 
     // Cars that change lane: blink first, then move over
     const ahead = v.x - player.x;
@@ -98,45 +123,43 @@ export function clearAround(vehicles: Vehicle[], x: number, distance: number): V
   return vehicles.filter((v) => Math.abs(v.x - x) > distance);
 }
 
-const MOTO_W = MOTORCYCLE_SPRITE[0]?.length ?? 0;
-const MOTO_H = MOTORCYCLE_SPRITE.length;
-
 /** Draws the vehicles in one lane (call far lane first, then near). */
 export function drawVehicles(ctx: CanvasRenderingContext2D, vehicles: Vehicle[], lane: Lane, time: number, roadOffset: number): void {
   for (const v of vehicles) {
     if (drawLane(v.lanePos) !== lane) continue;
-    const surface = laneY(v.lanePos);
+    const type = VEHICLES[v.kind];
+    const art = VEHICLE_ART[type.art];
+    const box = vehicleBox(art, v.x, laneY(v.lanePos));
+    const travelled = roadOffset * v.speedShare + v.x;
+    // Two-wheelers bounce a little; bicycles wobble from side to side
+    const bob = type.group === 'car' ? 0 : -(Math.floor((time + v.x) / 4) % 2);
+    if (v.kind === 'bicycle' && TRAFFIC_RULES.bicycleWobble) box.left += Math.round(Math.sin((time + v.x) / 9));
 
-    if (v.kind === 'car') {
-      const box = carBoxAt(v.x, surface);
-      const travelled = roadOffset * v.speedShare + v.x;
-      drawCarSprite(ctx, box, { X: v.paint.X ?? '6', Y: v.paint.Y ?? '5' }, wheelFrame(travelled));
-      // Blinking indicator before a lane change
-      if (v.signal > 0 && Math.floor(time / 6) % 2 === 0) {
-        fill(ctx, '9', box.left, box.top + 5, 1, 2);
-        fill(ctx, '9', box.left + box.width - 1, box.top + 5, 1, 2);
-      }
-      continue;
-    }
-
-    // Motorcycles (and Mat Rempit, with speed lines)
-    const left = toPx(v.x) - Math.floor(MOTO_W / 2);
-    const top = toPx(surface) - MOTO_H + 1 - (Math.floor(time / 4) % 2); // little bounce
+    // Mat Rempit: speed lines streaming behind
     if (v.kind === 'rempit') {
-      for (let i = 0; i < 3; i++) fill(ctx, '7', left - 4 - i * 5, top + 4 + i * 2, 3, 1);
+      for (let i = 0; i < 3; i++) fill(ctx, '7', box.left - 8 - i * 9, box.top + 10 + i * 5, 6, 1);
     }
-    drawSprite(ctx, MOTORCYCLE_SPRITE, left, top, v.paint);
+
+    drawVehicleArt(ctx, art, box, v.paint, wheelFrame(travelled), bob);
+
+    // Blinking indicators before a lane change (front and back corners)
+    if (v.signal > 0 && Math.floor(time / 6) % 2 === 0) {
+      const y = box.top + Math.round(box.height * 0.45);
+      fill(ctx, '9', box.left - 1, y, 3, 3);
+      fill(ctx, '9', box.left + box.width - 2, y, 3, 3);
+    }
   }
 }
 
-/** Flashing "!" at the left edge where a Mat Rempit is about to appear. */
+/** Flashing "!>" at the left edge where a Mat Rempit is about to appear. */
 export function drawRempitWarnings(ctx: CanvasRenderingContext2D, vehicles: Vehicle[], time: number): void {
   if (Math.floor(time / 8) % 2 === 1) return;
   for (const v of vehicles) {
     if (v.kind !== 'rempit' || v.x > -10) continue;
-    const y = toPx(laneY(v.lanePos)) - 10;
-    fill(ctx, '0', 1, y - 2, 9, 9);
-    drawText(ctx, '!', 3, y - 1, '8', { scale: 1 });
-    drawText(ctx, '>', 6, y - 1, 'a', { scale: 1 });
+    const y = toPx(laneY(v.lanePos)) - 24;
+    fill(ctx, '0', 2, y - 4, 20, 18);
+    fill(ctx, '8', 2, y - 4, 20, 1);
+    drawText(ctx, '!', 5, y, '8');
+    drawText(ctx, '>', 13, y, 'a');
   }
 }

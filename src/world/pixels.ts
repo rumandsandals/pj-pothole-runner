@@ -72,6 +72,8 @@ export function drawSprite(ctx: CanvasRenderingContext2D, rows: string[], x: num
 }
 
 // ── Tiny 3×5 arcade font ─────────────────────────────────────
+/** Every font dot is drawn this many art pixels wide (2 keeps text readable at 640×360). */
+const FONT_ZOOM = 2;
 // Each letter is 15 dots: 5 rows of 3, read left-to-right, top-to-bottom.
 const GLYPHS: Record<string, string> = {
   A: '010101111101101', B: '110101110101110', C: '011100100100011', D: '110101101101110',
@@ -97,7 +99,8 @@ export interface TextOptions {
 }
 
 export function textWidth(text: string, scale = 1): number {
-  return text.length === 0 ? 0 : text.length * 4 * scale - scale;
+  const s = scale * FONT_ZOOM;
+  return text.length === 0 ? 0 : text.length * 4 * s - s;
 }
 
 /** Draws text in the tiny pixel font. Lower-case letters are shown as capitals. */
@@ -113,8 +116,9 @@ export function drawText(
   const width = textWidth(upper, scale);
   const left = Math.round(align === 'center' ? x - width / 2 : align === 'right' ? x - width : x);
   const top = Math.round(y);
-  if (shadow) drawGlyphs(ctx, upper, left + scale, top + scale, shadow, scale);
-  drawGlyphs(ctx, upper, left, top, key, scale);
+  const s = scale * FONT_ZOOM;
+  if (shadow) drawGlyphs(ctx, upper, left + s, top + s, shadow, s);
+  drawGlyphs(ctx, upper, left, top, key, s);
 }
 
 function drawGlyphs(ctx: CanvasRenderingContext2D, text: string, left: number, top: number, key: ColourKey, scale: number): void {

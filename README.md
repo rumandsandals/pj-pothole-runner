@@ -33,13 +33,13 @@ Everything you're likely to change lives in **`src/config/`**. Edit a file, save
 | Levels (names, length in seconds, intro text, speed, potholes) | `src/config/levels.ts` |
 | Pothole sizes, damage, labels              | `src/config/potholes.ts`    |
 | Police / insurance / workshop pop-ups      | `src/config/roadEvents.ts`  |
-| Traffic behaviour, accident damage and severity | `src/config/traffic.ts` |
+| Traffic: vehicle types, how common, speeds, paint colours, damage | `src/config/traffic.ts` |
 | Accident scenes and the crash tow trucks   | `src/config/accidents.ts`   |
 | The two tow truck choices                  | `src/config/towTrucks.ts`   |
 | Workshop Hell rounds                       | `src/config/workshop.ts`    |
 | Menu text, help text, hotlines             | `src/config/text.ts`        |
 | The 16-colour palette, road/car/truck colours | `src/config/theme.ts`    |
-| Pixel art (car, tow truck, palms, clouds)  | `src/config/sprites.ts`     |
+| Pixel art (your Mazda, sedan, SUV, sports car, motorcycle, bicycle, tow truck, palms, clouds) | `src/config/sprites.ts` |
 | How chunky the pixels are (`PIXEL_SIZE`)   | `src/config/game.ts`        |
 | Dust, shake, wheel spin and other effects (`ANIMATION`) | `src/config/game.ts` |
 | Sound effects (pitch, length, volume) and default on/off | `src/config/sounds.ts` |
@@ -57,7 +57,7 @@ Before you share a change, run `npm run check`. It catches typos, such as a poth
 
 ### Redrawing the pixel art
 
-In `sprites.ts`, each line of text is one row of pixels, and each character is one pixel. `.` is see-through, `0`–`9` and `a`–`f` are palette colours, and `X`/`Y`/`Z` are swappable colours. For example, the car's body colour is set in `theme.ts`, so you can repaint it without touching the art. Keep every row in a sprite the same length.
+In `sprites.ts`, each line of text is one row of pixels, and each character is one pixel. `.` is see-through, `0`–`9` and `a`–`j` are palette colours, and `X`/`Y`/`Z` are swappable colours. For example, the car's body colour is set in `theme.ts`, so you can repaint it without touching the art. Keep every row in a sprite the same length.
 
 ## How the code is organised
 

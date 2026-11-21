@@ -24,6 +24,10 @@ export const PALETTE = {
   d: '#83769c', // lavender
   e: '#ff77a8', // pink
   f: '#ffccaa', // peach
+  g: '#3b3b4a', // tyre / dark plastic
+  h: '#8e8e9a', // steel grey
+  i: '#a8183f', // dark red
+  j: '#3a5a8c', // tinted glass
 } as const;
 
 export type ColourKey = keyof typeof PALETTE;
@@ -38,7 +42,7 @@ export interface TruckColours {
 
 export const THEME = {
   /** Sky fades from top to horizon between these rows (art pixels, 0 = top). */
-  sky: { top: 'c' as C, horizon: 'f' as C, fadeStart: 30, fadeEnd: 52 },
+  sky: { top: 'c' as C, horizon: 'f' as C, fadeStart: 90, fadeEnd: 170 },
   cloud: '7' as C,
   farBuildings: { body: 'd' as C, windows: 'f' as C },
   bushes: { dark: '3' as C, light: 'b' as C },
@@ -50,8 +54,8 @@ export const THEME = {
 
   pothole: { hole: '0' as C, rim: '6' as C, label: '8' as C, labelShadow: '0' as C, damageDot: 'a' as C },
 
-  /** Replaces X (body) and Y (trim) in the car sprite. */
-  car: { body: '8' as C, trim: '2' as C },
+  /** Your Mazda's paint: X = body, Y = shadow. */
+  car: { body: '8' as C, trim: 'i' as C },
   smoke: '6' as C,
 
   /** Replaces X (body), Y (stripe) and Z (cab) in the truck sprite. */

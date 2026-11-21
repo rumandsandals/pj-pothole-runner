@@ -1,9 +1,9 @@
 import { ANIMATION, CAR, LANES, PHYSICS } from '../config/game';
-import { CAR_BODY_SPRITE, WHEEL_FRAME_1, WHEEL_FRAME_2, WHEEL_POSITIONS } from '../config/sprites';
-import { THEME, type ColourKey } from '../config/theme';
+import { VEHICLE_ART, type VehicleArt } from '../config/sprites';
+import { THEME } from '../config/theme';
 import type { Car } from '../core/state';
 import { laneY, slideLane, type Lane } from './lanes';
-import { ART_WIDTH, drawSprite, fill, toPx } from './pixels';
+import { ART_WIDTH, drawSprite, fill, toPx, type Swaps } from './pixels';
 
 /** Moves the car (lane slide + jump). Returns true on the tick it lands. */
 export function updateCar(car: Car): boolean {
@@ -66,43 +66,48 @@ export function resetAfterRecovery(car: Car): void {
   car.invulnerable = CAR.invulnerableAfterRecovery;
 }
 
-const BODY_W = CAR_BODY_SPRITE[0]?.length ?? 0;
-const BODY_H = CAR_BODY_SPRITE.length;
-const WHEEL_H = WHEEL_FRAME_1.length;
+export type Box = { left: number; top: number; width: number; height: number };
 
-/** Where a car (body + wheels) is drawn, in art pixels, given its x and wheel height. */
-export function carBoxAt(x: number, y: number): { left: number; top: number; width: number; height: number } {
-  const height = BODY_H + WHEEL_H;
-  return { left: toPx(x) - Math.floor(BODY_W / 2), top: toPx(y) - height + 1, width: BODY_W, height };
+/** Where a vehicle's picture goes (art pixels), given its centre x and the road height under it. */
+export function vehicleBox(art: VehicleArt, x: number, y: number): Box {
+  const width = art.body[0]?.length ?? 0;
+  const height = art.body.length;
+  return { left: toPx(x) - Math.floor(width / 2), top: toPx(y) - height + 1, width, height };
 }
 
-export const carSpriteBox = (car: Car): ReturnType<typeof carBoxAt> => carBoxAt(car.x, car.y + car.sinkY);
+const PLAYER_ART = VEHICLE_ART.hatchback;
+export const carSpriteBox = (car: Car): Box => vehicleBox(PLAYER_ART, car.x, car.y + car.sinkY);
 
-/** Which wheel picture to show, so wheels turn as the road moves. */
-export function wheelFrame(distance: number): string[] {
-  if (ANIMATION.wheelSpinEvery <= 0) return WHEEL_FRAME_1;
-  return Math.floor(distance / ANIMATION.wheelSpinEvery) % 2 === 0 ? WHEEL_FRAME_1 : WHEEL_FRAME_2;
+/** Which of the two wheel pictures to show, so wheels turn as the road moves. */
+export function wheelFrame(distance: number): 0 | 1 {
+  if (ANIMATION.wheelSpinEvery <= 0) return 0;
+  return Math.floor(distance / ANIMATION.wheelSpinEvery) % 2 === 0 ? 0 : 1;
 }
 
 /** Back-wheel position in world units (for dust and exhaust). */
 export function rearWheelWorld(car: Car): { x: number; y: number } {
-  return { x: car.x - car.width / 2 + 4, y: car.y + car.sinkY - 2 };
+  const box = carSpriteBox(car);
+  return { x: car.x - box.width / 2 + (PLAYER_ART.wheelX[0] ?? 10), y: car.y + car.sinkY - 2 };
 }
 
 /**
- * Draws any car: the player's or traffic. `bob` lifts/drops the body for
- * suspension; `wheelDrop` lowers the wheels (in the air).
+ * Draws any vehicle from its art (see VEHICLE_ART in sprites.ts): the body,
+ * then the wheels on top. `bob` lifts/drops the body for suspension;
+ * `wheelDrop` lowers the wheels (in the air).
  */
-export function drawCarSprite(
+export function drawVehicleArt(
   ctx: CanvasRenderingContext2D,
-  box: ReturnType<typeof carBoxAt>,
-  paint: { X: ColourKey; Y: ColourKey },
-  wheels: string[],
+  art: VehicleArt,
+  box: Box,
+  paint: Swaps,
+  frame: 0 | 1,
   bob = 0,
   wheelDrop = 0,
 ): void {
-  for (const wx of WHEEL_POSITIONS.car) drawSprite(ctx, wheels, box.left + wx, box.top + BODY_H + wheelDrop);
-  drawSprite(ctx, CAR_BODY_SPRITE, box.left, box.top + bob, paint);
+  drawSprite(ctx, art.body, box.left, box.top + bob, paint);
+  const wheel = art.wheels[frame];
+  const r = Math.floor(wheel.length / 2);
+  for (const wx of art.wheelX) drawSprite(ctx, wheel, box.left + wx - r, box.top + art.wheelY - r + wheelDrop);
 }
 
 export function drawCar(ctx: CanvasRenderingContext2D, car: Car, time: number, roadOffset: number, roughness: number, pace = 1): void {
@@ -113,20 +118,20 @@ export function drawCar(ctx: CanvasRenderingContext2D, car: Car, time: number, r
   let shiftX = 0;
   let bob = 0;
   if (car.trapped) {
-    shiftX = Math.floor(time / 3) % 2 === 0 ? -1 : 1; // engine straining / wreck shuddering
+    shiftX = Math.floor(time / 3) % 2 === 0 ? -2 : 2; // engine straining / wreck shuddering
   } else if (car.squash > 0) {
-    bob = 1; // squashed after landing
+    bob = 2; // squashed after landing
   } else if (car.onGround && ANIMATION.roughRoadJiggle > 0 && roughness >= ANIMATION.roughRoadJiggle) {
     const period = Math.max(3, Math.round(12 - roughness * 3));
     bob = Math.floor(time / period) % 2; // suspension jiggling over a rough road
   }
-  const wheelDrop = car.onGround ? 0 : 1; // wheels hang lower in the air
+  const wheelDrop = car.onGround ? 0 : 2; // wheels hang lower in the air
   const surface = toPx(laneY(car.lanePos));
 
   // Shadow on the road while jumping
   if (!car.onGround) {
-    const shrink = Math.min(Math.floor(car.hop / 12), 6);
-    fill(ctx, '0', box.left + 3 + shrink, surface + 1, BODY_W - 6 - shrink * 2, 1);
+    const shrink = Math.min(Math.floor(car.hop / 8), 14);
+    fill(ctx, '0', box.left + 6 + shrink, surface, box.width - 12 - shrink * 2, 2);
   }
 
   // Sinking into an ABYSS: hide the part of the car below the road surface
@@ -134,33 +139,33 @@ export function drawCar(ctx: CanvasRenderingContext2D, car: Car, time: number, r
   if (sinking) {
     ctx.save();
     ctx.beginPath();
-    ctx.rect(0, 0, ART_WIDTH, surface + 3);
+    ctx.rect(0, 0, ART_WIDTH, surface + 5);
     ctx.clip();
   }
-  drawCarSprite(ctx, { ...box, left: box.left + shiftX }, { X: THEME.car.body, Y: THEME.car.trim }, wheelFrame(roadOffset), bob, wheelDrop);
+  const left = box.left + shiftX;
+  drawVehicleArt(ctx, PLAYER_ART, { ...box, left }, { X: THEME.car.body, Y: THEME.car.trim }, wheelFrame(roadOffset), bob, wheelDrop);
   if (sinking) ctx.restore();
 
   if (!car.trapped && !sinking) {
-    const left = box.left + shiftX;
     // Brake lights glow while slowing down
     if (pace < 0.97) {
-      fill(ctx, '9', left, box.top + bob + 6, 1, 1);
-      fill(ctx, '8', left - 1, box.top + bob + 5, 1, 3);
-      fill(ctx, '8', left - 2, box.top + bob + 6, 1, 1);
+      fill(ctx, '7', left, box.top + bob + 9, 2, 2);
+      fill(ctx, '8', left - 2, box.top + bob + 8, 2, 4);
+      fill(ctx, '8', left - 4, box.top + bob + 9, 2, 2);
     }
     // Speed lines while on the gas
     if (pace > 1.1) {
-      const flicker = Math.floor(time / 3) % 2;
-      for (let i = 0; i < 3; i++) fill(ctx, '7', left - 5 - i * 4 - flicker, box.top + 3 + i * 3, 3, 1);
+      const flicker = Math.floor(time / 3) % 2 * 2;
+      for (let i = 0; i < 3; i++) fill(ctx, '7', left - 10 - i * 8 - flicker, box.top + 5 + i * 5, 6, 1);
     }
   }
 
   // Smoke when stuck or wrecked
   if (car.trapped || car.sinkY > 5) {
-    const top = Math.min(box.top, surface - 12);
-    for (let i = 0; i < 4; i++) {
-      const size = 2 + Math.floor(i / 2);
-      fill(ctx, THEME.smoke, box.left - 3 - i * 3, top + 6 - i * 2 - ((time >> 3) % 2), size, size);
+    const top = Math.min(box.top, surface - 24);
+    for (let i = 0; i < 5; i++) {
+      const size = 3 + i;
+      fill(ctx, THEME.smoke, box.left + 4 - i * 6, top + 10 - i * 5 - ((time >> 3) % 2) * 2, size, size);
     }
   }
 }

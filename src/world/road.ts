@@ -8,8 +8,9 @@ export interface RoadPoint {
 }
 
 const STEP = 3;
-const KERB_BLOCK = 4; // width of each red/white kerb block (art pixels)
-const LANE_DASH = 10;
+const KERB_BLOCK = 8; // width of each red/white kerb block (art pixels)
+const KERB_HEIGHT = 5;
+const LANE_DASH = 22;
 
 /** Builds the road's bumps. Higher roughness = bumpier kerb and more cracks. */
 export function generateRoad(roughness: number): RoadPoint[] {
@@ -28,10 +29,11 @@ export function generateRoad(roughness: number): RoadPoint[] {
 // Fixed speckle pattern for the asphalt texture.
 const SPECKLES = (() => {
   const random = seededRandom(3);
-  return Array.from({ length: 220 }, () => ({
-    x: Math.floor(random() * 400),
-    y: 3 + Math.floor(random() * (ART_HEIGHT - ART_GROUND - 3)),
+  return Array.from({ length: 700 }, () => ({
+    x: Math.floor(random() * 640),
+    y: 6 + Math.floor(random() * (ART_HEIGHT - ART_GROUND - 6)),
     shade: random() < 0.6 ? 0 : 1,
+    size: random() < 0.25 ? 2 : 1,
     rank: random(), // smoother roads show fewer speckles
   }));
 })();
@@ -48,14 +50,14 @@ export function drawRoad(ctx: CanvasRenderingContext2D, road: RoadPoint[], offse
   const visibleShare = Math.min(0.25 + roughness * 0.3, 1);
   for (const s of SPECKLES) {
     if (s.rank > visibleShare) continue;
-    const x = wrap(s.x - scroll, 400);
-    if (x < ART_WIDTH) fill(ctx, THEME.roadSpeckles[s.shade] ?? THEME.road, x, ART_GROUND + s.y, 1, 1);
+    const x = wrap(s.x - scroll, 640);
+    if (x < ART_WIDTH) fill(ctx, THEME.roadSpeckles[s.shade] ?? THEME.road, x, ART_GROUND + s.y, s.size, s.size);
   }
 
   // Dashed yellow line between the two lanes
   const dividerY = toPx(LANES.dividerY);
   for (let x = -wrap(scroll, LANE_DASH * 2); x < ART_WIDTH; x += LANE_DASH * 2) {
-    fill(ctx, THEME.laneLine, x, dividerY, LANE_DASH, 1);
+    fill(ctx, THEME.laneLine, x, dividerY, LANE_DASH, 2);
   }
 
   // Red/white kerb, nudged up and down by the road's bumps
@@ -63,9 +65,10 @@ export function drawRoad(ctx: CanvasRenderingContext2D, road: RoadPoint[], offse
   for (let x = 0; x < ART_WIDTH; x++) {
     const worldX = (x * WORLD.width) / ART_WIDTH + offset;
     const point = road[Math.floor(wrap(worldX / STEP, roadLength))];
-    const bump = Math.max(-1, Math.min(2, Math.round((point?.y ?? 0) / 2)));
+    const bump = Math.max(-2, Math.min(3, Math.round(point?.y ?? 0)));
     const block = Math.floor((x + scroll) / KERB_BLOCK) % THEME.kerb.length;
     const colour = THEME.kerb[block] ?? THEME.road;
-    fill(ctx, colour, x, ART_GROUND + bump, 1, 2 - Math.min(bump, 0));
+    fill(ctx, colour, x, ART_GROUND + bump, 1, KERB_HEIGHT - Math.min(bump, 0));
+    fill(ctx, '0', x, ART_GROUND + bump + KERB_HEIGHT - Math.min(bump, 0), 1, 1); // kerb shadow
   }
 }

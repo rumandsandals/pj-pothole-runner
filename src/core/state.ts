@@ -61,7 +61,7 @@ export interface Vehicle {
   x: number;
   lane: Lane;
   lanePos: number;
-  speedShare: number; // share of the player's speed
+  speedShare: number; // share of the level's normal speed
   paint: Swaps;
   willChangeLane: boolean;
   signal: number; // ticks of blinking left before changing lane (-1 = not signalling)
