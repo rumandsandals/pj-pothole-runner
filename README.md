@@ -97,7 +97,7 @@ The accident scenes (`src/config/accidents.ts`) were drafted for the game. Check
 9. **"Ulat" tow touts** at crash scenes: the advice "never let a tow truck you didn't call take your car".
 10. The RM amounts and outcomes are game numbers, not real figures.
 11. **Police stops** (`src/config/police.ts`): speeding saman of about **RM 300**, and that offering a police officer a bribe ("duit kopi") is a crime under the **MACC Act 2009**.
-13. The red-light fine (`redLight` in `src/config/police.ts`) is a game number.
 12. Which choices count as illegal (`heat` in `accidents.ts` and `roadEvents.ts`): not reporting an accident, leaving the scene, bribing, chasing another road user.
+13. The red-light fine (`redLight` in `src/config/police.ts`) is a game number.
 
 The hotlines in `src/config/text.ts` (MBPJ, MACC, Tribunal, JPJ, BNM) came from the original game and should be re-checked too.
