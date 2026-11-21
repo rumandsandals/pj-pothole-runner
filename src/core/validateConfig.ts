@@ -1,5 +1,8 @@
 import { LEVELS } from '../config/levels';
+import { noteToHz, toHz } from '../audio/synth';
+import { DRIVING_THEME } from '../config/music';
 import { ROAD_EVENTS } from '../config/roadEvents';
+import { SOUNDS, type Tone } from '../config/sounds';
 import * as SPRITES from '../config/sprites';
 import { PALETTE } from '../config/theme';
 import { TOW_OPTIONS } from '../config/towTrucks';
@@ -44,6 +47,28 @@ export function validateConfig(): string[] {
       }
     });
   }
+
+  // Sounds: every pitch must be a number or a real note name
+  const badPitch = (v: number | string | undefined): boolean => v !== undefined && !(toHz(v) > 0);
+  for (const [name, tones] of Object.entries(SOUNDS)) {
+    tones.forEach((tone: Tone, i) => {
+      if (badPitch(tone.from) || badPitch(tone.to))
+        problems.push(`sounds.ts, "${name}" tone ${i + 1}: "${tone.from}${tone.to ? ` → ${tone.to}` : ''}" isn't a valid pitch (use e.g. 'C5', 'F#4' or 440).`);
+    });
+  }
+
+  // Music: notes, '.', '-' only; channels should be the same length
+  const lengths = DRIVING_THEME.channels.map((channel, c) => {
+    const tokens = channel.notes.trim().split(/\s+/);
+    tokens.forEach((token, step) => {
+      if (token !== '.' && token !== '-' && !(noteToHz(token) > 0))
+        problems.push(`music.ts, channel ${c + 1}, step ${step + 1}: "${token}" isn't a note (use e.g. C4, F#5, '.' or '-').`);
+    });
+    return tokens.length;
+  });
+  lengths.push(DRIVING_THEME.drums.trim().split(/\s+/).length);
+  if (new Set(lengths).size > 1)
+    problems.push(`music.ts: channels have different numbers of steps (${lengths.join(', ')}), so they'll drift out of time.`);
 
   return problems;
 }

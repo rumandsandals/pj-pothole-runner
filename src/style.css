@@ -192,6 +192,31 @@ canvas { display: block; image-rendering: pixelated; }
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
 
+/* ── Sound buttons (top-right corner, above everything) ─────── */
+#soundControls {
+  position: fixed;
+  top: 8px;
+  right: 8px;
+  z-index: 40;
+  display: flex;
+  gap: 6px;
+}
+.snd {
+  font: 7px var(--font-arcade);
+  padding: 7px 8px;
+  min-height: 30px;
+  background: var(--navy);
+  color: var(--white);
+  border: 2px solid var(--white);
+  box-shadow: 2px 2px 0 var(--black);
+  cursor: pointer;
+}
+.snd.off { color: var(--grey); border-color: var(--grey); text-decoration: line-through; }
+.snd:active { transform: translate(2px, 2px); box-shadow: none; }
+@media (max-width: 700px) {
+  #app { padding-top: 46px; } /* keep the title clear of the buttons on small screens */
+}
+
 /* ── Pop-up screens ──────────────────────────────────────────── */
 .ov {
   position: fixed;

@@ -26,6 +26,8 @@ Everything you're likely to change lives in **`src/config/`**. Edit a file, save
 | Pixel art (car, tow truck, palms, clouds)  | `src/config/sprites.ts`     |
 | How chunky the pixels are (`PIXEL_SIZE`)   | `src/config/game.ts`        |
 | Dust, shake, wheel spin and other effects (`ANIMATION`) | `src/config/game.ts` |
+| Sound effects (pitch, length, volume) and default on/off | `src/config/sounds.ts` |
+| Background music: notes, tempo, drums      | `src/config/music.ts`       |
 | Menu and panel colours and fonts           | top of `src/style.css`      |
 | Jump height, gravity, money, tow timing    | `src/config/game.ts`        |
 

@@ -2,6 +2,7 @@ import { ANIMATION, CAR, ECONOMY, EFFECTS, TICKS_PER_SECOND, TOW, WORKSHOP, WORL
 import { LEVELS } from '../config/levels';
 import { POTHOLES } from '../config/potholes';
 import { ROAD_EVENTS, type EventChoice, type RoadEventId } from '../config/roadEvents';
+import { sound } from '../audio/sound';
 import { TEXT } from '../config/text';
 import { THEME } from '../config/theme';
 import { TOW_OPTIONS, type TowOption } from '../config/towTrucks';
@@ -78,7 +79,9 @@ export class Game {
       if (s.tow.phase === 'incoming' && s.time % 6 === 0) {
         puff(s.bits, s.tow.x + 36, WORLD.groundY - 4, THEME.smoke, -TOW.speed); // truck exhaust
       }
+      const wasIncoming = s.tow.phase === 'incoming';
       if (updateTowTruck(s.tow)) this.finishTow();
+      else if (wasIncoming && s.tow.phase === 'towing') sound.play('horn');
       return;
     }
     if (s.mode !== 'playing') return;
@@ -86,6 +89,7 @@ export class Game {
     const level = currentLevel(s);
     const car = s.car;
     if (updateCar(car)) {
+      sound.play('land');
       const wheel = rearWheelWorld(car);
       burst(s.bits, car.x, wheel.y, ANIMATION.landingDust, [THEME.smoke, 'f'], 0.5);
     }
@@ -156,6 +160,7 @@ export class Game {
       addFloatingText(s.particles, car.x, car.y - 50, 'STUCK!', THEME.particles.stuck, 60, 2);
       burst(s.bits, car.x, WORLD.groundY, ANIMATION.debrisOnStuck, ['5', '0', '6', '8'], 1.2);
       startShake(s, ANIMATION.shakeOnStuck);
+      sound.play('stuck');
       flash(EFFECTS.stuckFlashMs);
       return;
     }
@@ -166,6 +171,7 @@ export class Game {
     addFloatingText(s.particles, car.x, car.y - 40, `-${type.damage}HP`, THEME.particles.damage);
     burst(s.bits, hole.x, WORLD.groundY, ANIMATION.debrisOnHit, ['5', '0', '6'], type.damage >= 30 ? 1.2 : 0.8);
     startShake(s, ANIMATION.shakeOnHit);
+    sound.play(type.damage >= 30 ? 'hitBig' : 'hit');
     flash(EFFECTS.hitFlashMs);
     updateHud(s);
     if (s.health <= 0) this.die();
@@ -184,6 +190,7 @@ export class Game {
     s.speed = level.speed;
     s.road = generateRoad(level.roughness);
     updateHud(s);
+    sound.play('levelClear');
     this.openLevelCard(cleared);
   }
 
@@ -201,6 +208,7 @@ export class Game {
     if (!clicked && performance.now() - this.cardShownAt < CARD_KEY_DELAY_MS) return;
     hideScreens();
     this.state.mode = 'playing';
+    sound.play('go');
   }
 
   // ── Player actions ─────────────────────────────────────────
@@ -217,12 +225,16 @@ export class Game {
   jump(): void {
     const s = this.state;
     if (s.mode === 'levelCard') this.go();
-    else if (s.mode === 'playing' && canJump(s.car)) jump(s.car);
+    else if (s.mode === 'playing' && canJump(s.car)) {
+      jump(s.car);
+      sound.play('jump');
+    }
   }
 
   // ── Road events ─────────────────────────────────────────────
   private openRoadEvent(id: RoadEventId): void {
     this.state.mode = 'event';
+    sound.play('eventPop');
     showRoadEvent(ROAD_EVENTS[id], (choice) => this.applyEventChoice(choice));
   }
 
@@ -231,6 +243,7 @@ export class Game {
     s.money = Math.max(0, s.money + (choice.effect.money ?? 0));
     s.health = clampHealth(s.health + (choice.effect.hp ?? 0));
     updateHud(s);
+    sound.play(choice.tone === 'bad' ? 'bad' : choice.tone === 'good' ? 'good' : 'click');
     showToast(choice.message);
     hideScreens();
     if (s.health <= 0) this.die();
@@ -259,6 +272,7 @@ export class Game {
     if (!option) return;
 
     if (option.licensed) {
+      sound.play('good');
       resetAfterRecovery(s.car);
       s.potholes = s.potholes.filter((p) => Math.abs(p.x - s.car.x) > s.car.width);
       s.money = Math.max(0, s.money - option.cost);
@@ -269,6 +283,7 @@ export class Game {
       return;
     }
 
+    sound.play('bad');
     showToast(option.outcome);
     s.mode = 'workshop';
     s.workshop = { bill: WORKSHOP.startingBill, step: 0, log: [] };
@@ -289,12 +304,14 @@ export class Game {
   private chooseWorkshop(choice: WorkshopChoice): void {
     const w = this.state.workshop;
     w.bill = Math.max(0, w.bill + choice.billChange);
+    sound.play(choice.good ? 'good' : 'bad');
     w.log.push({ text: choice.note, good: choice.good });
     w.step++;
     this.showWorkshop();
   }
 
   private leaveWorkshop(): void {
+    sound.play('go');
     const s = this.state;
     const bill = s.workshop.bill;
     s.money = Math.max(0, s.money - bill);
@@ -310,11 +327,13 @@ export class Game {
 
   // ── Endings ─────────────────────────────────────────────────
   private die(): void {
+    sound.play('crash');
     this.state.mode = 'dead';
     showDead(this.state);
   }
 
   private win(): void {
+    sound.play('win');
     this.state.mode = 'win';
     showWin(this.state);
   }

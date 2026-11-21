@@ -16,7 +16,7 @@ export const TEXT = {
     Choose the right tow — or enter Workshop Hell 🔧`,
 
   howTo: `
-    <b>CONTROLS:</b> SPACE / CLICK / TAP to jump<br>
+    <b>CONTROLS:</b> SPACE / CLICK / TAP to jump · M = music on/off<br>
     <b>POTHOLES:</b><br>
     &nbsp;· · · · = Shallow (−5 HP)&nbsp;&nbsp;──── = Medium (−15 HP)<br>
     &nbsp;━━━━━ = Deep (−30 HP)&nbsp;&nbsp;<b>[ABYSS]</b> = Car gets stuck!<br><br>
@@ -62,6 +62,11 @@ export const TEXT = {
     ⚖️ Dispute unfair charges: Tribunal Pengguna <b>1-800-886-800</b><br>
     🔩 Report stolen parts: JPJ Hotline <b>1-800-88-5983</b><br>
     📑 Insurance disputes: BNM BNMTELELINK <b>1-300-88-5465</b>`,
+
+  effectsOn: '🔊 SFX',
+  effectsOff: '🔇 SFX',
+  musicOn: '🎵 MUSIC',
+  musicOff: '🎵 MUSIC',
 
   jumpButton: '▲ JUMP',
   controlsHint: 'SPACE · CLICK · TAP TO JUMP',
