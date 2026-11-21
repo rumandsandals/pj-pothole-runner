@@ -1,10 +1,10 @@
 import { ROAD } from '../config/game';
 import type { LevelTraffic } from '../config/levels';
 import { VEHICLE_ART } from '../config/sprites';
-import { CAR_PAINT, CYCLIST_PAINT, REMPIT_PAINT, RIDER_PAINT, TRAFFIC_RULES, VEHICLES, type VehicleKind } from '../config/traffic';
+import { CAR_PAINT, CYCLIST_PAINT, REMPIT, REMPIT_PAINT, RIDER_PAINT, TRAFFIC_RULES, VEHICLES, type VehicleKind } from '../config/traffic';
 import type { Car, Vehicle } from '../core/state';
 import { drawVehicleArt, vehicleBox, wheelFrame } from './car';
-import { drawLane, laneCount, laneY, neighbourLane, randomLane, sameLane, slideLane, type Lane } from './lanes';
+import { drawLane, laneCount, laneHeight, laneY, neighbourLane, randomLane, sameLane, slideLane, type Lane } from './lanes';
 import { drawText, fill, toPx } from './pixels';
 
 const pick = <T,>(list: T[]): T => list[Math.floor(Math.random() * list.length)] as T;
@@ -37,7 +37,7 @@ export function maybeSpawnVehicle(vehicles: Vehicle[], traffic: LevelTraffic | n
   const rempit = Math.random() < traffic.rempitChance;
   const kind: VehicleKind = rempit ? 'rempit' : pickKind(Math.random() < traffic.motorcycleShare ? 'twoWheeler' : 'car', highway);
   const x = rempit ? TRAFFIC_RULES.rempitStartX : TRAFFIC_RULES.spawnAheadX;
-  const lane = randomLane();
+  const lane = rempit && laneCount() > 1 && Math.random() < REMPIT.splitChance ? randomLine() : randomLane();
 
   // Keep space between vehicles in a lane, and never block every lane at once
   const sameLaneClash = vehicles.some((v) => sameLane(v.lanePos, lane) && Math.abs(v.x - x) < TRAFFIC_RULES.minGapSameLane);
@@ -60,6 +60,48 @@ export function maybeSpawnVehicle(vehicles: Vehicle[], traffic: LevelTraffic | n
   return vehicle;
 }
 
+// ── Lane splitting ──────────────────────────────────────────
+/** Lane lines sit at half positions: 0.5 is the line between lanes 0 and 1. */
+const isLine = (position: number): boolean => Math.abs(position % 1) > 0.25 && Math.abs(position % 1) < 0.75;
+const randomLine = (): number => Math.floor(Math.random() * (laneCount() - 1)) + 0.5;
+
+/** Every lane and lane line a Mat Rempit can ride on. */
+function rempitPaths(): number[] {
+  const paths: number[] = [];
+  for (let i = 0; i < laneCount(); i++) {
+    paths.push(i);
+    if (i < laneCount() - 1) paths.push(i + 0.5);
+  }
+  return paths;
+}
+
+/** Is something riding in this path, close to x? (On a line, only another bike counts — cars are either side.) */
+const pathTaken = (vehicles: Vehicle[], me: Vehicle, path: number, x: number, range: number): boolean =>
+  vehicles.some((o) => o !== me && Math.abs(o.x - x) < range && Math.abs(o.lanePos - path) < (isLine(path) ? 0.25 : 0.5));
+
+/** Mat Rempit: weave between lanes and lane lines, filtering round traffic ahead. */
+function updateRempit(v: Vehicle, vehicles: Vehicle[], player: Car): void {
+  const fromPlayer = v.x - player.x;
+  if (fromPlayer > REMPIT.keepPathFrom && fromPlayer < REMPIT.keepPathUntil) return; // committed: no surprises
+  const blocked = pathTaken(vehicles, v, v.lane, v.x + REMPIT.filterLookAhead / 2, REMPIT.filterLookAhead / 2);
+  v.signal--;
+  if (!blocked && v.signal > 0) return;
+  const options = rempitPaths().filter(
+    (p) => p !== v.lane && Math.abs(p - v.lane) <= 1 && !pathTaken(vehicles, v, p, v.x, REMPIT.filterLookAhead),
+  );
+  const lines = options.filter(isLine);
+  const pool = lines.length > 0 && Math.random() < REMPIT.splitChance ? lines : options;
+  if (pool.length > 0) v.lane = pick(pool);
+  v.signal = Math.round(between(REMPIT.weaveEvery));
+}
+
+/** Road height for drawing: a bike on a lane line sits right on the line. */
+function rideY(position: number): number {
+  const frac = Math.abs(position % 1);
+  const onLine = 1 - Math.abs(frac * 2 - 1); // 0 in a lane, 1 on a line
+  return laneY(position) - laneHeight() * 0.26 * onLine + 3 * onLine;
+}
+
 const laneIsClear = (vehicles: Vehicle[], me: Vehicle, lane: Lane): boolean =>
   !vehicles.some((v) => v !== me && sameLane(v.lanePos, lane) && Math.abs(v.x - me.x) < TRAFFIC_RULES.minGapOtherLane);
 
@@ -68,7 +110,7 @@ export function updateVehicles(vehicles: Vehicle[], playerSpeed: number, roadSpe
   for (const v of vehicles) {
     // Don't drive through a slower vehicle ahead in the same lane: follow it instead
     let share = v.speedShare;
-    for (const o of vehicles) {
+    for (const o of v.kind === 'rempit' ? [] : vehicles) { // Mat Rempit never slow down
       const gap = o.x - v.x;
       if (o !== v && gap > 0 && gap < TRAFFIC_RULES.followGap && sameLane(o.lanePos, v.lanePos)) share = Math.min(share, o.speedShare);
     }
@@ -86,16 +128,8 @@ export function updateVehicles(vehicles: Vehicle[], playerSpeed: number, roadSpe
       v.signal = -1;
     }
 
-    // Mat Rempit weave once while still behind you — but only into a lane
-    // that's clear around you, so you always have somewhere to go
-    if (v.kind === 'rempit' && !v.changed && v.x > player.x - 170) {
-      v.changed = true;
-      const target = neighbourLane(v.lane);
-      const nearPlayer = vehicles.filter((o) => o !== v && o.x > player.x - 60 && o.x < player.x + 200);
-      const busy = new Set(nearPlayer.map((o) => drawLane(o.lanePos)));
-      const clearNearPlayer = !busy.has(target) && busy.size + 1 < laneCount();
-      if (Math.random() < 0.5 && clearNearPlayer) v.lane = target;
-    }
+    // Mat Rempit: lane splitting and filtering
+    if (v.kind === 'rempit') updateRempit(v, vehicles, player);
 
     v.lanePos = slideLane(v.lanePos, v.lane, v.kind === 'rempit' ? ROAD.changeTicks : ROAD.changeTicks * 2);
   }
@@ -108,7 +142,9 @@ export function findVehicleHit(car: Car, vehicles: Vehicle[], inset: number): nu
   const right = car.x + car.width / 2 - inset;
   for (let i = 0; i < vehicles.length; i++) {
     const v = vehicles[i];
-    if (!v || !sameLane(car.lanePos, v.lanePos)) continue;
+    // A Mat Rempit splitting lanes (on a lane line) can hit you in either lane beside it
+    const reach = v && isLine(v.lane) ? 0.75 : 0.5;
+    if (!v || Math.abs(car.lanePos - v.lanePos) >= reach) continue;
     const type = VEHICLES[v.kind];
     if (car.hop >= type.height) continue;
     if (right > v.x - type.halfWidth && left < v.x + type.halfWidth) return i;
@@ -127,7 +163,7 @@ export function drawVehicles(ctx: CanvasRenderingContext2D, vehicles: Vehicle[],
     if (drawLane(v.lanePos) !== lane) continue;
     const type = VEHICLES[v.kind];
     const art = VEHICLE_ART[type.art];
-    const box = vehicleBox(art, v.x, laneY(v.lanePos));
+    const box = vehicleBox(art, v.x, v.kind === 'rempit' ? rideY(v.lanePos) : laneY(v.lanePos));
     const travelled = roadOffset * v.speedShare + v.x;
     // Two-wheelers bounce a little; bicycles wobble from side to side
     const bob = type.group === 'car' ? 0 : -(Math.floor((time + v.x) / 4) % 2);
@@ -141,7 +177,7 @@ export function drawVehicles(ctx: CanvasRenderingContext2D, vehicles: Vehicle[],
     drawVehicleArt(ctx, art, box, v.paint, wheelFrame(travelled), bob);
 
     // Blinking indicators before a lane change (front and back corners)
-    if (v.signal > 0 && Math.floor(time / 6) % 2 === 0) {
+    if (type.group === 'car' && v.signal > 0 && Math.floor(time / 6) % 2 === 0) {
       const y = box.top + Math.round(box.height * 0.45);
       fill(ctx, '9', box.left - 1, y, 3, 3);
       fill(ctx, '9', box.left + box.width - 2, y, 3, 3);
@@ -154,7 +190,7 @@ export function drawRempitWarnings(ctx: CanvasRenderingContext2D, vehicles: Vehi
   if (Math.floor(time / 8) % 2 === 1) return;
   for (const v of vehicles) {
     if (v.kind !== 'rempit' || v.x > -10) continue;
-    const y = toPx(laneY(v.lanePos)) - 24;
+    const y = toPx(rideY(v.lanePos)) - 24;
     fill(ctx, '0', 2, y - 4, 20, 18);
     fill(ctx, '8', 2, y - 4, 20, 1);
     drawText(ctx, '!', 5, y, '8');

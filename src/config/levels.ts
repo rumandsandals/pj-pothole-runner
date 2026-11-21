@@ -70,7 +70,7 @@ export const LEVELS: Level[] = [
   },
   {
     name: 'Police Zone ❌', seconds: 41,
-    intro: "DEEP potholes, and Mat Rempit race up from behind — watch for the ! warning.",
+    intro: "DEEP potholes, and Mat Rempit race up from behind, splitting lanes — watch the ! warning, and jump if they're on your line.",
     potholes: ['medium', 'medium', 'deep'], speed: 5.0, spawnChance: 0.004, event: 'police_bad', eventAt: 0.8, roughness: 1.05,
     lanes: 2, highway: false,
     traffic: { spawnChance: 0.006, maxOnScreen: 2, motorcycleShare: 0.45, rempitChance: 0.15, laneChangeChance: 0 },

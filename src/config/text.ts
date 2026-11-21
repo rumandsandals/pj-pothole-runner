@@ -25,7 +25,8 @@ export const TEXT = {
     <b>TRAFFIC (from level 2):</b><br>
     🏍️ 🚲 Clip a motorcycle or bicycle = minor accident · 🚗 Bump a car = insurance claim<br>
     Sedans, slow SUVs and fast sports cars share the road<br>
-    💥 Serious crash = tow truck choice · ❗ = Mat Rempit coming from behind<br><br>
+    💥 Serious crash = tow truck choice · ❗ = Mat Rempit coming from behind<br>
+    Mat Rempit split lanes — riding the line, they can hit you in either lane. Jump!<br><br>
     <b>TOW TRUCK ENCOUNTER (ABYSS):</b><br>
     🟢 Licensed tow = safe recovery · back on road<br>
     🔴 Cheap tow = dragged to a dodgy workshop!<br><br>

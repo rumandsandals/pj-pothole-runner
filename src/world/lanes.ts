@@ -1,4 +1,5 @@
 import { ROAD } from '../config/game';
+import { toPx } from './pixels';
 
 /** Lane number: 0 = nearest (bottom) lane, then 1, 2… going up the road. */
 export type Lane = number;
@@ -12,7 +13,13 @@ export function setLaneCount(lanes: number): void {
 export const laneCount = (): number => count;
 
 /** Height of one lane (world units). */
-export const laneHeight = (): number => (ROAD.bottom - ROAD.top) / count;
+export const laneHeight = (): number => ROAD.laneWidth;
+
+/** Top edge of the road surface (world units): higher up for more lanes. */
+export const roadTop = (): number => ROAD.bottom - ROAD.laneWidth * count;
+
+/** Top of the kerb — everything above this is sky, buildings and roadside (art pixels). */
+export const groundPx = (): number => toPx(roadTop() - ROAD.kerb);
 
 /**
  * Where wheels touch the road (world units) at a lane position. Positions
@@ -21,7 +28,7 @@ export const laneHeight = (): number => (ROAD.bottom - ROAD.top) / count;
 export const laneY = (position: number): number => ROAD.bottom - laneHeight() * (position + ROAD.wheelLine);
 
 /** Heights of the lane lines: exactly between lanes (½, or ⅓ and ⅔ of the road). */
-export const laneLineYs = (): number[] => Array.from({ length: count - 1 }, (_, i) => ROAD.top + laneHeight() * (i + 1));
+export const laneLineYs = (): number[] => Array.from({ length: count - 1 }, (_, i) => roadTop() + laneHeight() * (i + 1));
 
 /** Keeps a lane number on the road. */
 export const clampLane = (lane: number): Lane => Math.max(0, Math.min(count - 1, Math.round(lane)));

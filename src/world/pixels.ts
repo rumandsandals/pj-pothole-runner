@@ -9,7 +9,6 @@ import { PALETTE, type ColourKey } from '../config/theme';
 
 export const ART_WIDTH = Math.round(WORLD.width / PIXEL_SIZE);
 export const ART_HEIGHT = Math.round(WORLD.height / PIXEL_SIZE);
-export const ART_GROUND = Math.round(WORLD.groundY / PIXEL_SIZE);
 
 /** Converts game-world units to art pixels. */
 export const toPx = (world: number): number => Math.round(world / PIXEL_SIZE);

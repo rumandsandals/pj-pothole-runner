@@ -1,7 +1,8 @@
 import { ANIMATION } from '../config/game';
 import { CLOUD, PALM } from '../config/sprites';
 import { THEME, type ColourKey } from '../config/theme';
-import { ART_GROUND, ART_WIDTH, drawSprite, drawText, fill, makeCanvas, seededRandom, toPx } from './pixels';
+import { groundPx } from './lanes';
+import { ART_HEIGHT, ART_WIDTH, drawSprite, drawText, fill, makeCanvas, seededRandom, toPx } from './pixels';
 
 /**
  * Sky, clouds, city skyline, then either a row of PJ shophouses and palms
@@ -37,9 +38,9 @@ const SIDE_WIDTH = 900;
 
 function buildSky(): HTMLCanvasElement {
   const { top, horizon, fadeStart, fadeEnd } = THEME.sky;
-  const [canvas, ctx] = makeCanvas(ART_WIDTH, ART_GROUND);
-  fill(ctx, top, 0, 0, ART_WIDTH, ART_GROUND);
-  for (let y = fadeStart; y < ART_GROUND; y++) {
+  const [canvas, ctx] = makeCanvas(ART_WIDTH, ART_HEIGHT);
+  fill(ctx, top, 0, 0, ART_WIDTH, ART_HEIGHT);
+  for (let y = fadeStart; y < ART_HEIGHT; y++) {
     const amount = Math.min((y - fadeStart) / Math.max(fadeEnd - fadeStart, 1), 1) * 4;
     for (let x = 0; x < ART_WIDTH; x++) {
       if ((BAYER[y % 2]?.[x % 2] ?? 0) < amount) fill(ctx, horizon, x, y, 1, 1);
@@ -186,6 +187,7 @@ export function drawBackground(ctx: CanvasRenderingContext2D, roadOffset: number
   near ??= buildNearRow();
 
   ctx.drawImage(sky, 0, 0);
+  const ground = groundPx(); // moves up when the road has more lanes
 
   // Clouds
   const cloudScroll = toPx(roadOffset) * PARALLAX.clouds + time * ANIMATION.cloudDrift;
@@ -200,14 +202,14 @@ export function drawBackground(ctx: CanvasRenderingContext2D, roadOffset: number
     drawSprite(ctx, CLOUD, x, cy, {});
   }
 
-  drawLooping(ctx, far, toPx(roadOffset) * PARALLAX.far, ART_GROUND - FAR_HEIGHT - 20);
+  drawLooping(ctx, far, toPx(roadOffset) * PARALLAX.far, ground - FAR_HEIGHT - 20);
   if (highway) {
     walls ??= buildWalls();
     highwaySide ??= buildHighwaySide();
-    drawLooping(ctx, walls, toPx(roadOffset) * PARALLAX.shops, ART_GROUND - WALL_HEIGHT - 10);
-    drawLooping(ctx, highwaySide, toPx(roadOffset) * PARALLAX.near, ART_GROUND - SIDE_HEIGHT);
+    drawLooping(ctx, walls, toPx(roadOffset) * PARALLAX.shops, ground - WALL_HEIGHT - 10);
+    drawLooping(ctx, highwaySide, toPx(roadOffset) * PARALLAX.near, ground - SIDE_HEIGHT);
     return;
   }
-  drawLooping(ctx, shops, toPx(roadOffset) * PARALLAX.shops, ART_GROUND - SHOP_HEIGHT - 8);
-  drawLooping(ctx, near, toPx(roadOffset) * PARALLAX.near, ART_GROUND - NEAR_HEIGHT);
+  drawLooping(ctx, shops, toPx(roadOffset) * PARALLAX.shops, ground - SHOP_HEIGHT - 8);
+  drawLooping(ctx, near, toPx(roadOffset) * PARALLAX.near, ground - NEAR_HEIGHT);
 }

@@ -1,7 +1,7 @@
 import { WORLD } from '../config/game';
 import { THEME } from '../config/theme';
-import { laneLineYs } from './lanes';
-import { ART_GROUND, ART_HEIGHT, ART_WIDTH, fill, seededRandom, toPx } from './pixels';
+import { groundPx, laneLineYs } from './lanes';
+import { ART_HEIGHT, ART_WIDTH, fill, seededRandom, toPx } from './pixels';
 
 export interface RoadPoint {
   x: number;
@@ -32,7 +32,7 @@ const SPECKLES = (() => {
   const random = seededRandom(3);
   return Array.from({ length: 700 }, () => ({
     x: Math.floor(random() * 640),
-    y: 6 + Math.floor(random() * (ART_HEIGHT - ART_GROUND - 6)),
+    y: 6 + Math.floor(random() * 200), // covers the widest (three-lane) road
     shade: random() < 0.6 ? 0 : 1,
     size: random() < 0.25 ? 2 : 1,
     rank: random(), // smoother roads show fewer speckles
@@ -48,16 +48,17 @@ const wrap = (value: number, length: number): number => ((value % length) + leng
  */
 export function drawRoad(ctx: CanvasRenderingContext2D, road: RoadPoint[], offset: number, roughness: number, highway = false): void {
   const scroll = toPx(offset);
+  const ground = groundPx(); // top of the kerb: higher when there are more lanes
 
   // Asphalt
-  fill(ctx, THEME.road, 0, ART_GROUND, ART_WIDTH, ART_HEIGHT - ART_GROUND);
+  fill(ctx, THEME.road, 0, ground, ART_WIDTH, ART_HEIGHT - ground);
 
   // Speckles: rougher roads get more
   const visibleShare = Math.min(0.25 + roughness * 0.3, 1);
   for (const s of SPECKLES) {
     if (s.rank > visibleShare) continue;
     const x = wrap(s.x - scroll, 640);
-    if (x < ART_WIDTH) fill(ctx, THEME.roadSpeckles[s.shade] ?? THEME.road, x, ART_GROUND + s.y, s.size, s.size);
+    if (x < ART_WIDTH && ground + s.y < ART_HEIGHT) fill(ctx, THEME.roadSpeckles[s.shade] ?? THEME.road, x, ground + s.y, s.size, s.size);
   }
 
   // Dashed lines exactly between lanes (½ for two lanes; ⅓ and ⅔ for three)
@@ -69,7 +70,7 @@ export function drawRoad(ctx: CanvasRenderingContext2D, road: RoadPoint[], offse
   }
 
   if (highway) {
-    drawBarrier(ctx, scroll);
+    drawBarrier(ctx, scroll, ground);
     return;
   }
 
@@ -81,15 +82,15 @@ export function drawRoad(ctx: CanvasRenderingContext2D, road: RoadPoint[], offse
     const bump = Math.max(-2, Math.min(3, Math.round(point?.y ?? 0)));
     const block = Math.floor((x + scroll) / KERB_BLOCK) % THEME.kerb.length;
     const colour = THEME.kerb[block] ?? THEME.road;
-    fill(ctx, colour, x, ART_GROUND + bump, 1, KERB_HEIGHT - Math.min(bump, 0));
-    fill(ctx, '0', x, ART_GROUND + bump + KERB_HEIGHT - Math.min(bump, 0), 1, 1); // kerb shadow
+    fill(ctx, colour, x, ground + bump, 1, KERB_HEIGHT - Math.min(bump, 0));
+    fill(ctx, '0', x, ground + bump + KERB_HEIGHT - Math.min(bump, 0), 1, 1); // kerb shadow
   }
 }
 
 /** Highway concrete barrier along the top of the road. */
-function drawBarrier(ctx: CanvasRenderingContext2D, scroll: number): void {
+function drawBarrier(ctx: CanvasRenderingContext2D, scroll: number, ground: number): void {
   const { face, top, shadow, joint } = THEME.highway.barrier;
-  const y = ART_GROUND - 4;
+  const y = ground - 4;
   fill(ctx, top, 0, y, ART_WIDTH, 2);
   fill(ctx, face, 0, y + 2, ART_WIDTH, 6);
   fill(ctx, shadow, 0, y + 8, ART_WIDTH, 2);

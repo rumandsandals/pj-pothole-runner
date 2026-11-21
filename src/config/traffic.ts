@@ -79,6 +79,20 @@ export const TRAFFIC_RULES = {
   clearAroundAfterAccident: 260, // vehicles this close are removed after an accident
 };
 
+/**
+ * MAT REMPIT
+ * They race up from behind, never slow down for traffic, and lane-split:
+ * ride on the lane line between two lanes, filtering through gaps.
+ * A Mat Rempit on a lane line can hit you in EITHER lane beside it.
+ */
+export const REMPIT = {
+  splitChance: 0.6, // how often they choose the lane line (lane splitting) over a lane
+  weaveEvery: [30, 70] as [number, number], // ticks between weaves (when not close to you)
+  filterLookAhead: 90, // they swerve round traffic this close ahead of them
+  keepPathFrom: -150, // once this close behind you…
+  keepPathUntil: 80, // …until this far past you, they hold their path, so the ! warning stays true
+};
+
 /** How bad an accident is, and how much it hurts. */
 export const ACCIDENT_SEVERITY = {
   minorDamage: 10, // clipping a motorcycle or bicycle

@@ -84,7 +84,7 @@ export function showLevelCard(info: LevelCardInfo, onGo: () => void): void {
   }
   facts.append(busy);
   if (traffic && traffic.rempitChance > 0) {
-    const rempit = make('div', '', 'Mat Rempit ❗');
+    const rempit = make('div', '', 'Mat Rempit (lane-splitting) ❗');
     if (!before || before.rempitChance === 0) rempit.append(make('span', 'new-tag', 'NEW'));
     facts.append(rempit);
   }

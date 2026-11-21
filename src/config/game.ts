@@ -9,19 +9,19 @@
 export const WORLD = {
   width: 640,
   height: 360, // 16:9 widescreen
-  groundY: 250, // where the road begins (the kerb); the sky and skyline are above this
 };
 
 /**
  * THE ROAD
- * The road runs from `top` (just under the kerb) to `bottom` (the bottom of
- * the screen), and is split into equal lanes — 2 or 3, set per level in
- * levels.ts. Lane lines sit exactly between lanes (½ for two lanes; ⅓ and
- * ⅔ for three). Lane 0 is the nearest (bottom) lane.
+ * Every lane is `laneWidth` tall, so a three-lane road is wider than a
+ * two-lane one: it grows upwards and the kerb and buildings move up with it.
+ * Lanes are set per level in levels.ts. Lane lines sit exactly between lanes
+ * (½ of the road for two lanes; ⅓ and ⅔ for three). Lane 0 is the nearest.
  */
 export const ROAD = {
-  top: 256,
-  bottom: 360,
+  bottom: 360, // the road runs to the bottom of the screen
+  laneWidth: 52, // height of each lane (world units)
+  kerb: 6, // the kerb / barrier above the road
   wheelLine: 0.2, // where wheels sit inside a lane: 0 = its bottom edge, 1 = its top edge
   changeTicks: 9, // how quickly the car slides between lanes
 };
