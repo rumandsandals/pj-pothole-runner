@@ -47,7 +47,6 @@ export const THEME = {
   road: '5' as C,
   roadSpeckles: ['0', '6'] as C[],
   laneLine: 'a' as C,
-  edgeLine: '6' as C,
 
   pothole: { hole: '0' as C, rim: '6' as C, label: '8' as C, labelShadow: '0' as C, damageDot: 'a' as C },
 

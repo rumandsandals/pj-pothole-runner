@@ -57,8 +57,6 @@ export function drawRoad(ctx: CanvasRenderingContext2D, road: RoadPoint[], offse
   for (let x = -wrap(scroll, LANE_DASH * 2); x < ART_WIDTH; x += LANE_DASH * 2) {
     fill(ctx, THEME.laneLine, x, dividerY, LANE_DASH, 1);
   }
-  // Solid white edge line below the near lane
-  fill(ctx, THEME.edgeLine, 0, toPx(LANES.near) + 4, ART_WIDTH, 1);
 
   // Red/white kerb, nudged up and down by the road's bumps
   const roadLength = road.length;
