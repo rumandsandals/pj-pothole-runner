@@ -1,0 +1,40 @@
+# 🚗 PJ Pothole Runner
+
+Dodge Petaling Jaya's potholes, survive dodgy tow trucks and Workshop Hell, and learn your consumer rights along the way.
+
+## Play it on your Mac
+
+1. Open **Terminal** in this folder.
+2. First time only: `npm install`
+3. Every time: `npm run dev`, then open the link it shows (usually http://localhost:5173).
+
+The page updates by itself whenever you save a change.
+
+## Customise the game
+
+Everything you're likely to change lives in **`src/config/`**. Edit a file, save, and the game updates.
+
+| I want to change…                          | Edit this file              |
+| ------------------------------------------ | --------------------------- |
+| Levels (names, speed, which potholes)      | `src/config/levels.ts`      |
+| Pothole sizes, damage, labels              | `src/config/potholes.ts`    |
+| Police / insurance / workshop pop-ups      | `src/config/roadEvents.ts`  |
+| The two tow truck choices                  | `src/config/towTrucks.ts`   |
+| Workshop Hell rounds                       | `src/config/workshop.ts`    |
+| Menu text, help text, hotlines             | `src/config/text.ts`        |
+| Road / car / truck colours                 | `src/config/theme.ts`       |
+| Menu and panel colours                     | top of `src/style.css`      |
+| Jump height, gravity, money, tow timing    | `src/config/game.ts`        |
+
+Before you share a change, run `npm run check`. It catches typos, such as a pothole name in `levels.ts` that doesn't exist, and tells you the file and line.
+
+## How the code is organised
+
+- `src/config/`: settings and content (the part you edit)
+- `src/world/`: drawing and moving the road, potholes, car and tow truck
+- `src/ui/`: menus, HUD, pop-ups and workshop panels
+- `src/core/`: the game loop, screen fitting and controls
+
+## Build for the web
+
+`npm run build` creates a `dist/` folder: the finished game, ready to host (for example on GitHub Pages).

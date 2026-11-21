@@ -1,0 +1,78 @@
+/**
+ * CORE GAME SETTINGS
+ * Change the numbers here to tweak how the game feels.
+ * Speeds and distances are "per tick" — the game runs 60 ticks every second
+ * on every screen, so it plays the same on a 60 Hz laptop or a 120 Hz monitor.
+ */
+
+/** The game world is drawn at this size, then scaled to fit any screen. */
+export const WORLD = {
+  width: 640,
+  height: 200,
+  groundY: 148, // where the road surface sits
+};
+
+export const TICKS_PER_SECOND = 60;
+
+export const PHYSICS = {
+  gravity: 0.55,
+  jumpForce: -12, // more negative = higher jump
+};
+
+/** How far you drive in each level before the next one starts. */
+export const LEVEL_LENGTH = 900;
+
+export const MAX_HEALTH = 100;
+
+export const CAR = {
+  x: 88,
+  width: 44,
+  height: 22,
+  hitboxInset: 9, // makes collisions a little forgiving
+  invulnerableAfterHit: 60, // ticks of blinking after hitting a pothole
+  invulnerableAfterRecovery: 90, // ticks of blinking after a tow / workshop
+  sinkDepth: 30, // how far the car sinks into an ABYSS pothole
+  sinkSpeed: 0.9,
+};
+
+export const SPAWN = {
+  maxOnScreen: 2, // most potholes visible at once
+  minGap: 294, // smallest gap between two potholes
+  spawnX: WORLD.width + 65, // potholes appear just off the right edge
+  despawnX: -110,
+  hitboxInset: 6,
+};
+
+export const ECONOMY = {
+  passiveIncomeEvery: 100, // ticks
+  passiveIncome: 5, // RM earned each time
+};
+
+export const TOW = {
+  arriveFromX: WORLD.width + 80,
+  stopAtX: 160,
+  speed: 3.5,
+  waitTicks: 84, // pause while the truck hooks your car (~1.4 seconds)
+  licensedHeal: 20,
+};
+
+export const WORKSHOP = {
+  startingBill: 3000,
+  meterMax: 6000,
+  goodResultBelow: 2500, // bill under this = "smart choices" ending
+  minHealthAfter: 10,
+};
+
+export const EFFECTS = {
+  hitFlashMs: 130,
+  stuckFlashMs: 220,
+  toastMs: 2800,
+};
+
+/** Screen-fitting rules. */
+export const LAYOUT = {
+  maxWidth: 1600, // the game never grows wider than this (px)
+  minWidth: 280,
+  sideGutter: 16, // space kept on each side of the screen
+  reservedHeight: 170, // room for the title, HUD and jump button
+};

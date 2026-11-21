@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>PJ Pothole Runner</title>
+  </head>
+  <body>
+    <main id="app">
+      <h1 id="title" data-text="title"></h1>
+
+      <div id="hud">
+        <div>HP:<span id="hpBar"><span id="hpFill"></span></span> <span id="hpNum">100%</span></div>
+        <div id="lvlName"></div>
+        <div>RM <span id="moneyNum">0</span></div>
+      </div>
+
+      <div id="wrapper">
+        <canvas id="game"></canvas>
+        <div id="flash"></div>
+        <div id="toast"></div>
+        <div id="banner"><div id="bannerTitle"></div><div id="bannerText"></div></div>
+      </div>
+
+      <!-- Workshop Hell rounds -->
+      <section id="wsPanel" class="panel">
+        <div id="wsHeader">
+          <div>
+            <div class="ws-title" data-text="workshopTitle"></div>
+            <div class="ws-step" id="wsStepLabel"></div>
+          </div>
+          <div class="ws-bill-box">
+            <div class="ws-bill-label">Current Bill</div>
+            <div class="ws-bill" id="wsBillNum"></div>
+          </div>
+        </div>
+        <div id="wsBillMeter"><div id="wsBillFill"></div></div>
+        <div id="wsBillRange"><span>RM 0</span><span id="wsBillBase"></span><span id="wsBillMax"></span></div>
+        <div id="wsQuestion"></div>
+        <div id="wsChoices"></div>
+        <div id="wsLog"></div>
+      </section>
+
+      <!-- Workshop Hell result -->
+      <section id="wsEndPanel" class="panel">
+        <div id="wsEndTitle"></div>
+        <div class="ws-end-summary">
+          <div class="ws-bill-label">Final Workshop Bill</div>
+          <div id="wsEndBill"></div>
+          <div id="wsEndSaved"></div>
+        </div>
+        <div id="wsEndLog"></div>
+        <div class="protection" data-text="workshopProtection"></div>
+        <button class="btn wide" id="wsEndBtn"></button>
+      </section>
+
+      <button id="jumpBtn" data-text="jumpButton"></button>
+      <div id="hint" data-text="controlsHint"></div>
+      <div id="rotateHint" data-text="rotateHint"></div>
+    </main>
+
+    <!-- Pop-up screens -->
+    <div class="ov" id="ovMenu">
+      <div class="ov-card">
+        <div class="tit" data-text="title"></div>
+        <div class="sub" data-text="tagline"></div>
+        <div class="intro" data-text="menuIntro"></div>
+        <button class="btn" data-action="start">▶ START DRIVING</button>
+        <button class="btn sec" data-action="howto">? HOW TO PLAY</button>
+      </div>
+    </div>
+
+    <div class="ov" id="ovHowTo">
+      <div class="ov-card">
+        <div class="tit">HOW TO PLAY</div>
+        <div class="howto" data-text="howTo"></div>
+        <button class="btn" data-action="start">▶ START</button>
+        <button class="btn sec" data-action="menu">← BACK</button>
+      </div>
+    </div>
+
+    <div class="ov" id="ovEvent">
+      <div class="ov-card">
+        <div class="tit" id="evTitle"></div>
+        <div class="desc" id="evDesc"></div>
+        <div class="choices" id="evChoices"></div>
+      </div>
+    </div>
+
+    <div class="ov" id="ovTow">
+      <div class="ov-card wide-card">
+        <div class="tit" data-text="towChoiceTitle"></div>
+        <div class="sub" data-text="towChoiceIntro"></div>
+        <div class="choices" id="towCards"></div>
+      </div>
+    </div>
+
+    <div class="ov" id="ovDead">
+      <div class="ov-card">
+        <div class="tit" data-text="deadTitle"></div>
+        <div class="score" id="deadScore"></div>
+        <div class="hotlines" data-text="deadHotlines"></div>
+        <button class="btn" data-action="start">↺ TRY AGAIN</button>
+        <button class="btn sec" data-action="howto">? KNOW YOUR RIGHTS</button>
+      </div>
+    </div>
+
+    <div class="ov" id="ovWin">
+      <div class="ov-card">
+        <div class="tit" data-text="winTitle"></div>
+        <div class="score" id="winScore"></div>
+        <div class="hotlines" data-text="winHotlines"></div>
+        <button class="btn" data-action="start">↺ PLAY AGAIN</button>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
