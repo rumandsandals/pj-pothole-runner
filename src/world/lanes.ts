@@ -13,10 +13,10 @@ export function setLaneCount(lanes: number): void {
 export const laneCount = (): number => count;
 
 /** Height of one lane (world units). */
-export const laneHeight = (): number => ROAD.laneWidth;
+export const laneHeight = (): number => (count >= 3 ? ROAD.laneWidthThreeLanes : ROAD.laneWidth);
 
 /** Top edge of the road surface (world units): higher up for more lanes. */
-export const roadTop = (): number => ROAD.bottom - ROAD.laneWidth * count;
+export const roadTop = (): number => ROAD.bottom - laneHeight() * count;
 
 /** Top of the kerb — everything above this is sky, buildings and roadside (art pixels). */
 export const groundPx = (): number => toPx(roadTop() - ROAD.kerb);

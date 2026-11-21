@@ -71,7 +71,7 @@ export function drawSprite(ctx: CanvasRenderingContext2D, rows: string[], x: num
 }
 
 // ── Tiny 3×5 arcade font ─────────────────────────────────────
-/** Every font dot is drawn this many art pixels wide (2 keeps text readable at 640×360). */
+/** Every font dot is drawn this many art pixels wide (2 keeps text readable at 640×300). */
 const FONT_ZOOM = 2;
 // Each letter is 15 dots: 5 rows of 3, read left-to-right, top-to-bottom.
 const GLYPHS: Record<string, string> = {

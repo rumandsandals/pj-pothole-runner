@@ -6,7 +6,7 @@ import type { Strip } from './scenery';
 /**
  * PJ LANDMARKS, drawn in pixel art from public descriptions and photos.
  * Each drawing has two layers like the scenery: the building, and the
- * lights that glow at dusk. Shapes are simplified for a 640×360 game —
+ * lights that glow at dusk. Shapes are simplified for a 640×300 game —
  * edit the numbers here to tweak a building.
  *
  * Brands are playful look-alikes (no real names or logos).
@@ -139,7 +139,7 @@ const DRAWINGS: Record<LandmarkId, { w: number; h: number; draw: Draw }> = {
   /** PJ Midtown: twin towers with purple side stripes, over a car park podium draped in green leaves. */
   pjMidtown: {
     w: 140,
-    h: 165,
+    h: 155,
     draw: (ctx, glow, w, h) => {
       // car park podium with hanging greenery
       fill(ctx, '0', 0, h - 41, w, 41);
@@ -351,7 +351,7 @@ const DRAWINGS: Record<LandmarkId, { w: number; h: number; draw: Draw }> = {
   /** Kota Darul Ehsan: the Moorish arch over the Federal Highway (Selangor → KL). */
   fedHighwayArch: {
     w: 260,
-    h: 170,
+    h: 155,
     draw: (ctx, glow, w, h) => {
       const wall: ColourKey = '7';
       fill(ctx, '0', 9, 39, w - 18, h - 39);
@@ -553,7 +553,7 @@ const DRAWINGS: Record<LandmarkId, { w: number; h: number; draw: Draw }> = {
   /** Menara CelcomDigi (PJ Sentral): a blue-glass tower on a six-level podium. */
   celcomDigi: {
     w: 110,
-    h: 160,
+    h: 155,
     draw: (ctx, glow, w, h) => {
       fill(ctx, '0', 0, h - 36, w, 36);
       fill(ctx, '6', 1, h - 35, w - 2, 35); // podium
@@ -569,7 +569,7 @@ const DRAWINGS: Record<LandmarkId, { w: number; h: number; draw: Draw }> = {
   /** "Sheratown": PJ's tallest building, a slim golden tower by the Federal Highway (a look-alike name). */
   sheratown: {
     w: 80,
-    h: 210,
+    h: 160,
     draw: (ctx, glow, w, h) => {
       tower(ctx, glow, 16, 22, 48, h, 'a', '9', 161);
       for (let y = 28; y < h; y += 12) fill(ctx, '9', 16, y, 48, 1); // golden bands

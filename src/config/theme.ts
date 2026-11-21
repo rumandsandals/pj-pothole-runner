@@ -50,7 +50,7 @@ export interface TruckColours {
 
 export const THEME = {
   /** Sky fades from top to horizon between these rows (art pixels, 0 = top). */
-  sky: { top: 'c' as C, horizon: 'f' as C, fadeStart: 90, fadeEnd: 170 },
+  sky: { top: 'c' as C, horizon: 'f' as C, fadeStart: 60, fadeEnd: 140 },
   cloud: '7' as C,
   farBuildings: { body: 'd' as C, windows: 'f' as C },
   bushes: { dark: '3' as C, light: 'b' as C },

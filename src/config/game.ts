@@ -8,7 +8,7 @@
 /** The game world is drawn at this size, then scaled to fit any screen. */
 export const WORLD = {
   width: 640,
-  height: 360, // 16:9 widescreen
+  height: 300, // a wide strip (about 2.1 : 1)
 };
 
 /**
@@ -19,16 +19,17 @@ export const WORLD = {
  * (½ of the road for two lanes; ⅓ and ⅔ for three). Lane 0 is the nearest.
  */
 export const ROAD = {
-  bottom: 360, // the road runs to the bottom of the screen
+  bottom: 300, // the road runs to the bottom of the screen
   laneWidth: 52, // height of each lane (world units)
+  laneWidthThreeLanes: 44, // a little narrower on three-lane roads, so the buildings still show
   kerb: 6, // the kerb / barrier above the road
   wheelLine: 0.2, // where wheels sit inside a lane: 0 = its bottom edge, 1 = its top edge
   changeTicks: 9, // how quickly the car slides between lanes
 };
 
 /**
- * Size of one art pixel in world units. 1 = the screen is 640×360 pixels
- * (detailed pixel art). 2 = chunkier, 320×180 — but the sprites are drawn
+ * Size of one art pixel in world units. 1 = the screen is 640×300 pixels
+ * (detailed pixel art). 2 = chunkier, 320×150 — but the sprites are drawn
  * for 1, so they'd look twice as big.
  */
 export const PIXEL_SIZE = 1;
