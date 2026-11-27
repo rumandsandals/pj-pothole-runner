@@ -5,7 +5,7 @@ Dodge Petaling Jaya's potholes, survive dodgy tow trucks and Workshop Hell, and 
 ## Controls
 
 ↑ ↓ (W S) change lane · hold ← → (A D) to brake / speed up · Space jumps · M music · F full screen.
-On phones: on-screen buttons, or swipe up/down on the road and tap to jump.
+On screen (and on phones): an arrow-key cluster — ▲ ▼ change lane, hold ◀ to brake, hold ▶ for gas — plus a wide JUMP key. You can also swipe up/down on the road and tap to jump.
 
 **Full screen on iPhone:** open the game in Safari, tap Share → **Add to Home Screen**. The icon then opens the game full screen like an app.
 

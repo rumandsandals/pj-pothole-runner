@@ -63,12 +63,15 @@
         <button class="btn wide" id="wsEndBtn"></button>
       </section>
 
+      <!-- On-screen controls: an arrow-key cluster (like a keyboard) plus a wide JUMP key -->
       <div id="controls">
-        <button class="lane-btn pedal" id="brakeBtn" data-text="brakeButton"></button>
-        <button class="lane-btn" id="laneUpBtn" data-text="laneUpButton"></button>
+        <div class="dpad">
+          <button class="key" id="laneUpBtn" data-text="laneUpButton" aria-label="Lane up"></button>
+          <button class="key pedal" id="brakeBtn" data-text="brakeButton" aria-label="Brake (hold)"></button>
+          <button class="key" id="laneDownBtn" data-text="laneDownButton" aria-label="Lane down"></button>
+          <button class="key pedal" id="gasBtn" data-text="gasButton" aria-label="Gas (hold)"></button>
+        </div>
         <button id="jumpBtn" data-text="jumpButton"></button>
-        <button class="lane-btn" id="laneDownBtn" data-text="laneDownButton"></button>
-        <button class="lane-btn pedal" id="gasBtn" data-text="gasButton"></button>
       </div>
       <div id="hint" data-text="controlsHint"></div>
       <div id="rotateHint" data-text="rotateHint"></div>

@@ -157,35 +157,65 @@ canvas { display: block; image-rendering: pixelated; }
 #bannerTitle { font: calc(9px * var(--ui-scale)) var(--font-arcade); color: var(--heading); animation: blink 1s steps(2) infinite; }
 #bannerText { font-size: calc(18px * var(--ui-scale)); color: var(--text-soft); margin-top: 4px; }
 
-#controls { display: flex; gap: 10px; align-items: center; margin-top: 18px; flex-shrink: 0; }
-.lane-btn {
-  padding: 12px 14px;
-  background: var(--navy);
-  color: var(--white);
-  border: 4px solid var(--white);
-  box-shadow: 0 6px 0 var(--black);
-  font: calc(9px * var(--ui-scale)) var(--font-arcade);
-  cursor: pointer;
-  touch-action: manipulation;
-}
-.lane-btn:active, .lane-btn.held { transform: translateY(4px); box-shadow: 0 2px 0 var(--black); }
-/* BRAKE / GAS: hold-down pedals */
-.pedal { background: var(--black); border-color: var(--yellow); color: var(--yellow); }
-#brakeBtn { border-color: var(--red); color: var(--red); }
-.pedal.held { background: var(--yellow); color: var(--black); }
-#brakeBtn.held { background: var(--red); color: var(--white); }
-#jumpBtn {
-  padding: 14px 44px;
-  background: var(--button-bg);
-  color: var(--button-text);
-  border: 4px solid var(--white);
-  box-shadow: 0 6px 0 var(--plum);
-  font: calc(12px * var(--ui-scale)) var(--font-arcade);
-  cursor: pointer;
-  touch-action: manipulation;
+/* ── On-screen controls: an arrow-key cluster laid out like a keyboard, plus a wide JUMP key ── */
+#controls {
+  --key: clamp(40px, calc(36px * var(--ui-scale)), 54px); /* size of one arrow key */
+  display: flex;
+  gap: calc(28px * var(--ui-scale));
+  align-items: flex-end;
+  justify-content: center;
+  margin-top: 18px;
   flex-shrink: 0;
 }
-#jumpBtn:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--plum); }
+/* Inverted T:   [▲]
+              [◀][▼][▶]   */
+.dpad {
+  display: grid;
+  grid-template-columns: repeat(3, var(--key));
+  grid-template-rows: repeat(2, var(--key));
+  gap: 5px;
+}
+#laneUpBtn { grid-area: 1 / 2; }
+#brakeBtn { grid-area: 2 / 1; }
+#laneDownBtn { grid-area: 2 / 2; }
+#gasBtn { grid-area: 2 / 3; }
+/* Keycaps: light, rounded, with a chunky base that presses down */
+.key {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(#f6f1e6, #cfc6b2);
+  color: var(--black);
+  border: 2px solid var(--black);
+  border-radius: 5px;
+  box-shadow: 0 4px 0 #7a7468, 0 6px 0 var(--black);
+  font: calc(var(--key) * 0.36) / 1 var(--font-arcade); /* the arrow scales with the key */
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.key small { font-size: max(6px, calc(var(--key) * 0.12)); margin-top: calc(var(--key) * 0.08); color: var(--grey); letter-spacing: 0; }
+.key:active, .key.held { transform: translateY(4px); box-shadow: 0 0 0 #7a7468, 0 2px 0 var(--black); }
+#brakeBtn.held { background: var(--red); color: var(--white); }
+#brakeBtn.held small { color: var(--white); }
+#gasBtn.held { background: var(--yellow); }
+/* JUMP: a wide red key, like a spacebar */
+#jumpBtn {
+  width: calc(var(--key) * 3.2);
+  height: var(--key);
+  background: linear-gradient(#ff3d74, var(--button-bg));
+  color: var(--button-text);
+  border: 2px solid var(--black);
+  border-radius: 5px;
+  box-shadow: 0 4px 0 var(--plum), 0 6px 0 var(--black);
+  font: calc(var(--key) * 0.3) var(--font-arcade);
+  cursor: pointer;
+  touch-action: none;
+  flex-shrink: 0;
+}
+#jumpBtn:active { transform: translateY(4px); box-shadow: 0 0 0 var(--plum), 0 2px 0 var(--black); }
 #hint { font: 7px var(--font-arcade); color: var(--grey); margin-top: 12px; }
 #rotateHint { display: none; font-size: 18px; color: var(--text-soft); margin-top: 8px; text-align: center; }
 
@@ -303,7 +333,7 @@ canvas { display: block; image-rendering: pixelated; }
 .btn.sec { background: var(--button-sec-bg); }
 .btn.bad { background: var(--button-bad-bg); }
 .btn.wide { width: 100%; padding: 14px; margin: 0; }
-.btn:focus-visible, .ws-choice:focus-visible, #jumpBtn:focus-visible { outline: 3px solid var(--yellow); outline-offset: 3px; }
+.btn:focus-visible, .ws-choice:focus-visible, #jumpBtn:focus-visible, .key:focus-visible { outline: 3px solid var(--yellow); outline-offset: 3px; }
 
 /* Tow truck cards */
 .tow-card {
@@ -405,25 +435,15 @@ body[data-layout='sideways'] #controls {
   z-index: 5;
   pointer-events: none; /* taps between the buttons still reach the road */
 }
-body[data-layout='sideways'] #controls button {
-  position: absolute;
-  pointer-events: auto;
-  opacity: 0.82;
-}
-/* Left thumb: ▲ ▼ lanes and BRAKE.  Right thumb: GAS and JUMP side by side (below the level clock). */
-body[data-layout='sideways'] .lane-btn { width: 84px; padding: 13px 0; font-size: 8px; }
-body[data-layout='sideways'] #laneUpBtn,
-body[data-layout='sideways'] #laneDownBtn,
-body[data-layout='sideways'] #brakeBtn { left: max(10px, env(safe-area-inset-left)); }
-body[data-layout='sideways'] #laneUpBtn { top: 17%; }
-body[data-layout='sideways'] #laneDownBtn { top: calc(17% + 56px); }
-body[data-layout='sideways'] #brakeBtn { top: calc(17% + 112px); }
-body[data-layout='sideways'] #gasBtn { right: calc(max(10px, env(safe-area-inset-right)) + 96px); top: 34%; padding: 18px 0; }
+/* Left thumb: the arrow cluster.  Right thumb: JUMP.  Both sit over the sky, clear of the road. */
+body[data-layout='sideways'] #controls { --key: 46px; }
+body[data-layout='sideways'] .dpad,
+body[data-layout='sideways'] #jumpBtn { position: absolute; pointer-events: auto; opacity: 0.85; top: 24%; }
+body[data-layout='sideways'] .dpad { left: max(10px, env(safe-area-inset-left)); }
 body[data-layout='sideways'] #jumpBtn {
   right: max(10px, env(safe-area-inset-right));
-  top: calc(34% - 6px);
-  width: 88px;
-  padding: 26px 0;
+  top: calc(24% + var(--key) + 5px);
+  width: 120px;
 }
 
 /* Upright: road on top, big thumb buttons filling the bottom */
@@ -440,19 +460,11 @@ body[data-layout='upright'] #controls {
   margin-top: auto; /* push the buttons down to where thumbs are */
   padding-top: 14px;
   width: 100%;
-  height: min(40vh, 320px);
-  display: grid;
-  grid-template-columns: 1fr 1.25fr;
-  grid-template-rows: 1fr 1fr 1fr;
-  gap: 14px 12px;
-  align-items: stretch;
+  --key: min(20vw, 84px);
+  justify-content: space-between;
+  gap: 12px;
 }
-body[data-layout='upright'] #laneUpBtn { grid-area: 1 / 1; }
-body[data-layout='upright'] #laneDownBtn { grid-area: 2 / 1; }
-body[data-layout='upright'] #brakeBtn { grid-area: 3 / 1; }
-body[data-layout='upright'] #gasBtn { grid-area: 1 / 2; }
-body[data-layout='upright'] #jumpBtn { grid-area: 2 / 2 / 4 / 3; padding: 0; font-size: 18px; }
-body[data-layout='upright'] .lane-btn { padding: 0; font-size: 12px; }
+body[data-layout='upright'] #jumpBtn { flex: 1; width: auto; height: calc(var(--key) * 2 + 5px); font-size: min(18px, calc(var(--key) * 0.26)); }
 
 /* Phones: hide the driving buttons while the Workshop Hell panels are open */
 body[data-layout='sideways']:has(.panel.show) #controls,
@@ -481,7 +493,7 @@ body[data-layout='sideways'] .tow-desc { font-size: 16px; }
 
 /* One-lane road (level 1): nothing to switch to, so the lane buttons are dimmed */
 body[data-lanes='1'] #laneUpBtn,
-body[data-lanes='1'] #laneDownBtn { opacity: 0.3 !important; pointer-events: none; }
+body[data-lanes='1'] #laneDownBtn { opacity: 0.35; pointer-events: none; }
 
 /* ── Pixel wipe between screens: chunky bars that close, then open ── */
 #wipe {

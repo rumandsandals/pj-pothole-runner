@@ -89,11 +89,12 @@ export const TEXT = {
   musicOff: 'MUSIC',
 
   jumpButton: 'JUMP',
-  controlsHint: '↑ ↓ LANES · HOLD A / D BRAKE · GAS · SPACE JUMP · F FULL SCREEN',
-  laneUpButton: '▲ LANE',
-  laneDownButton: '▼ LANE',
-  brakeButton: '◀ BRAKE',
-  gasButton: 'GAS ▶',
+  controlsHint: 'ARROW KEYS OR W A S D · ↑ ↓ LANE · HOLD ← BRAKE · HOLD → GAS · SPACE JUMP · F FULL SCREEN',
+  // The arrow-key cluster (a small label sits under each arrow)
+  laneUpButton: '▲<small>LANE</small>',
+  laneDownButton: '▼<small>LANE</small>',
+  brakeButton: '◀<small>BRAKE</small>',
+  gasButton: '▶<small>GAS</small>',
   fullScreenEnter: 'FULL',
   fullScreenExit: 'EXIT',
   fullScreenIphoneTip: 'iPhone: tap Share ⬆ then “Add to Home Screen” — the game then opens full screen like an app.',
