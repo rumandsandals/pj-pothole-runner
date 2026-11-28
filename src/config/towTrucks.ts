@@ -21,8 +21,8 @@ export interface TowOption {
 export const TOW_OPTIONS: TowOption[] = [
   {
     name: "🚛 Uncle Rajan's Towing",
-    tag: 'LICENSED · LKPP Registered · GPS Tracked',
-    description: 'Upfront pricing. Proper receipt issued. Certified crew. Takes you to an authorised Proton/Perodua workshop.',
+    tag: 'LICENSED · Registered company · GPS Tracked',
+    description: 'Upfront pricing. Proper receipt issued. Certified crew. Takes you to an authorised workshop you choose.',
     priceLabel: 'Est. RM120 — receipt provided',
     cost: 120,
     licensed: true,

@@ -14,7 +14,9 @@ import { drawHeatMeter, drawPoliceCar } from './police';
 import { drawPotholes } from './potholes';
 import { drawRoad } from './road';
 import { drawCrossingPeople, drawRoadMarkings, drawSignalPoles, drawStrollers } from './streetFurniture';
+import { drawStorm, drawTrees } from './storm';
 import { drawTowTruck } from './towTruck';
+import { drawAmbulance } from './ambulance';
 import { drawRempitWarnings, drawVehicles } from './traffic';
 import { drawLane, laneCount, setLaneCount } from './lanes';
 
@@ -41,9 +43,11 @@ export function render(ctx: CanvasRenderingContext2D, state: GameState): void {
   // Furthest lane first, so nearer things overlap further ones
   for (let lane = laneCount() - 1; lane >= 0; lane--) {
     drawPotholes(ctx, state.potholes, lane, state.time);
+    drawTrees(ctx, state.trees, lane);
     drawVehicles(ctx, state.vehicles, lane, state.time, state.roadOffset);
     if (carLane === lane) {
       drawPoliceCar(ctx, state);
+      drawAmbulance(ctx, state);
       drawTowTruck(ctx, state.tow, state.car, state.time);
       drawCar(ctx, state.car, state.time, state.roadOffset, roughness, state.mode === 'playing' ? state.pace : 1);
     }
@@ -58,6 +62,8 @@ export function render(ctx: CanvasRenderingContext2D, state: GameState): void {
     drawHeadlights(ctx, state);
     drawPoliceCar(ctx, state); // flashing lights stay bright
   }
+
+  drawStorm(ctx, state.storm); // dark sky and lightning during a thunderstorm
 
   drawRempitWarnings(ctx, state.vehicles, state.time);
   drawBits(ctx, state.bits);

@@ -4,6 +4,7 @@ import { byId } from './dom';
 
 const SCREENS = {
   menu: 'ovMenu',
+  controls: 'ovControls',
   howto: 'ovHowTo',
   level: 'ovLevel',
   event: 'ovEvent',

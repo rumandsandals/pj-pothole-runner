@@ -4,10 +4,21 @@
  */
 
 export const TEXT = {
-  title: '🚗 PJ POTHOLE RUNNER',
+  title: '🚗 PJ POTHOLE RUNNER <span class="draft">DRAFT</span>', // remove the DRAFT tag when it's finished
   tagline: "Navigate PJ's roads · Avoid potholes · Know your rights",
 
   pressStart: '- PRESS START -',
+
+  // Controls dialog (asked the first time you play)
+  controlsTitle: 'CHOOSE YOUR CONTROLS',
+  controlsTouchName: 'TOUCHSCREEN',
+  controlsTouchDesc: 'Joystick + JUMP button<br>Phones & iPads',
+  controlsKeyboardName: 'KEYBOARD',
+  controlsKeyboardDesc: 'Arrow keys + SPACE to jump<br>Computers',
+  controlsSuggested: 'BEST FOR THIS DEVICE',
+  controlsNote: 'You can change this later from the title screen.',
+  controlsTouchShort: 'JOYSTICK',
+  controlsKeyboardShort: 'KEYBOARD',
 
   menuIntro: `
     ↑ ↓ switch lanes · ← → brake / speed up · SPACE / TAP to jump<br>
@@ -42,9 +53,10 @@ export const TEXT = {
     missing catalytic converters · inflated insurance claims<br>
     Make smart choices to reduce your final bill!<br><br>
     <b class="warn">IRL HOTLINES:</b><br>
-    MBPJ: <b>www.mbpj.gov.my</b> / <b>03-7625 4688</b><br>
-    MACC: <b>1-800-88-6000</b> · Tribunal: <b>1-800-886-800</b><br>
-    JPJ Parts: <b>1-800-88-5983</b> · BNM: <b>1-300-88-5465</b>`,
+    MBPJ: <b>03-7954 2020</b> · <b>embpj.mbpj.gov.my</b><br>
+    MACC: <b>1-800-88-6000</b> · Consumer Claims Tribunal: <b>1-800-88-9811</b><br>
+    Insurance disputes: FMOS <b>03-2272 2811</b> · BNMLINK: <b>1-300-88-5465</b><br>
+    Emergency: <b>999</b>`,
 
   levelClearTitle: '🏁 LEVEL {n} CLEAR!',
   levelFirstLabel: 'GET READY',
@@ -66,22 +78,22 @@ export const TEXT = {
   deadTitle: '💥 VEHICLE TOTALLED',
   limpingOn: '🛟 Battered, but still driving! From level 7 on, 0 HP means your car is totalled.',
   deadHotlines: `
-    MBPJ: www.mbpj.gov.my · 03-7625 4688<br>
-    MACC: 1-800-88-6000 · Tribunal: 1-800-886-800`,
+    MBPJ: 03-7954 2020 · embpj.mbpj.gov.my<br>
+    MACC: 1-800-88-6000 · Consumer Claims Tribunal: 1-800-88-9811`,
 
   winTitle: '🏆 ROAD WARRIOR!',
   winChecklist: 'Police ✓ · Insurance ✓ · Workshop ✓ · Council ✓',
-  winHotlines: 'MBPJ: www.mbpj.gov.my · MACC: 1-800-88-6000',
+  winHotlines: 'MBPJ: 03-7954 2020 · MACC: 1-800-88-6000',
 
   workshopTitle: '🔧 WORKSHOP HELL',
   workshopGoodEnd: '🎉 SMART CHOICES PAID OFF!',
   workshopBadEnd: '💸 WORKSHOP NIGHTMARE COMPLETE',
   workshopProtection: `
     <b>IRL PROTECTION:</b><br>
-    📋 Always get itemised invoices — Consumer Protection Act 1999<br>
-    ⚖️ Dispute unfair charges: Tribunal Pengguna <b>1-800-886-800</b><br>
-    🔩 Report stolen parts: JPJ Hotline <b>1-800-88-5983</b><br>
-    📑 Insurance disputes: BNM BNMTELELINK <b>1-300-88-5465</b>`,
+    📋 Always get a written quote and an itemised invoice<br>
+    ⚖️ Dispute unfair charges: Consumer Claims Tribunal <b>1-800-88-9811</b><br>
+    🔩 Missing or stolen parts: lodge a <b>police report</b><br>
+    📑 Insurance disputes: FMOS <b>03-2272 2811</b> (free) · BNMLINK <b>1-300-88-5465</b>`,
 
   effectsOn: 'SFX',
   effectsOff: 'SFX',

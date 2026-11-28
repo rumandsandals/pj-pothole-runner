@@ -7,7 +7,7 @@ import type { ColourKey } from './theme';
  * Heat cools down slowly while you drive at normal speed.
  *
  * ⚠️ FACT-CHECK BEFORE SHARING: fine amounts and legal points here were
- * drafted for the game. See "Facts to verify" in README.md.
+ * drafted for the game. Checked Nov 2026 — see "Facts checked" in README.md.
  */
 
 export type Offence = 'speeding' | 'jump' | 'accident' | 'laneChange' | 'record' | 'redLight' | 'giveWay';
@@ -38,7 +38,7 @@ export const POLICE = {
 export const POLICE_STOPS: Record<Offence, { title: string; description: string; fine: number }> = {
   speeding: {
     title: '🚓 SPEED TRAP!',
-    description: "You're pulled over for speeding. The officer starts writing a saman (summons).",
+    description: "You're pulled over for speeding. The officer starts writing a saman (summons) — compounds go up to about RM300.",
     fine: 300,
   },
   jump: {

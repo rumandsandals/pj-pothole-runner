@@ -11,8 +11,10 @@ function bestLine(state: GameState): string {
   return isNew ? '<br><span class="new-best">🏆 NEW BEST!</span>' : best ? `<br>Best: <b>${formatRM(best.money)}</b>` : '';
 }
 
-export function showDead(state: GameState): void {
-  byId('deadScore').innerHTML = `
+/** Game over. `title` / `reason` replace the usual "VEHICLE TOTALLED" (e.g. after a fatal accident). */
+export function showDead(state: GameState, title?: string, reason?: string): void {
+  byId('deadTitle').innerHTML = title ?? TEXT.deadTitle;
+  byId('deadScore').innerHTML = `${reason ? `<b>${reason}</b><br><br>` : ''}
     Distance: <b>${Math.floor(state.distance)}m</b><br>
     Compensation: <b>${formatRM(state.money)}</b><br>
     Level: <b>${state.level} — ${currentLevel(state).name}</b>${bestLine(state)}`;

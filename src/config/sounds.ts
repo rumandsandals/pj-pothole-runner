@@ -57,7 +57,16 @@ export const SOUND_DEFAULTS = {
 };
 
 export const SOUNDS = {
-  jump: [{ wave: 'square', from: 280, to: 720, ms: 140, volume: 0.35 }],
+  // Jump: a SpaceX-style rocket blast. A deep ignition boom, a low roaring
+  // rumble while the jets fire, then the roar rolling away. Kept low and
+  // muffled on purpose (no high hiss).
+  jump: [
+    { wave: 'sine', from: 90, to: 30, ms: 320, volume: 0.75 }, // ignition boom
+    { wave: 'noise', from: 1100, to: 380, ms: 760, volume: 0.6, shape: 'hold' }, // the roar (low, rumbly)
+    { wave: 'triangle', from: 62, to: 44, ms: 760, volume: 0.3, shape: 'hold' }, // deep rumble underneath
+    { wave: 'square', from: 38, to: 30, ms: 700, volume: 0.06, shape: 'hold' }, // rattle you feel more than hear
+    { wave: 'noise', from: 450, to: 70, ms: 600, at: 720, volume: 0.45 }, // roar rolling away
+  ],
   land: [
     { wave: 'noise', from: 900, to: 200, ms: 80, volume: 0.7 },
     { wave: 'sine', from: 120, to: 60, ms: 80, volume: 0.4 },
@@ -65,6 +74,12 @@ export const SOUNDS = {
   hit: [
     { wave: 'noise', from: 2500, to: 300, ms: 180, volume: 0.6 },
     { wave: 'square', from: 180, to: 70, ms: 180, volume: 0.35 },
+  ],
+  // Thunder: a sharp crack, then a long low rumble rolling away
+  thunder: [
+    { wave: 'noise', from: 5000, to: 900, ms: 180, volume: 0.55 },
+    { wave: 'noise', from: 700, to: 60, ms: 2200, at: 80, volume: 0.8 },
+    { wave: 'sine', from: 70, to: 32, ms: 1800, at: 60, volume: 0.45 },
   ],
   hitBig: [
     { wave: 'noise', from: 3000, to: 150, ms: 320, volume: 0.75 },

@@ -4,9 +4,10 @@ import { ANIMATION, CAR, DRIVING, ECONOMY, GAME_OVER, JUICE, EFFECTS, TICKS_PER_
 import { LEVELS } from '../config/levels';
 import { tempoForLevel } from '../config/music';
 import { LIGHTS } from '../config/trafficLights';
-import { PEDESTRIANS } from '../config/pedestrians';
+import { PEDESTRIANS, PEDESTRIAN_HIT, PEDESTRIAN_HIT_TEXT } from '../config/pedestrians';
 import { HEAT, POLICE, POLICE_CHOICES, POLICE_STOPS, type Offence } from '../config/police';
 import { POTHOLES } from '../config/potholes';
+import { STORM, STORM_TEXT } from '../config/storm';
 import { ROAD_EVENTS, type EventChoice, type RoadEvent, type RoadEventId } from '../config/roadEvents';
 import { TEXT } from '../config/text';
 import { THEME } from '../config/theme';
@@ -37,16 +38,18 @@ import { addFloatingText, updateParticles } from '../world/particles';
 import { ART_HEIGHT, ART_WIDTH, makeCanvas } from '../world/pixels';
 import { findCollision, maybeSpawnPothole, movePotholes } from '../world/potholes';
 import { render } from '../world/render';
-import { blocksPotholes, placeFurniture, stopAhead, stopPoints, updateFurniture, updateStrollers } from '../world/streetFurniture';
+import { findTreeHit, updateStorm, updateTrees } from '../world/storm';
+import { blocksPotholes, type Crossing, placeFurniture, stopAhead, stopPoints, updateFurniture, updateStrollers } from '../world/streetFurniture';
 import { generateRoad } from '../world/road';
 import { updateTowTruck } from '../world/towTruck';
 import { clearAround, findVehicleHit, maybeSpawnVehicle, updateVehicles } from '../world/traffic';
-import { clampHealth, createState, createTow, currentLevel, currentTime, freshLevelStats, levelLength, starsFor, type GameState } from './state';
+import { clampHealth, createState, createTow, currentLevel, currentTime, freshLevelStats, levelLength, newStorm, starsFor, type GameState } from './state';
 import type { Viewport } from './Viewport';
 
 const TICK_MS = 1000 / TICKS_PER_SECOND;
 const MAX_FRAME_MS = 250; // after a pause (e.g. switching tabs), don't fast-forward
 const TITLE_CRUISE_SPEED = 1.6; // how fast the street scrolls behind the title screen
+const SPAWN_CHECK_X = ART_WIDTH - 40; // a fallen tree this close to the right edge stops a pothole appearing on it
 const CARD_KEY_DELAY_MS = 700; // so a player mashing Space doesn't skip the level card by accident
 
 const pickOne = <T,>(list: T[]): T | undefined => list[Math.floor(Math.random() * list.length)];
@@ -89,7 +92,7 @@ export class Game {
     const [dx, dy] = shakeOffset(this.state);
     const s = this.state;
     // Engine hum follows your speed while driving (idles at lights); silent on menus and pop-ups
-    const driving = s.mode === 'playing' || s.mode === 'pullover' || s.mode === 'towArriving';
+    const driving = s.mode === 'playing' || s.mode === 'pullover' || s.mode === 'towArriving' || s.mode === 'incident';
     sound.engine(driving && s.car.crashTimer === 0 && s.car.sinkY === 0 ? (s.mode === 'playing' ? s.speed : 0) : null);
     const dip = s.dip > 0 ? Math.round(Math.sin((s.dip / JUICE.landingDipTicks) * Math.PI) * JUICE.landingDip) : 0;
     this.viewport.present(this.ctx, this.art, [dx, dy + dip]);
@@ -114,7 +117,7 @@ export class Game {
       else if (wasIncoming && s.tow.phase === 'towing') sound.play('horn');
       return;
     }
-    // Title screen: your Mazda cruises slowly past PJ behind the menu
+    // Title screen: your Roadster cruises slowly past PJ behind the menu
     if (s.mode === 'menu') {
       s.roadOffset += TITLE_CRUISE_SPEED;
       s.levelDistance = (s.levelDistance + TITLE_CRUISE_SPEED) % levelLength(currentLevel(s));
@@ -124,6 +127,10 @@ export class Game {
 
     if (s.mode === 'pullover') {
       this.updatePullover();
+      return;
+    }
+    if (s.mode === 'incident') {
+      this.updateIncident();
       return;
     }
     if (s.mode !== 'playing') return;
@@ -187,6 +194,10 @@ export class Game {
       addFloatingText(s.particles, car.x, car.y - 46, 'RAN RED LIGHT!', THEME.particles.damage, 50);
       sound.play('bad');
     }
+    if (furniture.hit) {
+      this.startIncident(furniture.hit.crossing);
+      return;
+    }
     if (furniture.noGiveWay > 0) {
       this.addHeat(PEDESTRIANS.giveWayHeat, 'giveWay');
       addFloatingText(s.particles, car.x, car.y - 46, 'GIVE WAY!', THEME.particles.damage, 50);
@@ -194,8 +205,10 @@ export class Game {
     }
     s.strollers = updateStrollers(s.strollers, s.speed, !level.highway);
 
-    if (!blocksPotholes(s.signals, s.crossings)) maybeSpawnPothole(s.potholes, level, s.speed);
+    const treeNearSpawn = s.trees.some((t) => t.x > SPAWN_CHECK_X);
+    if (!blocksPotholes(s.signals, s.crossings) && !treeNearSpawn) maybeSpawnPothole(s.potholes, level, s.speed);
     s.potholes = movePotholes(s.potholes, s.speed);
+    this.updateStormAndTrees();
     const newVehicle = maybeSpawnVehicle(s.vehicles, level.traffic, level.highway);
     if (newVehicle?.kind === 'rempit') sound.play('rev');
     s.vehicles = updateVehicles(s.vehicles, s.speed, level.speed, car, stopPoints(s.signals, s.crossings));
@@ -230,6 +243,7 @@ export class Game {
     if (car.invulnerable <= 0 && !car.trapped) {
       this.checkVehicleHit();
       if (s.mode === 'playing' && !car.trapped && car.crashTimer === 0) this.checkPotholeHit();
+      if (s.mode === 'playing' && !car.trapped && car.crashTimer === 0 && car.invulnerable <= 0) this.checkTreeHit();
     }
     if (s.mode === 'playing') this.updateHeat();
   }
@@ -278,6 +292,73 @@ export class Game {
     addFloatingText(s.particles, car.x, car.y - 46, 'ILLEGAL JUMP!', THEME.particles.damage, 45);
   }
 
+  // ── Hitting a pedestrian at a zebra crossing ────────────────
+  private startIncident(crossing: Crossing): void {
+    const s = this.state;
+    s.mode = 'incident';
+    s.throttle = 0;
+    s.pace = 0;
+    s.speed = 0;
+    s.levelStats.crashes++;
+    s.incident = { ambulanceX: ART_WIDTH + 80, waited: 0, fatal: Math.random() < PEDESTRIAN_HIT.fatalChance, crossing };
+    s.police = { x: -90, waited: 0 };
+    s.vehicles = clearAround(s.vehicles, s.car.x, 260); // traffic stops around the scene
+    startShake(s, ANIMATION.shakeOnHit);
+    flash(EFFECTS.hitFlashMs);
+    sound.play('hit');
+    sound.play('siren');
+    showBanner(PEDESTRIAN_HIT_TEXT.bannerTitle, PEDESTRIAN_HIT_TEXT.bannerText);
+  }
+
+  private updateIncident(): void {
+    const s = this.state;
+    const scene = s.incident;
+    if (!scene) return;
+    const ambulanceStop = s.car.x + PEDESTRIAN_HIT.ambulanceStopAhead;
+    if (scene.ambulanceX > ambulanceStop) scene.ambulanceX = Math.max(ambulanceStop, scene.ambulanceX - PEDESTRIAN_HIT.ambulanceSpeed);
+    const p = s.police;
+    const policeStop = s.car.x - POLICE.stopBehind;
+    if (p && p.x < policeStop) p.x = Math.min(policeStop, p.x + POLICE.arriveSpeed);
+    const arrived = scene.ambulanceX <= ambulanceStop && (!p || p.x >= policeStop);
+    if (arrived && ++scene.waited === PEDESTRIAN_HIT.waitTicks) this.openIncident();
+  }
+
+  private openIncident(): void {
+    const s = this.state;
+    const scene = s.incident;
+    if (!scene) return;
+    hideBanner();
+    const t = PEDESTRIAN_HIT_TEXT;
+    const penalty = PEDESTRIAN_HIT.injuryPenalty;
+    const event: RoadEvent = scene.fatal
+      ? { title: t.fatalTitle, description: t.fatalText, choices: [{ label: t.fatalChoice, effect: {}, message: '' }] }
+      : {
+          title: t.injuredTitle,
+          description: t.injuredText,
+          choices: [
+            {
+              label: t.injuredChoice,
+              effect: { money: -penalty },
+              message: t.injuredMessage.replace('{penalty}', penalty.toLocaleString('en-MY')),
+              tone: 'good',
+            },
+          ],
+        };
+    s.mode = 'event';
+    sound.play('eventPop');
+    showRoadEvent(event, (choice) => {
+      // The ambulance takes them; the crossing clears
+      scene.crossing.walkers = [];
+      s.incident = null;
+      s.police = null;
+      if (scene.fatal) {
+        this.die(t.gameOverTitle, t.gameOverText);
+        return;
+      }
+      this.applyEventChoice(choice);
+    });
+  }
+
   private startPullover(): void {
     const s = this.state;
     s.mode = 'pullover';
@@ -323,6 +404,37 @@ export class Game {
       s.policeCooldown = POLICE.cooldownSeconds * TICKS_PER_SECOND;
       this.applyEventChoice(choice);
     });
+  }
+
+  // ── Thunderstorms and fallen trees ──────────────────────────
+  private updateStormAndTrees(): void {
+    const s = this.state;
+    const level = currentLevel(s);
+    const news = updateStorm(s.storm, s.levelDistance / levelLength(level));
+    if (news.started) showToast(STORM_TEXT.storm);
+    if (news.thunder) sound.play('thunder');
+    if (news.ended) showToast(STORM_TEXT.trees);
+    s.trees = updateTrees(s.storm, s.trees, s.speed, s.potholes, s.vehicles, blocksPotholes(s.signals, s.crossings));
+  }
+
+  private checkTreeHit(): void {
+    const s = this.state;
+    const car = s.car;
+    const index = findTreeHit(car, s.trees, CAR.hitboxInset);
+    const tree = s.trees[index];
+    if (!tree) return;
+    s.trees.splice(index, 1); // you plough through it
+    s.health = clampHealth(s.health - STORM.treeDamage);
+    s.levelStats.damage += STORM.treeDamage;
+    car.invulnerable = CAR.invulnerableAfterHit;
+    addFloatingText(s.particles, car.x, car.y - 50, STORM_TEXT.hit, THEME.particles.damage, 45, 2);
+    addFloatingText(s.particles, car.x, car.y - 34, `-${STORM.treeDamage}HP`, THEME.particles.damage);
+    burst(s.bits, tree.x, laneY(tree.lane) - 8, ANIMATION.debrisOnHit * 2, ['3', 'b', '4', '3'], 1.1); // leaves and splinters
+    startShake(s, ANIMATION.shakeOnStuck);
+    sound.play('hitBig');
+    flash(EFFECTS.hitFlashMs);
+    updateHud(s);
+    this.totalled();
   }
 
   private checkPotholeHit(): void {
@@ -440,6 +552,8 @@ export class Game {
     s.placed = [];
     s.potholes = [];
     s.vehicles = [];
+    s.trees = [];
+    s.storm = newStorm(s.level);
     const level = currentLevel(s);
     s.speed = level.speed;
     s.pace = 1;
@@ -645,6 +759,7 @@ export class Game {
     s.health = Math.max(WORKSHOP.minHealthAfter, s.health);
     s.potholes = [];
     s.vehicles = [];
+    s.trees = [];
     updateHud(s);
     hidePanels();
     hideScreens();
@@ -653,11 +768,11 @@ export class Game {
   }
 
   // ── Endings ─────────────────────────────────────────────────
-  private die(): void {
+  private die(title?: string, reason?: string): void {
     if (this.state.mode === 'dead' || this.state.mode === 'win') return; // only once per game
     sound.play('crash');
     this.state.mode = 'dead';
-    wipe(() => showDead(this.state));
+    wipe(() => showDead(this.state, title, reason));
   }
 
   private win(): void {

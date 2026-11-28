@@ -12,7 +12,7 @@ import type { TowOption } from './towTrucks';
  * Same format as roadEvents.ts. Add as many as you like to each list.
  *
  * ⚠️ FACT-CHECK BEFORE SHARING: legal points here were drafted for the
- * game. See "Facts to verify" in README.md.
+ * game. Checked Nov 2026 — see "Facts checked" in README.md.
  */
 
 export const ACCIDENT_EVENTS: Record<'minor' | 'rempit' | 'cyclist' | 'fender' | 'serious', RoadEvent[]> = {
@@ -29,10 +29,10 @@ export const ACCIDENT_EVENTS: Record<'minor' | 'rempit' | 'cyclist' | 'fender' |
     {
       title: '🚑 RIDER DOWN!',
       description:
-        "A motorcyclist wobbles and falls beside you. Drivers involved in an accident must stop and help — driving off is an offence.",
+        "Your car touched a motorcyclist and he falls. Because you made contact, you're involved: stop safely, help and report it — driving off is hit-and-run. (A pure bystander has no legal duty to stop, though calling MERS 999 is the decent thing to do.)",
       choices: [
         { label: '🛑 Stop, help & call 999', effect: { hp: 5 }, message: "✅ He's shaken but OK. You did the right thing.", tone: 'good' },
-        { label: '🏃 Drive off', effect: { money: -500, hp: -10, heat: 40 }, message: '❌ Hit-and-run caught on camera. -RM500!', tone: 'bad' },
+        { label: '🏃 Drive off', effect: { money: -500, hp: -10, heat: 40 }, message: "❌ You were involved, so that's hit-and-run — caught on camera. -RM500!", tone: 'bad' },
       ],
     },
   ],
@@ -74,7 +74,7 @@ export const ACCIDENT_EVENTS: Record<'minor' | 'rempit' | 'cyclist' | 'fender' |
     {
       title: '📄 KNOCK-FOR-KNOCK',
       description:
-        "The other driver admits fault. Under Knock-for-Knock you can claim from your OWN insurer — usually faster, and your NCD isn't affected if you weren't at fault.",
+        "The other driver admits fault. With comprehensive cover, Own Damage Knock-for-Knock (OD-KFK) lets you claim from your OWN insurer — usually faster, and your NCD stays if the police find you not at fault.",
       choices: [
         { label: '📄 Claim Knock-for-Knock', effect: { money: 350 }, message: '✅ Paid in weeks, and your NCD is safe.', tone: 'good' },
         { label: "⏳ Chase the other driver's insurer", effect: { money: 100 }, message: '❌ Months of paperwork for less money.', tone: 'bad' },
@@ -83,7 +83,7 @@ export const ACCIDENT_EVENTS: Record<'minor' | 'rempit' | 'cyclist' | 'fender' |
     {
       title: '🧑‍💼 LOWBALL ADJUSTER',
       description:
-        "The adjuster offers RM200 for RM900 of damage. Ask for a written assessment — and if you're still unhappy, the Ombudsman for Financial Services (OFS) handles insurance disputes for free.",
+        "The adjuster offers RM200 for RM900 of damage. Ask for a written assessment — and if you're still unhappy, the Financial Markets Ombudsman Service (FMOS, formerly OFS) handles insurance disputes for free.",
       choices: [
         { label: '📊 Written report & appeal', effect: { money: 400 }, message: '✅ Re-assessed fairly. +RM400!', tone: 'good' },
         { label: '😔 Take the RM200', effect: { money: 100 }, message: '❌ You were short-changed by RM700.', tone: 'bad' },

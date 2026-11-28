@@ -12,7 +12,37 @@
  * All vehicles face right.
  */
 
-/** YOUR CAR: Mazda 3 hatchback (BM, 2013-2018). X = paint, Y = paint shadow. */
+/**
+ * YOUR CAR: Tesla Roadster (2nd generation) with the "SpaceX package"
+ * thrusters — that's how it jumps. Silver. X = paint, Y = paint shadow.
+ * The jet flames are drawn in src/world/car.ts (drawJets).
+ */
+export const ROADSTER_BODY = [
+  '............................................................',
+  '............................................................',
+  '............................................................',
+  '............................................................',
+  '.....................00000000000............................',
+  '..................000jjjjjjjjjjj000.........................',
+  '...............000XXjjjjjj70jjjjjjj00.......................',
+  '...........0000XXXXXjjjjj7j0jjjjjj7jjj00....................',
+  '.......0000XXXXXXXXXXXXXXXX0XXXXXX7XXXXXX0000...............',
+  '....000XXXX777777XXXXXXXXXXXXXXXXXXXXXXXXXXXXX00000.........',
+  '..00XXXXXXXXXXXX7777777777777777777777XXXXXXXXXXXXX0000.....',
+  '.0iiXXXXXX000XXXXXXXXXXXXXXXXXXXXXXXXXXXXX0000XXXXXXXXXX77a0',
+  '0iiXXXXX00gggg00XXXXXXXXXXXXYXXXXXXXXXXXX00gggg00XXXXXXXXXX0',
+  '0XXXXXX0gggggggg0XXXXXXXXXXXYXXXXXXXXXXXX0gggggggg0XXXXXXX00',
+  '0XXXXX00gggggggg00XXXXXXXXXXYXXXXXXXXXXX00gggggggg00XXXXXX0.',
+  '0YYYYY0gggggggggg0YYYYYYYYYYYYYYYYYYYYYY0gggggggggg0YYYYYY0.',
+  '.0YYYY0gggggggggg0YYYYYYYYYYYYYYYYYYYYYY0gggggggggg0YYYYY0..',
+  '.0hhhh0gggggggggg0hhhhhhhhhhhhhhhhhhhhhh0gggggggggg0hhhh00..',
+  '.0g55h0gggggggggg0000000000000000000000000gggggggggg0000....',
+  '..0550......................................................',
+  '............................................................',
+  '............................................................',
+];
+
+/** Mazda 3 hatchback (BM, 2013-2018): your old car, kept in case you want it back. X = paint, Y = paint shadow. */
 export const HATCHBACK_BODY = [
   '............................................................',
   '...............00000000000000000............................',
@@ -417,6 +447,7 @@ export interface VehicleArt {
 
 /** Which body and wheels make up each vehicle. */
 export const VEHICLE_ART = {
+  roadster: { body: ROADSTER_BODY, wheels: [CAR_WHEEL_1, CAR_WHEEL_2], wheelX: [12, 46], wheelY: 17 },
   hatchback: { body: HATCHBACK_BODY, wheels: [CAR_WHEEL_1, CAR_WHEEL_2], wheelX: [12, 46], wheelY: 17 },
   sedan: { body: SEDAN_BODY, wheels: [CAR_WHEEL_1, CAR_WHEEL_2], wheelX: [13, 49], wheelY: 17 },
   suv: { body: SUV_BODY, wheels: [SUV_WHEEL_1, SUV_WHEEL_2], wheelX: [13, 49], wheelY: 22 },

@@ -1,10 +1,11 @@
-import { PEDESTRIANS } from '../config/pedestrians';
+import { PEDESTRIANS, PEDESTRIAN_HIT } from '../config/pedestrians';
+import { ROAD } from '../config/game';
 import { TRAFFIC_RULES } from '../config/traffic';
 import { LIGHTS } from '../config/trafficLights';
 import type { Level } from '../config/levels';
 import type { Car, Signal } from '../core/state';
-import { groundPx, laneLineYs, roadTop } from './lanes';
-import { drawDog, drawLeash, drawPerson, makeStroller, makeWalkers, type Stroller, type Walker } from './pedestrians';
+import { groundPx, laneHeight, laneLineYs, roadTop } from './lanes';
+import { drawDog, drawLeash, drawPerson, drawPersonDown, makeStroller, makeWalkers, type Stroller, type Walker } from './pedestrians';
 import { ART_HEIGHT, fill, toPx } from './pixels';
 
 /**
@@ -52,7 +53,7 @@ export const blocksPotholes = (signals: Signal[], crossings: Crossing[]): boolea
   signals.some((s) => s.x > APPEAR_X - 160) || crossings.some((c) => c.x > APPEAR_X - 120);
 
 /** Someone is on the road at this crossing (or about to step out). */
-const busy = (c: Crossing): boolean => c.started && c.walkers.some((w) => w.t < 1);
+const busy = (c: Crossing): boolean => c.started && c.walkers.some((w) => w.t < 1 || w.down);
 
 /**
  * Moves lights, crossings and walkers with the road and runs each light's
@@ -64,9 +65,10 @@ export function updateFurniture(
   speed: number,
   car: Car,
   stopped: boolean,
-): { signals: Signal[]; crossings: Crossing[]; ranRed: number; noGiveWay: number } {
+): { signals: Signal[]; crossings: Crossing[]; ranRed: number; noGiveWay: number; hit: { crossing: Crossing; walker: Walker } | null } {
   let ranRed = 0;
   let noGiveWay = 0;
+  let hit: { crossing: Crossing; walker: Walker } | null = null;
   const front = car.x + car.width / 2;
 
   for (const s of signals) {
@@ -97,6 +99,7 @@ export function updateFurniture(
     if (!c.started && c.walkers.length > 0 && c.x - car.x < PEDESTRIANS.startWithin) c.started = true;
     if (c.started) {
       for (const w of c.walkers) {
+        if (w.down) continue; // hit by your car: they stay where they fell
         if (w.delay > 0) {
           w.delay--;
           continue;
@@ -109,8 +112,13 @@ export function updateFurniture(
       c.passed = true;
       const onRoad = c.walkers.filter((w) => w.delay <= 0 && w.t > 0.02 && w.t < 1);
       if (onRoad.length > 0) {
-        noGiveWay++;
-        for (const w of c.walkers) w.hurry = true; // they scramble out of the way
+        // Someone in your lane, and you're not jumping clear over them: you hit them
+        const victim = car.hop < PEDESTRIAN_HIT.clearHeight ? onRoad.find((w) => walkerLane(w) === Math.round(car.lanePos)) : undefined;
+        if (victim) {
+          victim.down = true;
+          hit = { crossing: c, walker: victim };
+        } else noGiveWay++;
+        for (const w of c.walkers) if (!w.down) w.hurry = true; // the others scramble out of the way
       }
     }
   }
@@ -120,7 +128,23 @@ export function updateFurniture(
     crossings: crossings.filter((c) => c.x > GONE_X),
     ranRed,
     noGiveWay,
+    hit,
   };
+}
+
+/** Where a person crossing is right now: their feet, in art pixels (far kerb → off the bottom of the screen). */
+const walkerFootY = (w: Walker): number => {
+  const fromY = groundPx() + 6;
+  const toY = ART_HEIGHT + 26;
+  return fromY + (toY - fromY) * Math.max(0, w.t);
+};
+
+/** Which lane a person crossing is standing in (-1 = on the pavement). */
+function walkerLane(w: Walker): number {
+  const y = walkerFootY(w) / (ART_HEIGHT / 300); // back to world units
+  const fromBottom = ROAD.bottom - y;
+  if (fromBottom < 0 || y < roadTop()) return -1;
+  return Math.floor(fromBottom / laneHeight());
 }
 
 /** Everywhere traffic should stop right now: red / amber lights and crossings with people on them. */
@@ -200,6 +224,10 @@ export function drawCrossingPeople(ctx: CanvasRenderingContext2D, crossings: Cro
       if (w.t >= 1.2) continue;
       const walking = c.started && w.delay <= 0;
       const foot = fromY + (toY - fromY) * Math.max(0, w.t);
+      if (w.down) {
+        drawPersonDown(ctx, cx + w.offset + 6, foot, w.look);
+        continue;
+      }
       const frame = walking ? Math.floor(time / (w.hurry ? 3 : 7)) : 0;
       const x = cx + w.offset;
       if (w.dog) {

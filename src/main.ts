@@ -3,6 +3,7 @@ import '@fontsource/vt323/400.css';
 import './style.css';
 import { sound } from './audio/sound';
 import { bindInput } from './core/Input';
+import { markSuggestedControls, savedControls, suggestedControls, useControls } from './ui/controlsChoice';
 import { Game } from './core/Game';
 import { validateConfig } from './core/validateConfig';
 import { Viewport } from './core/Viewport';
@@ -28,7 +29,15 @@ if (import.meta.env.DEV) Object.assign(window, { game, sound });
 
 bindInput(
   canvas,
-  { jump: byId('jumpBtn'), up: byId('laneUpBtn'), down: byId('laneDownBtn'), brake: byId('brakeBtn'), gas: byId('gasBtn') },
+  {
+    jump: byId('jumpBtn'),
+    up: byId('laneUpBtn'),
+    down: byId('laneDownBtn'),
+    brake: byId('brakeBtn'),
+    gas: byId('gasBtn'),
+    joystick: byId('joystick'),
+    knob: byId('joyKnob'),
+  },
   { jump: () => game.jump(), lane: (lane) => game.moveLane(lane), throttle: (value) => game.setThrottle(value) },
 );
 
@@ -50,8 +59,17 @@ document.addEventListener('click', (e) => {
     game.start();
   }
   else if (action === 'howto') showScreen('howto');
+  else if (action === 'controls') showScreen('controls');
+  else if (action === 'controls-touch' || action === 'controls-keyboard') {
+    useControls(action === 'controls-touch' ? 'touch' : 'keyboard');
+    showScreen('menu');
+  }
   else if (action === 'menu') game.showMenu();
 });
 
 showMenuBest();
-showScreen('menu');
+// Touchscreen or keyboard? Ask the first time; after that, use what they picked.
+markSuggestedControls();
+const chosen = savedControls();
+useControls(chosen ?? suggestedControls(), false);
+showScreen(chosen ? 'menu' : 'controls');

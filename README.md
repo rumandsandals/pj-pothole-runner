@@ -5,7 +5,11 @@ Dodge Petaling Jaya's potholes, survive dodgy tow trucks and Workshop Hell, and 
 ## Controls
 
 ↑ ↓ (W S) change lane · hold ← → (A D) to brake / speed up · Space jumps · M music · F full screen.
-On screen (and on phones): an arrow-key cluster — ▲ ▼ change lane, hold ◀ to brake, hold ▶ for gas — plus a wide JUMP key. You can also swipe up/down on the road and tap to jump.
+The first time you play, the game asks: TOUCHSCREEN or KEYBOARD controls (it suggests the one that suits your device, remembers your pick, and you can change it from the CONTROLS button on the title screen). Wording is in `src/config/text.ts`; the logic is `src/ui/controlsChoice.ts`.
+
+Keyboard controls: an arrow-key cluster — ▲ ▼ change lane, hold ◀ to brake, hold ▶ for gas — plus a wide JUMP key.
+
+Touchscreen controls: a joystick instead — push up/down to change lane (keep holding to move again), hold left to brake, hold right for gas — plus the JUMP key. Tune it with `JOYSTICK` in `src/config/game.ts`. You can also swipe up/down on the road and tap to jump.
 
 **Full screen on iPhone:** open the game in Safari, tap Share → **Add to Home Screen**. The icon then opens the game full screen like an app.
 
@@ -39,7 +43,7 @@ Everything you're likely to change lives in **`src/config/`**. Edit a file, save
 | Workshop Hell rounds                       | `src/config/workshop.ts`    |
 | Menu text, help text, hotlines             | `src/config/text.ts`        |
 | The 16-colour palette, road/car/truck colours | `src/config/theme.ts`    |
-| Pixel art (your Mazda, sedan, SUV, sports car, motorcycle, bicycle, tow truck, palms, clouds) | `src/config/sprites.ts` |
+| Pixel art (your Tesla Roadster, sedan, SUV, sports car, motorcycle, bicycle, tow truck, palms, clouds) | `src/config/sprites.ts` |
 | How chunky the pixels are (`PIXEL_SIZE`)   | `src/config/game.ts`        |
 | Dust, shake, wheel spin and other effects (`ANIMATION`) | `src/config/game.ts` |
 | Sound effects (pitch, length, volume) and default on/off | `src/config/sounds.ts` |
@@ -85,23 +89,32 @@ In `sprites.ts`, each line of text is one row of pixels, and each character is o
 
 `npm run build` creates a `dist/` folder: the finished game, ready to host (for example on GitHub Pages).
 
-## Facts to verify before sharing
+## Facts checked (November 2026)
 
-The accident scenes (`src/config/accidents.ts`) were drafted for the game. Check each point against an official source before you share the game publicly:
+All the dialogs (accidents, road events, police stops, tow trucks, Workshop Hell, hotlines) were checked against news reports, government pages and insurer guides in November 2026. These are game simplifications, not legal advice. Re-check before a public launch, because numbers and names change.
 
-1. Road accidents in Malaysia must be reported to the police within **24 hours** (Road Transport Act 1987, section 52).
-2. Drivers involved in an accident must **stop and help**. Driving off (hit-and-run) is an offence.
-3. **999** is the emergency number to call.
-4. Without a police report, an insurance claim **may be rejected**.
-5. **Knock-for-Knock**: if you weren't at fault, you can claim from your **own** insurer, and your **NCD is not affected**.
-6. The **Ombudsman for Financial Services (OFS)** handles insurance disputes **free of charge** for consumers.
-7. Insurers need a copy of the **police report and the accident sketch plan** for a serious claim.
-8. Many motor policies include **free towing** to a panel workshop, up to a limit. This varies by insurer.
-9. **"Ulat" tow touts** at crash scenes: the advice "never let a tow truck you didn't call take your car".
-10. The RM amounts and outcomes are game numbers, not real figures.
-11. **Police stops** (`src/config/police.ts`): speeding saman of about **RM 300**, and that offering a police officer a bribe ("duit kopi") is a crime under the **MACC Act 2009**.
-12. Which choices count as illegal (`heat` in `accidents.ts` and `roadEvents.ts`): not reporting an accident, leaving the scene, bribing, chasing another road user.
-13. The red-light fine (`redLight` in `src/config/police.ts`) is a game number.
-14. Failing to give way at a zebra crossing: the fine (`giveWay` in `src/config/police.ts`) is a game number.
+**Confirmed**
+1. Road accidents must be reported to the police within **24 hours** (Road Transport Act 1987, s.52). A late report can mean a fine of about RM300.
+2. Drivers **involved** in an accident must stop; driving off is hit-and-run. A pure **bystander** has no legal duty to stop, though calling **MERS 999** is encouraged.
+3. **OD Knock-for-Knock** (Bank Negara, 2025): with comprehensive cover and a police finding that you weren't at fault, you claim from your own insurer and keep your NCD.
+4. The insurance ombudsman is now the **Financial Markets Ombudsman Service (FMOS)**, formerly OFS. It's free, on 03-2272 2811.
+5. Insurers ask for the **police report and the sketch plan** for claims.
+6. Councils can be **liable for pothole damage**. In 2022 a Kajang driver won RM2,980 from MPKj in the Magistrates' Court small claims. The Consumer Claims Tribunal said it had **no jurisdiction** over councils.
+7. Offering or giving a bribe is a crime under the **MACC Act 2009**. The MACC line is **1-800-88-6000**.
+8. Speeding and red-light **compounds go up to about RM300** today. A rise to RM500 is planned for 2029.
+9. **MBPJ hotline: 03-7954 2020**, or e-Aduan at embpj.mbpj.gov.my. **BNMLINK: 1-300-88-5465.**
+10. **Consumer Claims Tribunal: 1-800-88-9811** (RM5 to file). 1-800-886-800 is the ministry's general complaints line, not the Tribunal.
 
-The hotlines in `src/config/text.ts` (MBPJ, MACC, Tribunal, JPJ, BNM) came from the original game and should be re-checked too.
+**Fixed (were wrong)**
+- "Section 107" and "Section 91" Road Transport Act claims: removed. They weren't backed up.
+- "FAA 2013" right to a written report: replaced with "ask your insurer for the adjuster's report".
+- "JPJ Parts hotline 1-800-88-5983" for stolen parts: missing parts are theft, so the dialog now says lodge a **police report**.
+- Tribunal number 1-800-886-800, changed to 1-800-88-9811. MBPJ 03-7625 4688, changed to 03-7954 2020.
+- "Bank Negara ruled in your favour", changed to FMOS. Bank Negara doesn't rule on individual disputes.
+- "File with Tribunal Pengguna" against MBPJ, changed to the Magistrates' Court small claims.
+- "LKPP registered" tow truck: removed. It isn't the right agency.
+
+11. Causing death by reckless or dangerous driving (Road Transport Act 1987 s.41, amended 2020): **5–10 years' jail and a RM20,000–RM50,000 fine**. Source: news reports of the 2020 amendment; check the gazetted Act.
+
+**Still game numbers**
+- All RM rewards, fines (other than the ~RM300 compound) and HP amounts are made up for the game, including the RM3,000 penalty for injuring a pedestrian and the 30% chance a hit is fatal (`PEDESTRIAN_HIT` in `src/config/pedestrians.ts`).

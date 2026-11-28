@@ -71,8 +71,10 @@ export const THEME = {
 
   pothole: { hole: '0' as C, rim: '6' as C, label: '8' as C, labelShadow: '0' as C, damageDot: 'a' as C },
 
-  /** Your Mazda's paint: X = body, Y = shadow. */
-  car: { body: '8' as C, trim: 'i' as C },
+  /** Your Roadster's paint: X = body, Y = shadow (silver). */
+  car: { body: '6' as C, trim: 'h' as C },
+  /** The Roadster's thruster flames when you jump: hot core, glow, fading tail. */
+  jets: { core: '7' as C, glow: 'c' as C, tail: 'j' as C },
   smoke: '6' as C,
 
   /** Replaces X (body), Y (stripe) and Z (cab) in the truck sprite. */

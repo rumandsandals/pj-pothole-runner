@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <title>PJ Pothole Runner</title>
+    <title>PJ Pothole Runner (DRAFT)</title>
     <!-- "Add to Home Screen" opens the game full screen, like an app -->
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
@@ -65,6 +65,12 @@
 
       <!-- On-screen controls: an arrow-key cluster (like a keyboard) plus a wide JUMP key -->
       <div id="controls">
+        <!-- Touch screens: a joystick instead of the arrow keys. Push up/down = change lane, hold left = brake, hold right = gas -->
+        <div id="joystick" role="group" aria-label="Joystick: up and down change lane, left brakes, right is gas">
+          <span class="joy-arrow up">▲</span><span class="joy-arrow down">▼</span>
+          <span class="joy-arrow left">◀</span><span class="joy-arrow right">▶</span>
+          <div id="joyKnob"></div>
+        </div>
         <div class="dpad">
           <button class="key" id="laneUpBtn" data-text="laneUpButton" aria-label="Lane up"></button>
           <button class="key pedal" id="brakeBtn" data-text="brakeButton" aria-label="Brake (hold)"></button>
@@ -99,7 +105,26 @@
         <div class="press-start" data-text="pressStart"></div>
         <button class="btn" data-action="start">▶ START DRIVING</button>
         <button class="btn sec" data-action="howto">? HOW TO PLAY</button>
+        <button class="btn sec small" data-action="controls">🎮 CONTROLS: <span id="controlsLabel"></span></button>
         <div class="best" id="menuBest"></div>
+      </div>
+    </div>
+
+    <!-- Asked the first time you play: touchscreen joystick or keyboard arrow keys -->
+    <div class="ov" id="ovControls">
+      <div class="ov-card">
+        <div class="tit" data-text="controlsTitle"></div>
+        <div class="choices">
+          <button class="control-choice" data-action="controls-touch">
+            <span class="cc-icon">🕹️</span><span class="cc-name" data-text="controlsTouchName"></span>
+            <span class="cc-desc" data-text="controlsTouchDesc"></span><span class="cc-tag" data-text="controlsSuggested"></span>
+          </button>
+          <button class="control-choice" data-action="controls-keyboard">
+            <span class="cc-icon">⌨️</span><span class="cc-name" data-text="controlsKeyboardName"></span>
+            <span class="cc-desc" data-text="controlsKeyboardDesc"></span><span class="cc-tag" data-text="controlsSuggested"></span>
+          </button>
+        </div>
+        <div class="cc-note" data-text="controlsNote"></div>
       </div>
     </div>
 
@@ -143,7 +168,7 @@
 
     <div class="ov" id="ovDead">
       <div class="ov-card">
-        <div class="tit" data-text="deadTitle"></div>
+        <div class="tit" id="deadTitle" data-text="deadTitle"></div>
         <div class="score" id="deadScore"></div>
         <div class="hotlines" data-text="deadHotlines"></div>
         <button class="btn" data-action="start">↺ TRY AGAIN</button>

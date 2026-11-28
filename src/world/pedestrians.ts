@@ -65,6 +65,19 @@ export function drawPerson(ctx: CanvasRenderingContext2D, x: number, foot: numbe
   fill(ctx, '0', facing === 1 ? left + 4 : left + 2, top + 3, 1, 1); // eye
 }
 
+/** A person lying on the road after being hit (kept simple and non-graphic). */
+export function drawPersonDown(ctx: CanvasRenderingContext2D, x: number, foot: number, look: Look): void {
+  const left = Math.round(x) - 11;
+  const top = Math.round(foot) - 5;
+  fill(ctx, 'g', left - 1, top + 5, 24, 1); // shadow
+  fill(ctx, look.bottom, left, top + 2, 8, 3); // legs
+  fill(ctx, '0', left - 1, top + 2, 1, 3); // shoes
+  fill(ctx, look.top, left + 8, top + 1, 8, 4); // body
+  fill(ctx, look.skin, left + 10, top, 4, 1); // arm
+  fill(ctx, look.tudung ?? look.skin, left + 16, top + 1, 5, 4); // head
+  if (!look.tudung) fill(ctx, look.hair, left + 19, top + 1, 2, 4);
+}
+
 /** A small dog about 8 px tall, trotting. */
 export function drawDog(ctx: CanvasRenderingContext2D, x: number, foot: number, dog: DogLook, frame: number, facing: 1 | -1 = 1): void {
   const left = Math.round(x) - 6;
@@ -98,6 +111,7 @@ export interface Walker {
   look: Look;
   dog: DogLook | null;
   hurry: boolean; // scrambling out of the way of a car that didn't stop
+  down?: boolean; // hit by your car, lying on the road
 }
 
 export function makeWalkers(): Walker[] {

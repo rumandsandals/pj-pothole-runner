@@ -1,4 +1,5 @@
 import { CAR, MAX_HEALTH, TICKS_PER_SECOND, TOW, WORKSHOP } from '../config/game';
+import { STORM } from '../config/storm';
 import { LEVELS, type Level } from '../config/levels';
 import type { PotholeId } from '../config/potholes';
 import type { ColourKey } from '../config/theme';
@@ -18,6 +19,7 @@ export type Mode =
   | 'levelCard' // paused on the "LEVEL X" pop-up, waiting for GO
   | 'playing'
   | 'pullover' // a police car is pulling you over
+  | 'incident' // you hit a pedestrian: ambulance and police arriving
   | 'event'
   | 'towChoice'
   | 'towArriving'
@@ -53,6 +55,23 @@ export interface Bit {
   life: number;
   colour: ColourKey;
   size: number; // art pixels
+}
+
+/** A tree blown down across a lane by a thunderstorm. */
+export interface FallenTree {
+  x: number;
+  lane: Lane;
+  flip: boolean; // which way it fell (canopy left or right)
+}
+
+/** This level's thunderstorm (see storm.ts). */
+export interface Storm {
+  startAt: number | null; // share of the level where it starts (null = no storm this level)
+  ticks: number; // ticks since it started (-1 = not yet)
+  flash: number; // ticks left of a lightning flash
+  bolt: number[]; // x positions of the current lightning bolt's zig-zag
+  treesLeft: number; // fallen trees still to appear
+  nextTreeIn: number; // distance until the next fallen tree appears
 }
 
 export interface Pothole {
@@ -134,6 +153,17 @@ export interface GameState {
   placed: string[]; // which of this level's lights / crossings have appeared
   times: TimeId[]; // time of day for each level (shuffled every game)
   workshop: { bill: number; step: number; log: WorkshopLogEntry[] };
+  storm: Storm;
+  trees: FallenTree[];
+  incident: Incident | null; // after hitting a pedestrian
+}
+
+/** After you hit someone at a zebra crossing: the ambulance and police arriving. */
+export interface Incident {
+  ambulanceX: number;
+  waited: number;
+  fatal: boolean;
+  crossing: Crossing;
 }
 
 export function createCar(): Car {
@@ -205,6 +235,9 @@ export function createState(mode: Mode = 'menu'): GameState {
     placed: [],
     times: shuffleTimes(),
     workshop: { bill: WORKSHOP.startingBill, step: 0, log: [] },
+    storm: newStorm(1),
+    trees: [],
+    incident: null,
   };
 }
 
@@ -269,4 +302,11 @@ export function secondsLeft(state: GameState): number {
 
 export function clampHealth(hp: number): number {
   return Math.max(0, Math.min(MAX_HEALTH, hp));
+}
+
+/** Decides, at random, whether (and where) this level gets a thunderstorm. */
+export function newStorm(level: number): Storm {
+  const [from, to] = STORM.startsBetween;
+  const startAt = level >= STORM.fromLevel && Math.random() < STORM.chancePerLevel ? from + Math.random() * (to - from) : null;
+  return { startAt, ticks: -1, flash: 0, bolt: [], treesLeft: 0, nextTreeIn: 0 };
 }

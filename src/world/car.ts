@@ -1,4 +1,4 @@
-import { ANIMATION, CAR, JUICE, PHYSICS, ROAD } from '../config/game';
+import { ANIMATION, CAR, JETS, JUICE, PHYSICS, ROAD } from '../config/game';
 import { VEHICLE_ART, type VehicleArt } from '../config/sprites';
 import { THEME } from '../config/theme';
 import type { Car } from '../core/state';
@@ -77,7 +77,8 @@ export function vehicleBox(art: VehicleArt, x: number, y: number): Box {
   return { left: toPx(x) - Math.floor(width / 2), top: toPx(y) - height + 1, width, height };
 }
 
-const PLAYER_ART = VEHICLE_ART.hatchback;
+/** Your car. Swap `roadster` for `hatchback` to drive the old Mazda again. */
+const PLAYER_ART = VEHICLE_ART.roadster;
 export const carSpriteBox = (car: Car): Box => vehicleBox(PLAYER_ART, car.x, car.y + car.sinkY);
 
 /** Which of the two wheel pictures to show, so wheels turn as the road moves. */
@@ -99,6 +100,51 @@ export function groundShadow(ctx: CanvasRenderingContext2D, cx: number, y: numbe
   for (let row = -2; row <= 1; row++) {
     const half = Math.round(halfWidth * Math.sqrt(1 - (row / 3) ** 2));
     ctx.fillRect(Math.round(cx - half), Math.round(y + row), half * 2, 1);
+  }
+}
+
+/**
+ * The Roadster's thrusters, firing while you're in the air: jet streams
+ * blasting down from under the car (like the SpaceX-package Roadster) plus
+ * a small puff out of the back. `power` is 1 on the way up and smaller as
+ * you fall; `drop` is how far it is down to the road (art pixels).
+ */
+function drawJets(ctx: CanvasRenderingContext2D, left: number, top: number, time: number, power: number, drop: number): void {
+  const { core, glow, tail } = THEME.jets;
+  const flicker = Math.floor(time / 2) % 3;
+  const nozzleY = top + 18; // just under the floor of the car
+
+  // Jet streams straight down: behind the back wheel, under the middle, ahead of the front wheel
+  for (const [i, x] of JETS.nozzles.entries()) {
+    const wobble = (flicker + i) % 3;
+    const length = Math.min(drop + 4, Math.round((JETS.length + wobble * 3) * (0.45 + power * 0.55)));
+    for (let k = 0; k < length; k++) {
+      const share = k / Math.max(1, length);
+      const colour = share < 0.25 ? core : share < 0.65 ? glow : tail;
+      if (colour === tail && (k + i) % 2 === 1) continue; // fade out in a dither
+      const width = share < 0.15 ? 3 : share < 0.6 ? 4 : 2; // flares out then thins
+      const sway = colour === tail ? ((k + wobble) % 3) - 1 : 0;
+      fill(ctx, colour, left + x - Math.floor(width / 2) + sway, nozzleY + k, width, 1);
+      if (colour === glow && width === 4) fill(ctx, core, left + x - 1, nozzleY + k, 2, 1); // hot centre line
+    }
+  }
+
+  // A small puff out of the back
+  const puff = Math.round((3 + flicker) * power);
+  for (let k = 0; k < puff; k++) fill(ctx, k < 2 ? core : glow, left - 2 - k, top + 13, 1, k < 2 ? 2 : 1);
+}
+
+/** Where the jet streams hit the road: blasts of spray to each side. */
+function drawJetSplash(ctx: CanvasRenderingContext2D, left: number, surface: number, time: number, power: number): void {
+  const { glow, tail } = THEME.jets;
+  const spread = Math.round((4 + (Math.floor(time / 3) % 3)) * power);
+  for (const x of JETS.nozzles) {
+    for (let k = 1; k <= spread; k++) {
+      const colour = k < spread / 2 ? glow : tail;
+      const lift = Math.floor((spread - k) / 3);
+      fill(ctx, colour, left + x + 1 + k, surface - lift, 1, 1);
+      fill(ctx, colour, left + x - 1 - k, surface - lift, 1, 1);
+    }
   }
 }
 
@@ -170,9 +216,14 @@ export function drawCar(ctx: CanvasRenderingContext2D, car: Car, time: number, r
   ctx.rotate(rot);
   ctx.scale(sx, sy);
   ctx.translate(-cx, -bottom);
+  const jetPower = rising ? 1 : 0.5;
+  const jetsOn = !car.onGround && !car.trapped;
+  if (jetsOn) drawJets(ctx, left, box.top, time, jetPower, surface - (box.top + 18));
   drawVehicleArt(ctx, PLAYER_ART, { ...box, left }, { X: THEME.car.body, Y: THEME.car.trim }, wheelFrame(roadOffset), bob, wheelDrop, false);
   ctx.restore();
   if (sinking) ctx.restore();
+  // Jets blasting the road when the car is low enough
+  if (jetsOn && surface - (box.top + 18) < JETS.length + 6) drawJetSplash(ctx, left, surface, time, jetPower);
 
   if (!car.trapped && !sinking) {
     // Brake lights glow while slowing down

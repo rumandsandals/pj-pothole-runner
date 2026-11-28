@@ -50,7 +50,7 @@ export const GAME_OVER = {
 
 export const CAR = {
   x: 150, // where the car sits on screen (0 = left edge, 640 = right). Further right = more room to see traffic behind you
-  width: 56, // collision size (the Mazda sprite is 60 wide)
+  width: 56, // collision size (the Roadster sprite is 60 wide)
   height: 22,
   hitboxInset: 9, // makes collisions a little forgiving
   invulnerableAfterHit: 60, // ticks of blinking after hitting a pothole
@@ -82,6 +82,23 @@ export const JUICE = {
   landingDip: 2, // camera dips this many pixels when you land
   landingDipTicks: 8,
   moneyRollSpeed: 0.18, // how fast the RM counter rolls to its new value (0–1)
+};
+
+/** The Roadster's jet streams when you jump (drawn in src/world/car.ts). */
+export const JETS = {
+  nozzles: [6, 22, 38, 54], // where the jets come out, pixels from the car's back end
+  length: 22, // how long the streams get (art pixels) at full power
+};
+
+/**
+ * ON-SCREEN JOYSTICK (shown when the player picks TOUCHSCREEN controls).
+ * Distances are a share of how far the knob can move: 0 = centre, 1 = the edge.
+ */
+export const JOYSTICK = {
+  deadZone: 0.25, // ignore tiny wobbles near the centre
+  pedalAt: 0.35, // push left / right this far to brake / give gas
+  laneAt: 0.55, // push up / down this far to change lane
+  laneRepeatMs: 420, // keep holding up / down to move another lane after this long
 };
 
 export const FULL_SCREEN = {

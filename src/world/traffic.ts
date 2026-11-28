@@ -15,7 +15,9 @@ const KINDS = Object.keys(VEHICLES) as VehicleKind[];
 
 /** Picks a vehicle from one group (cars or two-wheelers), weighted by `mix`. */
 function pickKind(group: 'car' | 'twoWheeler', highway: boolean): VehicleKind {
-  const options = KINDS.filter((k) => VEHICLES[k].group === group && !(highway && !VEHICLES[k].onHighway));
+  const options = KINDS.filter(
+    (k) => VEHICLES[k].group === group && !(highway && !VEHICLES[k].onHighway) && laneCount() <= VEHICLES[k].maxLanes,
+  );
   let roll = Math.random() * options.reduce((sum, k) => sum + VEHICLES[k].mix, 0);
   for (const k of options) {
     roll -= VEHICLES[k].mix;
